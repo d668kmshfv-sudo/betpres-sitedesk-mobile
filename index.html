@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="sk">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+ <meta name="theme-color" content="#f4f8fb">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="default">
+ <meta name="apple-mobile-web-app-title" content="SiteDesk">
+ <meta name="format-detection" content="telephone=no">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+ <title>BETPRES SiteDesk Mobile</title>
+ <link rel="manifest" href="manifest.webmanifest">
+ <link rel="apple-touch-icon" href="assets/app-icon.svg">
+ <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
+ <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ <div id="app" class="app">
+  <header class="topbar">
+   <button class="brand-button" type="button" data-route="home" aria-label="Prehľad">
+    <img src="assets/app-icon.svg" alt="BETPRES">
+    <span><b>SiteDesk</b><small>MOBILE</small></span>
+   </button>
+   <div class="top-actions">
+    <button id="syncButton" class="icon-button sync-button" type="button" aria-label="Synchronizovať">
+     <span class="sync-icon">↻</span><i id="pendingBadge" hidden>0</i>
+    </button>
+    <button class="avatar-button" type="button" data-route="settings" aria-label="Nastavenia"><span id="userInitials">JV</span></button>
+   </div>
+  </header>
+
+  <section class="project-strip">
+   <label for="projectSelect">Aktívna stavba</label>
+   <select id="projectSelect" aria-label="Aktívna stavba"></select>
+   <span id="connectionState" class="connection-state offline"><i></i> Offline</span>
+  </section>
+
+  <main id="mainContent" class="main-content">
+   <section class="screen active" data-screen="home">
+    <div class="welcome-row">
+     <div><p id="todayLabel" class="eyebrow"></p><h1>Čo potrebuješ zapísať?</h1></div>
+     <button class="icon-button" type="button" data-route="settings" aria-label="Nastavenia vzhľadu">⚙</button>
+    </div>
+    <div class="quick-grid">
+     <button class="quick-card material" type="button" data-action="add-material"><span>▤</span><b>Dodací list</b><small>Odfotiť alebo zapísať</small></button>
+     <button class="quick-card defect" type="button" data-action="add-defect"><span>!</span><b>Vada / nedorobok</b><small>Pridať aj fotografiu</small></button>
+     <button class="quick-card diary" type="button" data-action="add-diary"><span>✎</span><b>Denný zápis</b><small>Rýchla poznámka zo stavby</small></button>
+     <button class="quick-card workers" type="button" data-route="workers"><span>♟</span><b>Stav pracovníkov</b><small>Dnešné počty firiem</small></button>
+    </div>
+    <section class="summary-card">
+     <div class="section-title"><div><p class="eyebrow">DNES NA STAVBE</p><h2>Rýchly prehľad</h2></div><span id="homeProjectBadge" class="soft-badge">—</span></div>
+     <div class="metric-grid">
+      <article><strong id="metricWorkers">0</strong><span>pracovníkov</span></article>
+      <article><strong id="metricDefects">0</strong><span>otvorených vád</span></article>
+      <article><strong id="metricDiary">0</strong><span>dnešných zápisov</span></article>
+     </div>
+    </section>
+    <section class="recent-card">
+     <div class="section-title"><div><p class="eyebrow">POSLEDNÉ ZMENY</p><h2>Aktivita</h2></div></div>
+     <div id="recentActivity" class="item-list compact"></div>
+    </section>
+   </section>
+
+   <section class="screen" data-screen="materials">
+    <div class="screen-head"><div><p class="eyebrow">PASPORT SKLADU</p><h1>Materiál</h1></div><button class="primary-circle" type="button" data-action="add-material">+</button></div>
+    <div class="stats-row"><article><small>Neodfakturované</small><strong id="materialUnbilled">0,00 €</strong></article><article><small>Bez čísla faktúry</small><strong id="materialUnbilledCount">0</strong></article></div>
+    <div class="search-row"><label class="search-box"><span>⌕</span><input id="materialSearch" type="search" placeholder="Materiál, dodávateľ, doklad"></label><button class="filter-button" type="button" data-action="material-filter">Filter</button></div>
+    <div id="materialFilterSummary" class="filter-summary" hidden></div>
+    <div id="materialsList" class="item-list"></div>
+   </section>
+
+   <section class="screen" data-screen="defects">
+    <div class="screen-head"><div><p class="eyebrow">KONTROLA KVALITY</p><h1>Vady a nedorobky</h1></div><button class="primary-circle" type="button" data-action="add-defect">+</button></div>
+    <div class="segmented" data-filter-group="defects"><button class="active" data-value="open">Otvorené</button><button data-value="all">Všetky</button><button data-value="done">Hotové</button></div>
+    <label class="search-box full"><span>⌕</span><input id="defectSearch" type="search" placeholder="Hľadať vadu, miesto alebo firmu"></label>
+    <div id="defectsList" class="item-list"></div>
+   </section>
+
+   <section class="screen" data-screen="workers">
+    <div class="screen-head"><div><p class="eyebrow">DENNÁ EVIDENCIA</p><h1>Stav pracovníkov</h1></div><button id="workerSaveButton" class="save-button" type="button">Uložiť</button></div>
+    <label class="date-card"><span>Dátum</span><input id="workerDate" type="date"></label>
+    <div class="worker-total"><div><small>Spolu na stavbe</small><strong><span id="workerTotal">0</span> osôb</strong></div><span id="workerCompanyCount" class="soft-badge">0 firiem</span></div>
+    <div id="workersList" class="worker-list"></div>
+   </section>
+
+   <section class="screen" data-screen="calendar">
+    <div class="screen-head"><div><p class="eyebrow">TERMÍNY A ÚLOHY</p><h1>Kalendár</h1></div><button class="primary-circle" type="button" data-action="add-event">+</button></div>
+    <div class="month-switch"><button id="calendarPrev" type="button">‹</button><strong id="calendarMonthLabel"></strong><button id="calendarNext" type="button">›</button></div>
+    <div id="calendarList" class="timeline-list"></div>
+   </section>
+
+   <section class="screen" data-screen="diary">
+    <div class="screen-head"><div><p class="eyebrow">MÔJ STAVEBNÝ DENNÍK</p><h1>Denné zápisy</h1></div><button class="primary-circle" type="button" data-action="add-diary">+</button></div>
+    <label class="search-box full"><span>⌕</span><input id="diarySearch" type="search" placeholder="Hľadať v poznámkach"></label>
+    <div id="diaryList" class="item-list"></div>
+   </section>
+
+   <section class="screen settings-screen" data-screen="settings">
+    <div class="screen-head"><div><p class="eyebrow">APLIKÁCIA</p><h1>Nastavenia</h1></div></div>
+    <section class="settings-card">
+     <div class="section-title"><div><p class="eyebrow">MOTÍV</p><h2>Vzhľad aplikácie</h2></div></div>
+     <div class="theme-choices" id="themeChoices">
+      <button type="button" data-theme="system"><span class="theme-preview system"><i></i></span><b>Systémový</b></button>
+      <button type="button" data-theme="light"><span class="theme-preview light"><i></i></span><b>Svetlý</b></button>
+      <button type="button" data-theme="dark"><span class="theme-preview dark"><i></i></span><b>Tmavý</b></button>
+     </div>
+     <label class="setting-row"><span><b>Veľkosť písma</b><small>Upraví text aj ovládacie prvky</small></span><select id="fontScale"><option value="0.94">Menšie</option><option value="1" selected>Štandardné</option><option value="1.08">Väčšie</option><option value="1.16">Najväčšie</option></select></label>
+     <label class="setting-row"><span><b>Kontrast</b><small>Silnejšie okraje a text</small></span><input id="contrastRange" type="range" min="0" max="100" value="45"></label>
+     <label class="setting-row"><span><b>Kompaktné zobrazenie</b><small>Viac údajov na obrazovke</small></span><input id="compactToggle" class="switch" type="checkbox"></label>
+     <button id="resetAppearance" class="secondary-button full" type="button">Obnoviť BETPRES vzhľad</button>
+    </section>
+    <section class="settings-card">
+     <div class="section-title"><div><p class="eyebrow">SITEDESK CLOUD</p><h2>Prepojenie</h2></div><span id="cloudRole" class="soft-badge">Nepripojené</span></div>
+     <div id="signedInBox" class="signed-box" hidden><div><strong id="signedInEmail"></strong><small id="workspaceVersion"></small></div><button id="signOutButton" class="text-button danger-text" type="button">Odhlásiť</button></div>
+     <form id="connectionForm" class="stack-form">
+      <label>Project URL<input id="cloudUrl" type="url" inputmode="url" placeholder="https://…supabase.co" autocomplete="url"></label>
+      <label>Publishable / anon key<input id="cloudKey" type="password" placeholder="sb_publishable_…" autocomplete="off"></label>
+      <label>Pracovný priestor<input id="workspaceName" value="Medická – pilot" autocomplete="organization"></label>
+      <div class="form-split"><label>E-mail<input id="cloudEmail" type="email" inputmode="email" autocomplete="email"></label><label>Heslo<input id="cloudPassword" type="password" autocomplete="current-password"></label></div>
+      <button class="primary-button full" type="submit">Pripojiť mobil k SiteDesk</button>
+     </form>
+     <label class="connection-import">Alebo načítaj súbor pripojenia z počítača<input id="connectionFile" type="file" accept="application/json,.json"></label>
+     <p id="cloudMessage" class="form-message"></p>
+    </section>
+    <section class="settings-card install-card">
+     <div><p class="eyebrow">IPHONE</p><h2>Inštalácia na plochu</h2><p>Otvor túto stránku v Safari, stlač <b>Zdieľať</b> a potom <b>Pridať na plochu</b>.</p></div>
+     <button id="installHelpButton" class="secondary-button full" type="button">Zobraziť postup</button>
+    </section>
+    <p class="app-version">BETPRES SiteDesk Mobile 1.0.0 · kompatibilné so SiteDesk 5.0.49</p>
+   </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Hlavné menu">
+   <button type="button" data-route="materials"><span>▤</span><small>Materiál</small></button>
+   <button type="button" data-route="defects"><span>!</span><small>Vady</small></button>
+   <button type="button" data-route="workers"><span>♟</span><small>Pracovníci</small></button>
+   <button type="button" data-route="calendar"><span>▣</span><small>Kalendár</small></button>
+   <button type="button" data-route="diary"><span>✎</span><small>Denník</small></button>
+  </nav>
+
+  <div id="sheetBackdrop" class="sheet-backdrop" hidden></div>
+  <section id="bottomSheet" class="bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+   <div class="sheet-grabber"></div>
+   <div class="sheet-head"><div><p id="sheetEyebrow" class="eyebrow"></p><h2 id="sheetTitle"></h2></div><button id="closeSheet" class="icon-button" type="button" aria-label="Zavrieť">×</button></div>
+   <div id="sheetBody" class="sheet-body"></div>
+  </section>
+  <div id="toast" class="toast" hidden></div>
+ </div>
+ <script src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js" defer></script>
+ <script src="app.js" defer></script>
+</body>
+</html>
