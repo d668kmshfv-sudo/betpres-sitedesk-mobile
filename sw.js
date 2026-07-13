@@ -1,4 +1,4 @@
-const CACHE="betpres-sitedesk-mobile-1.0.0";
+const CACHE="betpres-sitedesk-mobile-1.0.1";
 const SHELL=[
  "./",
  "./index.html",
