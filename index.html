@@ -8,18 +8,18 @@
  <meta name="apple-mobile-web-app-status-bar-style" content="default">
  <meta name="apple-mobile-web-app-title" content="SiteDesk">
  <meta name="format-detection" content="telephone=no">
- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co https://cdn.jsdelivr.net; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
  <title>BETPRES SiteDesk Mobile</title>
  <link rel="manifest" href="manifest.webmanifest">
- <link rel="apple-touch-icon" href="assets/app-icon.svg">
- <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
+ <link rel="apple-touch-icon" href="assets/betpres-logo.png">
+ <link rel="icon" href="assets/app-icon.svg">
  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
  <div id="app" class="app">
   <header class="topbar">
    <button class="brand-button" type="button" data-route="home" aria-label="Prehľad">
-    <img src="assets/app-icon.svg" alt="BETPRES">
+    <img src="assets/betpres-logo.png" alt="Betpres">
     <span><b>SiteDesk</b><small>MOBILE</small></span>
    </button>
    <div class="top-actions">
@@ -127,7 +127,7 @@
      <div><p class="eyebrow">IPHONE</p><h2>Inštalácia na plochu</h2><p>Otvor túto stránku v Safari, stlač <b>Zdieľať</b> a potom <b>Pridať na plochu</b>.</p></div>
      <button id="installHelpButton" class="secondary-button full" type="button">Zobraziť postup</button>
     </section>
-    <p class="app-version">BETPRES SiteDesk Mobile 1.0.1 · kompatibilné so SiteDesk 5.0.49</p>
+    <p class="app-version">BETPRES SiteDesk Mobile 1.0.3 · kompatibilné so SiteDesk 5.0.50</p>
    </section>
   </main>
 
@@ -147,7 +147,7 @@
   </section>
   <div id="toast" class="toast" hidden></div>
  </div>
- <script src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js" defer></script>
+ <script src="vendor/tesseract.min.js" defer></script>
  <script src="app.js" defer></script>
 </body>
 </html>
