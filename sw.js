@@ -1,10 +1,10 @@
-const CACHE="betpres-sitedesk-mobile-1.0.9";
+const CACHE="betpres-sitedesk-mobile-1.0.10";
 const CACHE_PREFIX="betpres-sitedesk-mobile-";
 const SHELL=[
  "./",
  "./index.html",
- "./styles.css",
- "./app.js",
+ "./styles.css?v=1.0.10",
+ "./app.js?v=1.0.10",
  "./manifest.webmanifest",
  "./assets/betpres-logo.png",
  "./assets/app-icon.png",
