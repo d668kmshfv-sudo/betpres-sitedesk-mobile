@@ -1,4 +1,4 @@
-# BETPRES SiteDesk Mobile 1.0.4
+# BETPRES SiteDesk Mobile 1.0.6
 
 Mobilná aplikácia je PWA určená pre iPhone. Po zverejnení na HTTPS adrese sa správa ako bežná aplikácia, má vlastnú ikonu a základné údaje fungujú aj bez signálu.
 
