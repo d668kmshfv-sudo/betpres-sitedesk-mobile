@@ -9,7 +9,7 @@
   appearance:"betpres-mobile-appearance-v1",
   project:"betpres-mobile-project-v1"
  };
- const ARRAYS=["projects","companies","assignments","purchases","defects","calendarEvents","workerSheets","mobileDiary"];
+ const ARRAYS=["projects","companies","assignments","purchases","defects","calendarEvents","workerSheets","betpresTimesheets","thpTimesheets","mobileDiary"];
  const $=id=>document.getElementById(id);
  const q=(selector,root=document)=>root.querySelector(selector);
  const qa=(selector,root=document)=>[...root.querySelectorAll(selector)];
@@ -31,6 +31,7 @@
   projectId:localStorage.getItem(KEYS.project)||"",
   calendarMonth:todayISO().slice(0,7),
   defectFilter:"open",
+  workerMode:"companies",
   materialSupplier:"",
   ocrWorker:null,
   photoUrls:new Map(),
@@ -189,13 +190,39 @@
   const sheet=workerSheetForDate(date),day=Number(date.slice(8,10)),rows=sheet?.rows?.length?sheet.rows:derivedWorkerRows();
   return rows.map(row=>({...row,value:Number(row.values?.[day]||0)}))
  }
+ function employeeSheetForDate(type,date){
+  const key=type==="thp"?"thpTimesheets":"betpresTimesheets",month=date.slice(0,7);
+  return app.data[key].find(sheet=>sheet.projectId===app.projectId&&sheet.month===month)||app.data[key].filter(sheet=>sheet.projectId===app.projectId&&sheet.month<month).sort((a,b)=>String(b.month).localeCompare(String(a.month)))[0]
+ }
+ function employeesForDate(type,date){
+  const day=Number(date.slice(8,10)),sheet=employeeSheetForDate(type,date);
+  return (sheet?.rows||[]).slice().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"sk",{sensitivity:"base"})).map(row=>({...row,value:row.values?.[day]??"",overtime:row.overtime?.[day]??""}))
+ }
+ function normalizeAttendance(value,{overtime=false}={}){
+  const raw=String(value??"").trim().toUpperCase().replace(",",".");
+  if(!raw)return"";
+  if(!overtime&&["P","N","D"].includes(raw))return raw;
+  const number=Number(raw);return Number.isFinite(number)?Math.max(0,Math.min(24,number)):null
+ }
  function renderWorkers(){
   const date=$("workerDate").value||todayISO();if(!$("workerDate").value)$("workerDate").value=date;
+  qa("[data-worker-mode]",$("workerModeSwitch")).forEach(button=>button.classList.toggle("active",button.dataset.workerMode===app.workerMode));
+  if(app.workerMode!=="companies"){renderEmployeeTimesheet(date);return}
   const rows=workersForDate(date),total=rows.reduce((sum,row)=>sum+Number(row.value||0),0);
-  $("workerTotal").textContent=String(total);$("workerCompanyCount").textContent=`${rows.filter(row=>Number(row.value)>0).length} firiem`;
+  $("workerTotalLabel").textContent="Spolu na stavbe";$("workerTotalUnit").textContent="osôb";$("workerTotal").textContent=String(total);$("workerCompanyCount").textContent=`${rows.filter(row=>Number(row.value)>0).length} firiem`;
   $("workersList").innerHTML=rows.length?rows.map(row=>`<article class="worker-row"><div><strong>${esc(row.alias||row.name||row.actualName||company(row.companyId)?.name||"Bez názvu")}</strong><small>${esc(row.actualName&&row.actualName!==(row.alias||row.name)?row.actualName:company(row.companyId)?.scope||"")}</small></div><div class="number-stepper"><button type="button" data-step="-1" aria-label="Odobrať">−</button><input type="number" min="0" inputmode="numeric" value="${Number(row.value||0)||""}" data-worker-id="${esc(row.id)}" data-company-id="${esc(row.companyId||"")}" data-name="${esc(row.name||row.alias||row.actualName||"")}" aria-label="Počet pracovníkov"><button type="button" data-step="1" aria-label="Pridať">+</button></div></article>`).join(""):`<div class="empty-state">Na tejto stavbe zatiaľ nie sú priradené firmy.</div>`;
   qa("[data-step]",$("workersList")).forEach(button=>button.onclick=()=>{const input=q("input",button.parentElement),value=Math.max(0,Number(input.value||0)+Number(button.dataset.step));input.value=value||"";updateWorkerPreview()});
   qa("[data-worker-id]",$("workersList")).forEach(input=>input.oninput=updateWorkerPreview)
+ }
+ function renderEmployeeTimesheet(date){
+  const type=app.workerMode,rows=employeesForDate(type,date),isThp=type==="thp",hours=rows.reduce((sum,row)=>sum+(Number(row.value)||0),0),overtime=rows.reduce((sum,row)=>sum+(Number(row.overtime)||0),0),active=rows.filter(row=>String(row.value??"").trim()!==""||Number(row.overtime)>0).length;
+  $("workerTotalLabel").textContent=isThp?"THP odpracované hodiny":"BETPRES odpracované hodiny";$("workerTotalUnit").textContent="h";$("workerTotal").textContent=String(hours).replace(".",",");$("workerCompanyCount").textContent=isThp&&overtime?`${active} ľudí · ${String(overtime).replace(".",",")} h nadčas`:`${active} pracovníkov`;
+  $("workersList").innerHTML=rows.length?rows.map(row=>`<article class="worker-row employee-hours-row ${isThp?"thp":""}"><div><strong>${esc(row.name||"Bez mena")}</strong><small>${esc(row.position||"Pozícia nie je doplnená")}</small></div><label class="hours-field"><span>Hodiny</span><input class="employee-hours-input" inputmode="decimal" value="${esc(row.value)}" data-employee-hours="${esc(row.id)}" data-name="${esc(row.name||"")}" data-position="${esc(row.position||"")}" aria-label="Hodiny ${esc(row.name||"")}"></label>${isThp?`<label class="hours-field"><span>Nadčas</span><input class="employee-hours-input" inputmode="decimal" value="${esc(row.overtime)}" data-employee-overtime="${esc(row.id)}" aria-label="Nadčas ${esc(row.name||"")}" placeholder=""></label>`:""}</article>`).join(""):`<div class="empty-state">V podsmenovke ${isThp?"THP":"BETPRES"} zatiaľ nie sú pracovníci.<span class="worker-empty-note">Meno pridaj v počítačovej aplikácii; po synchronizácii sa zobrazí aj tu.</span></div>`;
+  qa("[data-employee-hours],[data-employee-overtime]",$("workersList")).forEach(input=>input.oninput=updateEmployeePreview)
+ }
+ function updateEmployeePreview(){
+  const rows=qa("[data-employee-hours]",$("workersList")),hours=rows.reduce((sum,input)=>sum+(Number(String(input.value).replace(",","."))||0),0),overtime=qa("[data-employee-overtime]",$("workersList")).reduce((sum,input)=>sum+(Number(String(input.value).replace(",","."))||0),0),active=rows.filter(input=>String(input.value).trim()!==""||Number(String(q(`[data-employee-overtime=\"${CSS.escape(input.dataset.employeeHours)}\"]`,$("workersList"))?.value||"").replace(",","."))>0).length;
+  $("workerTotal").textContent=String(hours).replace(".",",");$("workerCompanyCount").textContent=app.workerMode==="thp"&&overtime?`${active} ľudí · ${String(overtime).replace(".",",")} h nadčas`:`${active} pracovníkov`
  }
  function updateWorkerPreview(){
   const values=qa("[data-worker-id]",$("workersList")).map(input=>Number(input.value||0));
@@ -203,6 +230,19 @@
  }
  function saveWorkers(){
   const date=$("workerDate").value||todayISO();
+  if(app.workerMode!=="companies"){
+   const invalid=[],entries=qa("[data-employee-hours]",$("workersList")).map(input=>{
+    const rowId=input.dataset.employeeHours,overtimeInput=q(`[data-employee-overtime=\"${CSS.escape(rowId)}\"]`,$("workersList")),value=normalizeAttendance(input.value),overtime=normalizeAttendance(overtimeInput?.value||"",{overtime:true});
+    if(value===null||overtime===null)invalid.push(input.dataset.name||"pracovník");
+    return{input,rowId,value,overtime}
+   });
+   if(invalid.length){toast(`Skontroluj hodiny: ${invalid.join(", ")}. Povolené sú 0–24 alebo P / N / D.`);return}
+   entries.forEach(({input,rowId,value,overtime})=>{
+    const operation={id:uid("op"),kind:"employee-day",timesheet:app.workerMode,projectId:app.projectId,date,rowId,name:input.dataset.name,position:input.dataset.position,value,overtime,createdAt:isoNow()};
+    applyOperation(app.data,operation);enqueue(operation,{replaceKey:`${operation.kind}:${operation.timesheet}:${operation.projectId}:${operation.date}:${operation.rowId}`})
+   });
+   saveSnapshot();toast(`Podsmenovka ${app.workerMode==="thp"?"THP":"BETPRES"} je uložená v mobile.`);renderHome();autoSync();return
+  }
   qa("[data-worker-id]",$("workersList")).forEach(input=>{
    const operation={id:uid("op"),kind:"worker-day",projectId:app.projectId,date,rowId:input.dataset.workerId,companyId:input.dataset.companyId,name:input.dataset.name,value:Math.max(0,Number(input.value||0)),createdAt:isoNow()};
    applyOperation(app.data,operation);enqueue(operation,{replaceKey:`${operation.kind}:${operation.projectId}:${operation.date}:${operation.rowId}`})
@@ -322,6 +362,16 @@
    if(!row){row={id:operation.rowId||uid("wr"),companyId:operation.companyId||"",name:operation.name||"Bez názvu",alias:operation.name||"Bez názvu",actualName:operation.name||"",values:{}};sheet.rows.push(row)}
    row.values=row.values||{};if(Number(operation.value))row.values[day]=Number(operation.value);else delete row.values[day]
   }
+  if(operation.kind==="employee-day"){
+   const key=operation.timesheet==="thp"?"thpTimesheets":"betpresTimesheets",month=operation.date.slice(0,7),day=Number(operation.date.slice(8,10));
+   let sheet=data[key].find(item=>item.projectId===operation.projectId&&item.month===month);
+   if(!sheet){const previous=data[key].filter(item=>item.projectId===operation.projectId&&item.month<month).sort((a,b)=>String(b.month).localeCompare(String(a.month)))[0];sheet={id:uid(operation.timesheet==="thp"?"thps":"bts"),projectId:operation.projectId,month,rows:(previous?.rows||[]).map((row,index)=>({...clone(row),id:uid(operation.timesheet==="thp"?"thpe":"bte"),sortOrder:index,values:{},overtime:{}}))};data[key].push(sheet)}
+   let row=sheet.rows.find(item=>item.id===operation.rowId)||sheet.rows.find(item=>item.name===operation.name);
+   if(!row){row={id:operation.rowId||uid(operation.timesheet==="thp"?"thpe":"bte"),name:operation.name||"Bez mena",position:operation.position||"",sortOrder:sheet.rows.length,values:{},overtime:{}};sheet.rows.push(row)}
+   row.values=row.values||{};row.overtime=row.overtime||{};
+   if(operation.value===""||operation.value===0)delete row.values[day];else row.values[day]=operation.value;
+   if(operation.timesheet==="thp"&&operation.overtime!==""&&operation.overtime!==0)row.overtime[day]=operation.overtime;else delete row.overtime[day]
+  }
  }
 
  async function imageData(file,max=1400,quality=.74){
@@ -405,7 +455,7 @@
   $("projectSelect").onchange=()=>{app.projectId=$("projectSelect").value;localStorage.setItem(KEYS.project,app.projectId);renderRoute()};
   $("materialSearch").oninput=renderMaterials;$("defectSearch").oninput=renderDefects;$("diarySearch").oninput=renderDiary;
   qa('[data-filter-group="defects"] button').forEach(button=>button.onclick=()=>{app.defectFilter=button.dataset.value;qa('[data-filter-group="defects"] button').forEach(item=>item.classList.toggle("active",item===button));renderDefects()});
-  $("workerDate").onchange=renderWorkers;$("workerSaveButton").onclick=saveWorkers;$("calendarPrev").onclick=()=>shiftCalendar(-1);$("calendarNext").onclick=()=>shiftCalendar(1);
+  $("workerDate").onchange=renderWorkers;$("workerSaveButton").onclick=saveWorkers;qa("[data-worker-mode]",$("workerModeSwitch")).forEach(button=>button.onclick=()=>{app.workerMode=button.dataset.workerMode;renderWorkers()});$("calendarPrev").onclick=()=>shiftCalendar(-1);$("calendarNext").onclick=()=>shiftCalendar(1);
   $("closeSheet").onclick=closeSheet;$("sheetBackdrop").onclick=closeSheet;$("syncButton").onclick=()=>sync();
   qa("[data-theme]",$("themeChoices")).forEach(button=>button.onclick=()=>{app.appearance.theme=button.dataset.theme;saveAppearance();applyAppearance()});
   $("fontScale").onchange=()=>{app.appearance.fontScale=$("fontScale").value;saveAppearance();applyAppearance()};
