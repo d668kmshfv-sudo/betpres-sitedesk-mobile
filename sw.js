@@ -1,3 +1,4 @@
+
 const CACHE="betpres-sitedesk-mobile-1.0.8";
 const SHELL=[
  "./",
@@ -6,6 +7,7 @@ const SHELL=[
  "./app.js",
  "./manifest.webmanifest",
  "./assets/betpres-logo.png",
+ "./assets/app-icon.png",
  "./assets/app-icon.svg",
  "./vendor/tesseract.min.js",
  "./vendor/worker.min.js",
