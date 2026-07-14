@@ -1,4 +1,4 @@
-const CACHE="betpres-sitedesk-mobile-1.0.7";
+const CACHE="betpres-sitedesk-mobile-1.0.8";
 const SHELL=[
  "./",
  "./index.html",
@@ -21,3 +21,4 @@ self.addEventListener("fetch",event=>{
  if(url.origin!==location.origin)return;
  event.respondWith(caches.match(event.request,{ignoreSearch:true}).then(cached=>cached||fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy))}return response}).catch(()=>caches.match("./index.html"))))
 });
+
