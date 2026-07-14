@@ -9,7 +9,7 @@
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#f3f7fa",
   "theme_color": "#f3f7fa",
   "categories": ["business", "productivity", "utilities"],
@@ -24,6 +24,8 @@
   "shortcuts": [
     {"name": "Dodací list", "short_name": "Materiál", "url": "./?open=materials"},
     {"name": "Vada alebo nedorobok", "short_name": "Vada", "url": "./?open=defects"},
-    {"name": "Stav pracovníkov", "short_name": "Pracovníci", "url": "./?open=workers"}
+    {"name": "Stav pracovníkov", "short_name": "Pracovníci", "url": "./?open=workers"},
+    {"name": "Koordinačná porada", "short_name": "Porada", "url": "./?open=meetings"}
   ]
 }
+
