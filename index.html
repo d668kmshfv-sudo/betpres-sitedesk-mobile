@@ -46,7 +46,7 @@
      <button class="quick-card material" type="button" data-action="add-material"><span>▤</span><b>Dodací list</b><small>Odfotiť alebo zapísať</small></button>
      <button class="quick-card defect" type="button" data-action="add-defect"><span>!</span><b>Vada / nedorobok</b><small>Pridať aj fotografiu</small></button>
      <button class="quick-card diary" type="button" data-action="add-diary"><span>✎</span><b>Denný zápis</b><small>Rýchla poznámka zo stavby</small></button>
-     <button class="quick-card workers" type="button" data-route="workers"><span>♟</span><b>Stav pracovníkov</b><small>Dnešné počty firiem</small></button>
+     <button class="quick-card workers" type="button" data-route="workers"><span>♟</span><b>Pracovníci</b><small>Firmy, BETPRES aj THP</small></button>
     </div>
     <section class="summary-card">
      <div class="section-title"><div><p class="eyebrow">DNES NA STAVBE</p><h2>Rýchly prehľad</h2></div><span id="homeProjectBadge" class="soft-badge">—</span></div>
@@ -79,8 +79,13 @@
 
    <section class="screen" data-screen="workers">
     <div class="screen-head"><div><p class="eyebrow">DENNÁ EVIDENCIA</p><h1>Stav pracovníkov</h1></div><button id="workerSaveButton" class="save-button" type="button">Uložiť</button></div>
+    <div id="workerModeSwitch" class="worker-mode-switch" role="tablist" aria-label="Typ smenovky">
+     <button class="active" type="button" data-worker-mode="companies">Firmy</button>
+     <button type="button" data-worker-mode="betpres">BETPRES</button>
+     <button type="button" data-worker-mode="thp">THP</button>
+    </div>
     <label class="date-card"><span>Dátum</span><input id="workerDate" type="date"></label>
-    <div class="worker-total"><div><small>Spolu na stavbe</small><strong><span id="workerTotal">0</span> osôb</strong></div><span id="workerCompanyCount" class="soft-badge">0 firiem</span></div>
+    <div class="worker-total"><div><small id="workerTotalLabel">Spolu na stavbe</small><strong><span id="workerTotal">0</span> <span id="workerTotalUnit">osôb</span></strong></div><span id="workerCompanyCount" class="soft-badge">0 firiem</span></div>
     <div id="workersList" class="worker-list"></div>
    </section>
 
@@ -127,7 +132,7 @@
      <div><p class="eyebrow">IPHONE</p><h2>Inštalácia na plochu</h2><p>Otvor túto stránku v Safari, stlač <b>Zdieľať</b> a potom <b>Pridať na plochu</b>.</p></div>
      <button id="installHelpButton" class="secondary-button full" type="button">Zobraziť postup</button>
     </section>
-    <p class="app-version">BETPRES SiteDesk Mobile 1.0.3 · kompatibilné so SiteDesk 5.0.50</p>
+    <p class="app-version">BETPRES SiteDesk Mobile 1.0.4 · kompatibilné so SiteDesk 5.0.50</p>
    </section>
   </main>
 
