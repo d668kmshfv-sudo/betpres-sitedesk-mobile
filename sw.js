@@ -1,11 +1,17 @@
-const CACHE="betpres-sitedesk-mobile-1.0.1";
+const CACHE="betpres-sitedesk-mobile-1.0.3";
 const SHELL=[
  "./",
  "./index.html",
  "./styles.css",
  "./app.js",
  "./manifest.webmanifest",
- "./assets/app-icon.svg"
+ "./assets/betpres-logo.png",
+ "./assets/app-icon.svg",
+ "./vendor/tesseract.min.js",
+ "./vendor/worker.min.js",
+ "./vendor/tesseract-core/tesseract-core-lstm.wasm.js",
+ "./vendor/tesseract-core/tesseract-core-lstm.wasm",
+ "./vendor/lang/slk.traineddata.gz"
 ];
 self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
