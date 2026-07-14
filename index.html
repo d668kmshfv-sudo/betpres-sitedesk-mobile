@@ -23,6 +23,9 @@
     <span><b>SiteDesk</b><small>MOBILE</small></span>
    </button>
    <div class="top-actions">
+    <button id="quickOpenButton" class="quick-open-button" type="button" aria-label="Rýchlo otvoriť modul">
+     <span aria-hidden="true">⌕</span><b>Rýchlo otvoriť</b><kbd>Ctrl K</kbd>
+    </button>
     <button id="syncButton" class="icon-button sync-button" type="button" aria-label="Synchronizovať">
      <span class="sync-icon">↻</span><i id="pendingBadge" hidden>0</i>
     </button>
@@ -79,7 +82,7 @@
    </section>
 
    <section class="screen" data-screen="workers">
-    <div class="screen-head"><div><p class="eyebrow">DENNÁ EVIDENCIA</p><h1>Stav pracovníkov</h1></div><button id="workerSaveButton" class="save-button" type="button">Uložiť</button></div>
+    <div class="screen-head"><div><p class="eyebrow">DENNÁ EVIDENCIA</p><h1>Stav pracovníkov</h1></div><div class="screen-actions"><button class="secondary-button focus-button" type="button" data-focus-toggle aria-pressed="false">Sústrediť</button><button id="workerSaveButton" class="save-button" type="button">Uložiť</button></div></div>
     <div id="workerModeSwitch" class="worker-mode-switch" role="tablist" aria-label="Typ smenovky">
      <button class="active" type="button" data-worker-mode="companies">Firmy</button>
      <button type="button" data-worker-mode="betpres">BETPRES</button>
@@ -91,7 +94,7 @@
    </section>
 
    <section class="screen" data-screen="meetings">
-    <div class="screen-head"><div><p class="eyebrow">ÚLOHY A DOHODY</p><h1>Koordinačné porady</h1></div><button class="primary-circle" type="button" data-action="new-coordination">+</button></div>
+    <div class="screen-head"><div><p class="eyebrow">ÚLOHY A DOHODY</p><h1>Koordinačné porady</h1></div><div class="screen-actions"><button class="secondary-button focus-button" type="button" data-focus-toggle aria-pressed="false">Sústrediť</button><button class="primary-circle" type="button" data-action="new-coordination">+</button></div></div>
     <div class="coordination-date-bar"><button id="coordinationPrev" type="button" aria-label="Predchádzajúca porada">‹</button><label>Dátum porady<input id="coordinationDate" type="date"></label><button id="coordinationNext" type="button" aria-label="Nasledujúca porada">›</button></div>
     <div id="coordinationEmpty" class="empty-state" hidden></div>
     <div id="coordinationWorkspace" class="coordination-mobile-workspace">
@@ -146,11 +149,13 @@
       <div><p class="eyebrow">IPHONE A IPAD</p><h2>Inštalácia na plochu</h2><p>Otvor túto stránku v Safari, stlač <b>Zdieľať</b> a potom <b>Pridať na plochu</b>.</p></div>
      <button id="installHelpButton" class="secondary-button full" type="button">Zobraziť postup</button>
     </section>
-    <p class="app-version">BETPRES SiteDesk Mobile 1.0.7 · iPhone a iPad · kompatibilné so SiteDesk 5.0.57</p>
+    <p class="app-version">BETPRES SiteDesk Mobile 1.0.8 · iPhone a iPad · kompatibilné so SiteDesk 5.0.57</p>
    </section>
   </main>
 
   <nav class="tabbar" aria-label="Hlavné menu">
+   <span class="tabbar-heading">PRACOVNÝ PRIESTOR</span>
+   <button class="tablet-only-nav" type="button" data-route="home"><span>⌂</span><small>Prehľad</small></button>
    <button type="button" data-route="materials"><span>▤</span><small>Materiál</small></button>
    <button type="button" data-route="defects"><span>!</span><small>Vady</small></button>
    <button type="button" data-route="workers"><span>♟</span><small>Pracovníci</small></button>
@@ -171,3 +176,4 @@
  <script src="app.js" defer></script>
 </body>
 </html>
+
