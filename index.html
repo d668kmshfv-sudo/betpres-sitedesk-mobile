@@ -47,6 +47,7 @@
      <button class="quick-card defect" type="button" data-action="add-defect"><span>!</span><b>Vada / nedorobok</b><small>Pridať aj fotografiu</small></button>
      <button class="quick-card diary" type="button" data-action="add-diary"><span>✎</span><b>Denný zápis</b><small>Rýchla poznámka zo stavby</small></button>
      <button class="quick-card workers" type="button" data-route="workers"><span>♟</span><b>Pracovníci</b><small>Firmy, BETPRES aj THP</small></button>
+     <button class="quick-card meetings" type="button" data-route="meetings"><span>◫</span><b>Koordinačná porada</b><small>Úlohy a firmy priamo na stavbe</small></button>
     </div>
     <section class="summary-card">
      <div class="section-title"><div><p class="eyebrow">DNES NA STAVBE</p><h2>Rýchly prehľad</h2></div><span id="homeProjectBadge" class="soft-badge">—</span></div>
@@ -89,6 +90,19 @@
     <div id="workersList" class="worker-list"></div>
    </section>
 
+   <section class="screen" data-screen="meetings">
+    <div class="screen-head"><div><p class="eyebrow">ÚLOHY A DOHODY</p><h1>Koordinačné porady</h1></div><button class="primary-circle" type="button" data-action="new-coordination">+</button></div>
+    <div class="coordination-date-bar"><button id="coordinationPrev" type="button" aria-label="Predchádzajúca porada">‹</button><label>Dátum porady<input id="coordinationDate" type="date"></label><button id="coordinationNext" type="button" aria-label="Nasledujúca porada">›</button></div>
+    <div id="coordinationEmpty" class="empty-state" hidden></div>
+    <div id="coordinationWorkspace" class="coordination-mobile-workspace">
+     <section class="coordination-summary-card"><div><p class="eyebrow">AKTUÁLNY ZÁPIS</p><h2 id="coordinationTitle">Koordinačná porada</h2><p id="coordinationMeta"></p></div><button id="coordinationEditInfo" class="secondary-button" type="button">Upraviť údaje</button></section>
+     <div class="stats-row coordination-stats"><article><small>Otvorené úlohy</small><strong id="coordinationOpenCount">0</strong></article><article><small>Firmy</small><strong id="coordinationCompanyCount">0</strong></article><article><small>Účastníci</small><strong id="coordinationAttendeeCount">0</strong></article></div>
+     <section class="coordination-text-card"><div><small>Program</small><p id="coordinationAgenda"></p></div><div><small>Poznámky</small><p id="coordinationNotes"></p></div></section>
+     <div class="section-title coordination-section-title"><div><p class="eyebrow">ÚLOHY PODĽA FIRIEM</p><h2>Body porady</h2></div><button id="coordinationAddCompany" class="secondary-button" type="button">+ Pridať firmu</button></div>
+     <div id="coordinationCompanyList" class="coordination-company-list"></div>
+    </div>
+   </section>
+
    <section class="screen" data-screen="calendar">
     <div class="screen-head"><div><p class="eyebrow">TERMÍNY A ÚLOHY</p><h1>Kalendár</h1></div><button class="primary-circle" type="button" data-action="add-event">+</button></div>
     <div class="month-switch"><button id="calendarPrev" type="button">‹</button><strong id="calendarMonthLabel"></strong><button id="calendarNext" type="button">›</button></div>
@@ -129,10 +143,10 @@
      <p id="cloudMessage" class="form-message"></p>
     </section>
     <section class="settings-card install-card">
-     <div><p class="eyebrow">IPHONE</p><h2>Inštalácia na plochu</h2><p>Otvor túto stránku v Safari, stlač <b>Zdieľať</b> a potom <b>Pridať na plochu</b>.</p></div>
+      <div><p class="eyebrow">IPHONE A IPAD</p><h2>Inštalácia na plochu</h2><p>Otvor túto stránku v Safari, stlač <b>Zdieľať</b> a potom <b>Pridať na plochu</b>.</p></div>
      <button id="installHelpButton" class="secondary-button full" type="button">Zobraziť postup</button>
     </section>
-    <p class="app-version">BETPRES SiteDesk Mobile 1.0.6 · kompatibilné so SiteDesk 5.0.57</p>
+    <p class="app-version">BETPRES SiteDesk Mobile 1.0.7 · iPhone a iPad · kompatibilné so SiteDesk 5.0.57</p>
    </section>
   </main>
 
@@ -140,6 +154,7 @@
    <button type="button" data-route="materials"><span>▤</span><small>Materiál</small></button>
    <button type="button" data-route="defects"><span>!</span><small>Vady</small></button>
    <button type="button" data-route="workers"><span>♟</span><small>Pracovníci</small></button>
+   <button type="button" data-route="meetings"><span>◫</span><small>Porady</small></button>
    <button type="button" data-route="calendar"><span>▣</span><small>Kalendár</small></button>
    <button type="button" data-route="diary"><span>✎</span><small>Denník</small></button>
   </nav>
