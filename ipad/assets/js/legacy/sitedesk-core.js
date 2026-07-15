@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.0.75";
+const SITE_DESK_APP_VERSION="5.0.76";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";

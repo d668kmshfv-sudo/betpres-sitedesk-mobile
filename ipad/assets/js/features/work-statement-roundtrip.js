@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var TEMPLATE_VERSION = "BETPRES-WS-1";
+ var TEMPLATE_VERSION = "BETPRES-WS-2";
  var pendingImport = null;
 
  function byId(id) { return document.getElementById(id); }
@@ -43,6 +43,23 @@
   return String(item.currentQty == null ? "" : item.currentQty).trim() === "" ? "" : calculated.currentQty;
  }
 
+ function synchronizeStatementBudgets(statement) {
+  var added = 0;
+  if (typeof workBudgetList === "function" && typeof addBudgetItemsToStatement === "function") {
+   (workBudgetList(statement.companyId) || []).forEach(function (budget) {
+    added += addBudgetItemsToStatement(statement, budget, { replace: false });
+   });
+  }
+  var itemCount = (statement.items || []).filter(function (item) { return !isWorkDocSectionItem(item); }).length;
+  if (added) {
+   statement.updatedAt = new Date().toISOString();
+   if (typeof commitDirectState === "function") commitDirectState();
+   if (typeof renderWorkStatements === "function") renderWorkStatements();
+  }
+  if (!itemCount) throw new Error("Súpis nemá žiadne položky. Najprv importuj rozpočet ZoD alebo dodatku, prípadne pridaj položky do otvoreného dokladu.");
+  return itemCount;
+ }
+
  function workbookStyles() {
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
@@ -64,30 +81,30 @@
     '<fill><patternFill patternType="solid"><fgColor rgb="FF174F7F"/></patternFill></fill>' +
     '<fill><patternFill patternType="solid"><fgColor rgb="FFFFFFFF"/></patternFill></fill>' +
    '</fills>' +
-   '<borders count="2"><border/><border><left style="thin"><color rgb="FFA9BAC8"/></left><right style="thin"><color rgb="FFA9BAC8"/></right><top style="thin"><color rgb="FFA9BAC8"/></top><bottom style="thin"><color rgb="FFA9BAC8"/></bottom></border></borders>' +
-   '<cellStyleXfs count="1"><xf/></cellStyleXfs>' +
+   '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFA9BAC8"/></left><right style="thin"><color rgb="FFA9BAC8"/></right><top style="thin"><color rgb="FFA9BAC8"/></top><bottom style="thin"><color rgb="FFA9BAC8"/></bottom><diagonal/></border></borders>' +
+   '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
    '<cellXfs count="20">' +
-    '<xf/>' +
-    '<xf fontId="1" fillId="8" applyFill="1" applyFont="1"><alignment horizontal="center" vertical="center"/></xf>' +
-    '<xf fontId="3" fillId="3" borderId="1" applyFill="1" applyFont="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>' +
-    '<xf fontId="2" fillId="2" borderId="1" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
-    '<xf fontId="3" fillId="4" borderId="1" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
-    '<xf fontId="3" fillId="5" borderId="1" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
-    '<xf fontId="3" fillId="6" borderId="1" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
-    '<xf fontId="2" fillId="7" borderId="1" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
-    '<xf borderId="1" applyBorder="1"><alignment vertical="center"/></xf>' +
-    '<xf borderId="1" applyBorder="1"><alignment vertical="center"/></xf>' +
-    '<xf numFmtId="164" borderId="1" applyNumberFormat="1" applyBorder="1"><alignment horizontal="right" vertical="center"/></xf>' +
-    '<xf numFmtId="165" borderId="1" applyNumberFormat="1" applyBorder="1"><alignment horizontal="right" vertical="center"/></xf>' +
-    '<xf fontId="2" fillId="7" borderId="1" applyFill="1" applyFont="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>' +
-    '<xf fontId="2" fillId="2" borderId="1" applyFill="1" applyFont="1" applyBorder="1"><alignment vertical="center"/></xf>' +
-    '<xf fontId="3" fillId="3" borderId="1" numFmtId="165" applyFill="1" applyFont="1" applyBorder="1" applyNumberFormat="1"><alignment horizontal="right" vertical="center"/></xf>' +
-    '<xf borderId="1" applyBorder="1"><alignment vertical="top" wrapText="1"/></xf>' +
-    '<xf fontId="3" fillId="4" borderId="1" numFmtId="164" applyFill="1" applyFont="1" applyBorder="1" applyNumberFormat="1" applyProtection="1"><alignment horizontal="right" vertical="center"/><protection locked="0"/></xf>' +
-    '<xf fontId="3" fillId="4" borderId="1" numFmtId="165" applyFill="1" applyFont="1" applyBorder="1" applyNumberFormat="1"><alignment horizontal="right" vertical="center"/></xf>' +
-    '<xf fontId="4"><alignment horizontal="left"/></xf>' +
-    '<xf fontId="3" fillId="3" borderId="1" numFmtId="164" applyFill="1" applyFont="1" applyBorder="1" applyNumberFormat="1"><alignment horizontal="right" vertical="center"/></xf>' +
-   '</cellXfs></styleSheet>';
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+    '<xf numFmtId="0" fontId="1" fillId="8" borderId="0" xfId="0" applyFill="1" applyFont="1"><alignment horizontal="center" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="3" fillId="3" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="3" fillId="4" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="3" fillId="5" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="3" fillId="6" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="2" fillId="7" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment vertical="center"/></xf>' +
+    '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"><alignment horizontal="right" vertical="center"/></xf>' +
+    '<xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"><alignment horizontal="right" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="2" fillId="7" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>' +
+    '<xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1"><alignment vertical="center"/></xf>' +
+    '<xf numFmtId="165" fontId="3" fillId="3" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1" applyNumberFormat="1"><alignment horizontal="right" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment vertical="top" wrapText="1"/></xf>' +
+    '<xf numFmtId="164" fontId="3" fillId="4" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1" applyNumberFormat="1" applyProtection="1"><alignment horizontal="right" vertical="center"/><protection locked="0"/></xf>' +
+    '<xf numFmtId="165" fontId="3" fillId="4" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1" applyNumberFormat="1"><alignment horizontal="right" vertical="center"/></xf>' +
+    '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0"><alignment horizontal="left"/></xf>' +
+    '<xf numFmtId="164" fontId="3" fillId="3" borderId="1" xfId="0" applyFill="1" applyFont="1" applyBorder="1" applyNumberFormat="1"><alignment horizontal="right" vertical="center"/></xf>' +
+   '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles><dxfs count="0"/><tableStyles count="0" defaultTableStyle="TableStyleMedium2" defaultPivotStyle="PivotStyleLight16"/></styleSheet>';
  }
 
  async function logoBytes() {
@@ -99,6 +116,7 @@
  }
 
  async function buildWorkStatementWorkbook(statement) {
+  synchronizeStatementBudgets(statement);
   var projectData = activeProject();
   var companyData = company(statement.companyId);
   var assignmentData = assignment(statement.projectId, statement.companyId);
@@ -185,6 +203,76 @@
   return zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
  }
 
+ async function buildExcelJsWorkStatementWorkbook(statement) {
+  synchronizeStatementBudgets(statement);
+  if (!window.ExcelJS) throw new Error("Knižnica pre vytvorenie Excelu sa nenačítala. Reštartuj aplikáciu a skús export znova.");
+  var projectData = activeProject(), companyData = company(statement.companyId), assignmentData = assignment(statement.projectId, statement.companyId);
+  var documentShort = assignmentDocShort(assignmentData), sourceItems = workItemsWithDocumentSections(statement);
+  var workbook = new window.ExcelJS.Workbook();
+  workbook.creator = "BETPRES SiteDesk";
+  workbook.company = "BETPRES, s.r.o.";
+  workbook.created = new Date();
+  workbook.modified = new Date();
+  workbook.calcProperties.fullCalcOnLoad = true;
+  var sheet = workbook.addWorksheet("Súpis prác", {
+   views: [{ state: "frozen", ySplit: 7, activeCell: "I8", showGridLines: false }],
+   pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.25, right: 0.25, top: 0.45, bottom: 0.45, header: 0.2, footer: 0.2 } },
+   headerFooter: { oddHeader: "&C&B" + (companyData && companyData.name || ""), oddFooter: "&LBETPRES SiteDesk&CStrana &P / &N&R" + formatBillingMonth(statement.period) },
+   properties: { defaultRowHeight: 20 }
+  });
+  var widths = [6,6,18,62,7,14,14,14,14,14,14,14,14,14,2,2,2,2];
+  widths.forEach(function (width, index) { sheet.getColumn(index + 1).width = width; if (index >= 14) sheet.getColumn(index + 1).hidden = true; });
+  sheet.mergeCells("A1:B1"); sheet.mergeCells("C1:N1"); sheet.mergeCells("A2:G2"); sheet.mergeCells("H2:N2");
+  sheet.mergeCells("A3:D3"); sheet.mergeCells("E3:H3"); sheet.mergeCells("I3:K3"); sheet.mergeCells("L3:N3"); sheet.mergeCells("A4:N4");
+  sheet.mergeCells("A6:E6"); sheet.mergeCells("F6:H6"); sheet.mergeCells("I6:J6"); sheet.mergeCells("K6:L6"); sheet.mergeCells("M6:N6");
+  sheet.getCell("C1").value = "SÚPIS VYKONANÝCH PRÁC – EXCEL PRE SUBDODÁVATEĽA";
+  sheet.getCell("A2").value = "OBJEDNÁVATEĽ: BETPRES, s.r.o.";
+  sheet.getCell("H2").value = "ZHOTOVITEĽ: " + (companyData && companyData.name || "");
+  sheet.getCell("A3").value = "STAVBA: " + (projectData && projectData.name || "");
+  sheet.getCell("E3").value = documentShort + " č.: " + (assignmentData && assignmentData.contractNo || "—");
+  sheet.getCell("I3").value = "OBDOBIE: " + formatBillingMonth(statement.period);
+  sheet.getCell("L3").value = "SÚPIS č. " + (statement.number || "—") + " · " + fmtDateISO(statement.statementDate);
+  sheet.getCell("A4").value = "POKYNY: Vyplň iba zelené bunky v stĺpci AKTUÁLNY MESIAC – MNOŽSTVO. Ostatné údaje sú chránené a program ich po vrátení skontroluje.";
+  [["A6","POLOŽKY"],["F6","ROZPOČET (" + documentShort + ")"],["I6","AKTUÁLNY MESIAC"],["K6","DOTERAZ ČERPANÉ"],["M6","ZOSTÁVA ČERPAŤ"]].forEach(function (entry) { sheet.getCell(entry[0]).value = entry[1]; });
+  ["TYP","KÓD","PODKÓD","POPIS POLOŽKY","MJ","MNOŽSTVO","J. CENA €","CENA €","MNOŽSTVO","CENA €","MNOŽSTVO","CENA €","MNOŽSTVO","CENA €","BETPRES_ITEM_ID","BETPRES_STATEMENT_ID","BETPRES_TEMPLATE_VERSION","BETPRES_SOURCE"].forEach(function (value, index) { sheet.getCell(7, index + 1).value = value; });
+
+  var navy = "FF082F61", blue = "FF174F7F", pale = "FFEAF2F8", green = "FFE3F4E9", amber = "FFFFF3D8", remaining = "FFE6F0F8", borderColor = "FFA9BAC8";
+  sheet.getRow(1).height = 42; sheet.getRow(2).height = 24; sheet.getRow(3).height = 24; sheet.getRow(4).height = 28; sheet.getRow(5).height = 8; sheet.getRow(6).height = 26; sheet.getRow(7).height = 32;
+  sheet.getCell("C1").font = { name: "Aptos Display", size: 18, bold: true, color: { argb: navy } }; sheet.getCell("C1").alignment = { horizontal: "center", vertical: "middle" };
+  ["A2","H2","A3","E3","I3","L3"].forEach(function (ref) { sheet.getCell(ref).font = { name: "Aptos", size: 9, bold: true, color: { argb: "FF173753" } }; sheet.getCell(ref).fill = { type: "pattern", pattern: "solid", fgColor: { argb: pale } }; sheet.getCell(ref).alignment = { vertical: "middle", wrapText: true }; });
+  sheet.getCell("A4").font = { name: "Aptos", size: 9, bold: true, color: { argb: "FF173753" } }; sheet.getCell("A4").fill = { type: "pattern", pattern: "solid", fgColor: { argb: green } }; sheet.getCell("A4").alignment = { vertical: "middle", wrapText: true };
+  [["A6",navy],["F6",navy],["I6",green],["K6",amber],["M6",remaining]].forEach(function (entry) { var cellItem = sheet.getCell(entry[0]); cellItem.fill = { type: "pattern", pattern: "solid", fgColor: { argb: entry[1] } }; cellItem.font = { name: "Aptos", size: 9, bold: true, color: { argb: entry[1] === navy ? "FFFFFFFF" : "FF173753" } }; cellItem.alignment = { horizontal: "center", vertical: "middle", wrapText: true }; });
+  sheet.getRow(7).eachCell({ includeEmpty: true }, function (cellItem, colNumber) { cellItem.fill = { type: "pattern", pattern: "solid", fgColor: { argb: colNumber <= 8 ? blue : colNumber <= 10 ? green : colNumber <= 12 ? amber : remaining } }; cellItem.font = { name: "Aptos", size: 9, bold: true, color: { argb: colNumber <= 8 ? "FFFFFFFF" : "FF173753" } }; cellItem.alignment = { horizontal: "center", vertical: "middle", wrapText: true }; });
+
+  sourceItems.forEach(function (item, index) {
+   var rowNumber = index + 8, row = sheet.getRow(rowNumber), calculated = workItemCalc(statement, item), section = String(item.type || "").toUpperCase() === "D", priceOnly = isWorkPriceOnlyItem(item);
+   row.height = section ? 21 : 23;
+   if (section) {
+    [item.pc || "", item.type || "D", item.code || "", item.description || "", "", "", "", "", "", "", "", "", "", "", item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || ""].forEach(function (value, column) { row.getCell(column + 1).value = value; });
+    sheet.mergeCells("D" + rowNumber + ":N" + rowNumber);
+    row.eachCell({ includeEmpty: true }, function (cellItem) { cellItem.fill = { type: "pattern", pattern: "solid", fgColor: { argb: blue } }; cellItem.font = { name: "Aptos", size: 9, bold: true, color: { argb: "FFFFFFFF" } }; cellItem.alignment = { vertical: "middle", wrapText: true }; });
+   } else {
+    var currentValue = itemCurrentValue(item, calculated);
+    [item.pc || "", item.type || "K", item.code || "", item.description || "", item.unit || "", priceOnly ? null : calculated.contractQty, priceOnly ? null : calculated.unitPrice, calculated.contractTotal, priceOnly || currentValue === "" ? null : Number(currentValue), null, priceOnly ? null : calculated.previousQty, calculated.previousPrice, priceOnly ? null : calculated.remainingQty, calculated.remainingPrice, item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || "ZoD"].forEach(function (value, column) { row.getCell(column + 1).value = value; });
+    if (!priceOnly) row.getCell(10).value = { formula: 'IF(I' + rowNumber + '=0,"",I' + rowNumber + '*G' + rowNumber + ')', result: currentValue === "" ? 0 : calculated.currentPrice };
+    row.eachCell({ includeEmpty: true }, function (cellItem, colNumber) { cellItem.font = { name: "Aptos", size: 9, color: { argb: "FF102A43" } }; cellItem.alignment = { vertical: colNumber === 4 ? "top" : "middle", horizontal: colNumber >= 6 && colNumber <= 14 ? "right" : "left", wrapText: colNumber === 4 }; if ([6,9,11,13].includes(colNumber)) cellItem.numFmt = "0.000"; else if ([7,8,10,12,14].includes(colNumber)) cellItem.numFmt = "#,##0.00"; });
+    row.getCell(9).fill = { type: "pattern", pattern: "solid", fgColor: { argb: green } }; row.getCell(9).font = { name: "Aptos", size: 9, bold: true, color: { argb: "FF173753" } }; row.getCell(9).protection = { locked: false };
+   }
+  });
+  var firstDataRow = 8, lastDataRow = Math.max(firstDataRow, sourceItems.length + 7), summaryRow = sourceItems.length + 8;
+  sheet.mergeCells("A" + summaryRow + ":G" + summaryRow); sheet.getCell("A" + summaryRow).value = "CELKOM (bez DPH)";
+  [[8,"SUM(H"+firstDataRow+":H"+lastDataRow+")"],[9,"SUM(I"+firstDataRow+":I"+lastDataRow+")"],[10,"SUM(J"+firstDataRow+":J"+lastDataRow+")"],[11,"SUM(K"+firstDataRow+":K"+lastDataRow+")"],[12,"SUM(L"+firstDataRow+":L"+lastDataRow+")"],[13,"SUM(M"+firstDataRow+":M"+lastDataRow+")"],[14,"SUM(N"+firstDataRow+":N"+lastDataRow+")"]].forEach(function (entry) { sheet.getCell(summaryRow, entry[0]).value = { formula: entry[1], result: 0 }; });
+  sheet.getRow(summaryRow).height = 25; sheet.getRow(summaryRow).eachCell({ includeEmpty: true }, function (cellItem, colNumber) { cellItem.fill = { type: "pattern", pattern: "solid", fgColor: { argb: colNumber === 9 || colNumber === 10 ? green : pale } }; cellItem.font = { name: "Aptos", size: 9, bold: true, color: { argb: "FF173753" } }; cellItem.alignment = { vertical: "middle", horizontal: colNumber >= 8 ? "right" : "left" }; if (colNumber >= 8 && colNumber <= 14) cellItem.numFmt = colNumber % 2 ? "0.000" : "#,##0.00"; });
+  sheet.eachRow(function (row) { row.eachCell({ includeEmpty: true }, function (cellItem, colNumber) { if (colNumber <= 14) cellItem.border = { top: { style: "thin", color: { argb: borderColor } }, left: { style: "thin", color: { argb: borderColor } }, bottom: { style: "thin", color: { argb: borderColor } }, right: { style: "thin", color: { argb: borderColor } } }; }); });
+  for (var rowNumber = 8; rowNumber <= lastDataRow; rowNumber += 1) sheet.getCell("I" + rowNumber).dataValidation = { type: "decimal", operator: "between", allowBlank: true, showErrorMessage: true, errorTitle: "Neplatné množstvo", error: "Zadaj číslo, napríklad 12,5.", formulae: [-999999999, 999999999] };
+  var logo = await logoBytes();
+  if (logo) { var imageId = workbook.addImage({ buffer: new Uint8Array(logo), extension: "png" }); sheet.addImage(imageId, { tl: { col: 0.15, row: 0.15 }, br: { col: 1.9, row: 1.15 }, editAs: "oneCell" }); }
+  sheet.pageSetup.printArea = "A1:N" + summaryRow;
+  await sheet.protect("", { selectLockedCells: false, selectUnlockedCells: true, formatCells: false, formatColumns: false, formatRows: false, insertRows: false, deleteRows: false });
+  var buffer = await workbook.xlsx.writeBuffer();
+  return new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+ }
+
  function numericValue(raw) {
   var normalized = String(raw == null ? "" : raw).trim().replace(/\s/g, "").replace(",", ".");
   if (!normalized) return { blank: true, ok: true, value: 0 };
@@ -231,6 +319,62 @@
   return { fatal: "", updates: updates, invalid: invalid, unchanged: unchanged, skipped: skipped, totalDelta: workRound(totalDelta, 2) };
  }
 
+ function normalizedSearch(value) {
+  return String(value == null ? "" : value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+ }
+ function fileDataUrl(file) {
+  return new Promise(function (resolve, reject) {
+   var reader = new FileReader();
+   reader.onload = function () { resolve(String(reader.result || "")); };
+   reader.onerror = function () { reject(reader.error || new Error("Súbor sa nepodarilo načítať.")); };
+   reader.readAsDataURL(file);
+  });
+ }
+ function pdfPageRows(page) {
+  var rows = [];
+  (page.items || []).slice().sort(function (a, b) { return b.y - a.y || a.x - b.x; }).forEach(function (item) {
+   var row = rows.find(function (candidate) { return Math.abs(candidate.y - item.y) <= 2.8; });
+   if (!row) { row = { y: item.y, items: [] }; rows.push(row); }
+   row.items.push(item);
+  });
+  rows.forEach(function (row) { row.items.sort(function (a, b) { return a.x - b.x; }); row.text = row.items.map(function (item) { return item.text; }).join(" "); });
+  return rows;
+ }
+ function workResultFromPdf(pages, statement) {
+  var allText = normalizedSearch((pages || []).flatMap(function (page) { return (page.items || []).map(function (item) { return item.text; }); }).join(" "));
+  var companyName = normalizedSearch((company(statement.companyId) || {}).name || "");
+  var periodName = normalizedSearch(formatBillingMonth(statement.period));
+  if ((companyName && !allText.includes(companyName)) || (periodName && !allText.includes(periodName))) {
+   return { fatal: "PDF patrí k inej firme alebo k inému mesiacu. Otvor správny súpis a načítaj súbor znova.", updates: [], invalid: [], unchanged: 0, skipped: 0, totalDelta: 0 };
+  }
+  var candidates = (statement.items || []).filter(function (item) { return String(item.type || "").toUpperCase() !== "D" && !isWorkPriceOnlyItem(item); });
+  var updates = [], invalid = [], unchanged = 0, skipped = 0, totalDelta = 0;
+  (pages || []).forEach(function (page) {
+   var header = (page.items || []).filter(function (item) { return normalizedSearch(item.text).includes("aktualny mesiac"); }).sort(function (a, b) { return String(a.text || "").length - String(b.text || "").length; })[0];
+   if (!header) return;
+   var quantityMinX = header.x - 18, quantityMaxX = header.x + 44;
+   pdfPageRows(page).forEach(function (row) {
+    var rowSearch = normalizedSearch(row.text);
+    var item = candidates.find(function (candidate) {
+     var code = normalizedSearch(candidate.code || ""), description = normalizedSearch(candidate.description || "").slice(0, 34), pc = normalizedSearch(candidate.pc || "");
+     return (code && rowSearch.includes(code)) || (description.length >= 12 && rowSearch.includes(description)) || (!code && pc && rowSearch.startsWith(pc + " "));
+    });
+    if (!item || updates.some(function (update) { return update.item.id === item.id; })) return;
+    var quantityCell = row.items.find(function (cellItem) { return cellItem.x >= quantityMinX && cellItem.x <= quantityMaxX && /^[-+]?\s*[0-9][0-9\s.,]*$/.test(String(cellItem.text || "").trim()); });
+    if (!quantityCell) return;
+    var parsed = numericValue(quantityCell.text);
+    if (!parsed.ok || parsed.blank) { invalid.push({ row: "PDF", item: item, raw: quantityCell.text }); return; }
+    var oldValue = parseWorkNumber(item.currentQty), newValue = workRound(parsed.value, 6);
+    if (Math.abs(oldValue - newValue) < 0.0000005) { unchanged += 1; return; }
+    var calculated = workItemCalc(statement, item), delta = workRound((newValue - oldValue) * calculated.unitPrice, 2);
+    totalDelta += delta;
+    updates.push({ item: item, oldValue: oldValue, newValue: newValue, delta: delta, over: newValue + calculated.previousQty > calculated.contractQty + 0.0005, negative: newValue < 0, row: "PDF" });
+   });
+  });
+  if (!updates.length && !invalid.length) return { fatal: "V PDF sa nenašli doplnené množstvá v stĺpci Aktuálny mesiac. PDF musí pochádzať z BETPRES šablóny a obsahovať čitateľný text; pri skene použi vrátený Excel.", updates: [], invalid: [], unchanged: unchanged, skipped: skipped, totalDelta: 0 };
+  return { fatal: "", updates: updates, invalid: invalid, unchanged: unchanged, skipped: skipped, totalDelta: workRound(totalDelta, 2) };
+ }
+
  function showImportPreview(result, fileName, statement) {
   pendingImport = { result: result, statementId: statement.id, fileName: fileName };
   byId("workReturnFileName").textContent = fileName + " · " + (company(statement.companyId) && company(statement.companyId).name || "") + " · " + formatBillingMonth(statement.period);
@@ -255,21 +399,30 @@
  async function readReturnedFile(file) {
   var statement = getWorkStatement(false);
   if (!statement) throw new Error("Najprv otvor súpis firmy a mesiaca, ku ktorému Excel patrí.");
-  var rows = await parseXlsx(file);
-  var result = parseReturnedWorkbook(rows, statement);
+  synchronizeStatementBudgets(statement);
+  var isPdf = /\.pdf$/i.test(file.name || "") || file.type === "application/pdf";
+  var result;
+  if (isPdf) {
+   if (!window.betpresDesktop || typeof window.betpresDesktop.extractWorkStatementPdf !== "function") throw new Error("Import PDF je dostupný v nainštalovanej počítačovej aplikácii. Na iPade použi vyplnený Excel.");
+   var extracted = await window.betpresDesktop.extractWorkStatementPdf({ dataUrl: await fileDataUrl(file) });
+   result = workResultFromPdf(extracted && extracted.pages || [], statement);
+  } else {
+   var rows = await parseXlsx(file);
+   result = parseReturnedWorkbook(rows, statement);
+  }
   showImportPreview(result, file.name || "Vyplnený súpis.xlsx", statement);
   return result;
  }
 
  var exportButton = byId("exportWorkXlsx");
  if (exportButton) exportButton.onclick = async function () {
-  var statement = getWorkStatement(false);
+  var statement = getWorkStatement(true);
   if (!statement) return;
   exportButton.disabled = true;
   var original = exportButton.textContent;
   exportButton.textContent = "Pripravujem Excel…";
   try {
-   var blob = await buildWorkStatementWorkbook(statement);
+   var blob = await buildExcelJsWorkStatementWorkbook(statement);
    downloadWorkBlob(blob, workFileBase(statement) + "-pre-subdodavatela.xlsx");
    if (typeof toast === "function") toast("Excel pre subdodávateľa bol pripravený.");
   } catch (error) {
@@ -289,7 +442,7 @@
    if (!file) return;
    importButton.disabled = true;
    var original = importButton.textContent;
-   importButton.textContent = "Kontrolujem Excel…";
+   importButton.textContent = "Kontrolujem súpis…";
    try { await readReturnedFile(file); }
    catch (error) { alert("Excel sa nepodarilo načítať: " + (error && error.message ? error.message : error)); }
    finally { importButton.disabled = false; importButton.textContent = original; }
@@ -321,7 +474,7 @@
    Object.assign(item, { pc: "1", type: "K", code: "TEST-001", description: "Test návratového Excelu", unit: "m2", contractQty: "100", unitPrice: "12,50", currentQty: "" });
    statement.items.push(item);
   }
-  var blob = await buildWorkStatementWorkbook(statement);
+  var blob = await buildExcelJsWorkStatementWorkbook(statement);
   var archive = await JSZip.loadAsync(blob);
   ["xl/worksheets/sheet1.xml", "xl/styles.xml", "xl/drawings/drawing1.xml", "xl/media/image1.png"].forEach(function (path) {
    if (!archive.file(path)) throw new Error("V Excel šablóne chýba súčasť: " + path);
@@ -340,4 +493,5 @@
   if (showPreview) showImportPreview(result, "Test-vyplneny-supis.xlsx", statement);
   return { ok: true, blobSize: blob.size, rows: rows.length, updates: result.updates.length, itemId: item.id, newValue: nextValue, logo: true, template: TEMPLATE_VERSION };
  };
+ window.__BETPRES_BUILD_WORK_XLSX__ = buildExcelJsWorkStatementWorkbook;
 })();

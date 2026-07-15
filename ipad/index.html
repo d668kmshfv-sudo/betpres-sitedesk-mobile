@@ -2,10 +2,10 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk iPad"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk iPad 1.0.0</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css"><link rel="stylesheet" href="assets/styles/appearance-settings.css"><link rel="stylesheet" href="assets/styles/ai-assistant.css"><link rel="stylesheet" href="assets/styles/material-samples.css"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.0.0">
+<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk iPad"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk iPad 1.0.1</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css"><link rel="stylesheet" href="assets/styles/appearance-settings.css"><link rel="stylesheet" href="assets/styles/ai-assistant.css"><link rel="stylesheet" href="assets/styles/material-samples.css"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.0.1">
 
-<script src="assets/js/ipad-bridge.js?v=1.0.0"></script>
+<script src="assets/js/ipad-bridge.js?v=1.0.1"></script>
 <script src="assets/js/bootstrap/startup-guard.js"></script>
 
 </head>
@@ -366,14 +366,14 @@
   <span class="work-visible-count" id="workVisibleCount"></span>
   <span class="work-spacer"></span>
   <button class="ghost" id="exportWorkXlsx">Excel pre subdodávateľa</button>
-  <button class="ghost" id="importCompletedWorkXlsx">Načítať vyplnený Excel</button>
-  <input id="completedWorkXlsxFile" class="hidden" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+  <button class="ghost" id="importCompletedWorkXlsx">Načítať vyplnený Excel / PDF</button>
+  <input id="completedWorkXlsxFile" class="hidden" type="file" accept=".xlsx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
   <button class="ghost" id="exportWorkPdf">Náhľad / tlač PDF</button>
   <button class="ghost" id="exportWorkCsv">Export CSV</button>
  </div>
 
  <div class="work-paste-tip">
-  Najskôr hore vyber <strong>ZoD</strong> alebo konkrétny <strong>Dodatok</strong>. Nové aj vložené položky sa uložia iba do otvoreného dokladu. <strong>Export súpisu vždy obsahuje ZoD aj všetky dodatky.</strong><span class="formula-tip">Pre subdodávateľa použi „Excel pre subdodávateľa“. Vyplní iba zelené množstvá aktuálneho mesiaca a vrátený súbor načítaš bez prepisovania položiek.</span>
+  Najskôr hore vyber <strong>ZoD</strong> alebo konkrétny <strong>Dodatok</strong>. Nové aj vložené položky sa uložia iba do otvoreného dokladu. <strong>Export súpisu vždy obsahuje ZoD aj všetky dodatky.</strong><span class="formula-tip">Subdodávateľ v Exceli vypĺňa iba zelené množstvá aktuálneho mesiaca. Späť môžeš načítať XLSX; PDF načítaj v počítačovej aplikácii.</span>
  </div>
 
  <article class="panel no-pad work-table-panel">
@@ -1097,7 +1097,7 @@
 
 <div class="modal hidden" id="workReturnImportModal"><div class="modal-card wide work-return-card">
  <div class="modal-head">
-  <div><p>NÁVRATOVÝ EXCEL OD SUBDODÁVATEĽA</p><h2>Kontrola doplneného súpisu</h2></div>
+  <div><p>NÁVRATOVÝ SÚPIS OD SUBDODÁVATEĽA</p><h2>Kontrola doplneného súpisu</h2></div>
   <button class="close" data-close="workReturnImportModal">×</button>
  </div>
  <div class="work-return-file" id="workReturnFileName">—</div>
@@ -1522,7 +1522,7 @@ Marek Kováč"></textarea>
 </div>
 
 <div id="toast" class="toast"></div>
-<script src="assets/js/data/seed-data.js"></script><script src="assets/js/data/material-passport-data.js"></script><script src="assets/js/vendor/jszip.min.js"></script>
+<script src="assets/js/data/seed-data.js"></script><script src="assets/js/data/material-passport-data.js"></script><script src="assets/js/vendor/jszip.min.js"></script><script src="assets/js/vendor/exceljs.min.js"></script>
 <script src="assets/js/legacy/sitedesk-core.js"></script>
 <script src="assets/js/features/work-spreadsheet.js"></script>
 <script src="assets/js/features/work-statement-roundtrip.js"></script>
