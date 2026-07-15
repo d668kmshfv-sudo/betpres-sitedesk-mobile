@@ -1,0 +1,67 @@
+:root {
+  --ipad-safe-top: env(safe-area-inset-top, 0px);
+  --ipad-safe-right: env(safe-area-inset-right, 0px);
+  --ipad-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ipad-safe-left: env(safe-area-inset-left, 0px);
+}
+
+html, body.ipad-web { min-height: 100%; overscroll-behavior-y: none; }
+body.ipad-web {
+  padding-top: var(--ipad-safe-top);
+  padding-right: var(--ipad-safe-right);
+  padding-bottom: var(--ipad-safe-bottom);
+  padding-left: var(--ipad-safe-left);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+.ipad-web button,
+.ipad-web select,
+.ipad-web input:not([type="checkbox"]):not([type="radio"]),
+.ipad-web textarea,
+.ipad-web .nav-item { min-height: 44px; }
+
+.ipad-web button, .ipad-web .nav-item, .ipad-web [data-go] { touch-action: manipulation; }
+.ipad-web .topbar { position: sticky; top: var(--ipad-safe-top); z-index: 70; }
+.ipad-web .table-wrap,
+.ipad-web .excel-grid-wrap,
+.ipad-web .timesheet-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+
+.ipad-web-badge {
+  position: fixed;
+  right: calc(14px + var(--ipad-safe-right));
+  bottom: calc(14px + var(--ipad-safe-bottom));
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid rgba(11, 43, 79, .18);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 8px 28px rgba(11, 43, 79, .18);
+  backdrop-filter: blur(14px);
+  font: 700 12px/1.2 system-ui, sans-serif;
+}
+.ipad-web-badge span { padding: 0 7px; color: #0b2b4f; }
+.ipad-web-badge a {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 11px;
+  color: #fff;
+  background: #0b2b4f;
+  text-decoration: none;
+}
+
+@media (orientation: portrait) and (max-width: 940px) {
+  .ipad-web .sidebar { width: 210px; }
+  .ipad-web .main { min-width: 0; }
+  .ipad-web .page { padding-left: 14px; padding-right: 14px; }
+  .ipad-web .topbar { padding-left: 12px; padding-right: 12px; }
+}
+
+@media (display-mode: standalone) {
+  .ipad-web-badge { bottom: calc(18px + var(--ipad-safe-bottom)); }
+}

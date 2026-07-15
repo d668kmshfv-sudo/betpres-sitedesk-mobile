@@ -1,0 +1,1534 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk iPad"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk iPad 1.0.0</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css"><link rel="stylesheet" href="assets/styles/appearance-settings.css"><link rel="stylesheet" href="assets/styles/ai-assistant.css"><link rel="stylesheet" href="assets/styles/material-samples.css"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.0.0">
+
+<script src="assets/js/ipad-bridge.js?v=1.0.0"></script>
+<script src="assets/js/bootstrap/startup-guard.js"></script>
+
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar site-sidebar" id="sidebar">
+ <div class="brand site-brand">
+  <img src="assets/images/navigation-logo.png" alt="Betpres">
+ <div><strong>BETPRES</strong><small>SiteDesk 5.0.75</small></div>
+ </div>
+
+ <nav class="site-nav">
+  <div class="nav-group">
+   <div class="nav-group-label">PREHĽAD</div>
+   <button class="nav-btn active" data-view="dashboard"><span class="nav-icon">⌂</span><span>Prehľad stavby</span></button>
+   <button class="nav-btn" data-view="quick"><span class="nav-icon">⚡</span><span>Rýchle zadávanie</span></button>
+  </div>
+
+  <div class="nav-group">
+   <div class="nav-group-label">DENNÁ PRÁCA</div>
+   <button class="nav-btn" data-view="calendar"><span class="nav-icon">▣</span><span>Kalendár</span></button>
+   <button class="nav-btn" data-view="workers"><span class="nav-icon">♟</span><span>Stav pracovníkov</span></button>
+   <button class="nav-btn" data-view="defects"><span class="nav-icon">!</span><span>Vady a nedorobky</span></button>
+   <button class="nav-btn" data-view="siteMeetings"><span class="nav-icon">◫</span><span>Koordinačné porady</span></button>
+   <button class="nav-btn" data-view="controlDays"><span class="nav-icon">▣</span><span>Kontrolné dni</span></button>
+  </div>
+
+  <div class="nav-group">
+   <div class="nav-group-label">FINANCIE A SÚPISY</div>
+   <button class="nav-btn" data-view="billing"><span class="nav-icon">€</span><span>Fakturácia</span></button>
+   <button class="nav-btn" data-view="workStatements"><span class="nav-icon">▤</span><span>Súpis prác</span></button>
+   <button class="nav-btn" data-view="purchases"><span class="nav-icon">▥</span><span>Pasport skladu</span></button>
+  </div>
+
+  <div class="nav-group">
+  <div class="nav-group-label">DOKUMENTY</div>
+   <button class="nav-btn" data-view="materialSamples"><span class="nav-icon">◇</span><span>Vzorkovanie materiálov</span></button>
+   <button class="nav-btn" data-view="documents"><span class="nav-icon">▤</span><span>Archív dokumentov</span></button>
+   <button class="nav-btn" data-view="handover"><span class="nav-icon">⇄</span><span>Odovzdanie pracoviska</span></button>
+   <button class="nav-btn" data-view="acceptance"><span class="nav-icon">✓</span><span>Preberacie protokoly</span></button>
+  </div>
+
+  <div class="nav-group">
+   <div class="nav-group-label">NASTAVENIA</div>
+   <button class="nav-btn" data-view="projects"><span class="nav-icon">▦</span><span>Stavby</span></button>
+   <button class="nav-btn" data-view="companies"><span class="nav-icon">♙</span><span>Firmy a zmluvy</span></button>
+   <button class="nav-btn" data-view="excelImport"><span class="nav-icon">⇧</span><span>Import z Excelu</span></button>
+   <button class="nav-btn" data-view="appearance"><span class="nav-icon">Aa</span><span>Vzhľad aplikácie</span></button>
+   <button class="nav-btn" data-view="cloud"><span class="nav-icon">☁</span><span>Cloud a databáza</span></button>
+   <button class="nav-btn" data-view="data"><span class="nav-icon">⇩</span><span>Dáta a záloha</span></button>
+  </div>
+ </nav>
+
+ <div class="site-sidebar-footer">
+  <div class="site-version-dot"></div>
+  <div><strong>SiteDesk 5.0.75</strong><small>Codex AI · vzorky · smenovky</small></div>
+ </div>
+</aside>
+<main class="main">
+<header class="topbar site-topbar">
+ <button id="menuBtn" class="menu-btn" aria-label="Otvoriť menu">☰</button>
+
+ <div class="site-topbar-title">
+  <small id="siteSectionTitle">Prehľad stavby</small>
+  <label class="project-picker">
+   <span>Aktívna stavba</span>
+   <select id="globalProject"></select>
+  </label>
+ </div>
+
+ <div class="site-topbar-actions">
+  <button id="openCommandPalette" class="site-command-button" type="button" title="Rýchle otvorenie (Ctrl + K)">
+   <span>⌕</span><span>Rýchle otvorenie</span><kbd>Ctrl K</kbd>
+  </button>
+  <div id="saveStateIndicator" class="site-save-state"><span></span> Automaticky uložené</div>
+  <button id="cloudQuickStatus" class="cloud-quick-status local" type="button" data-go="cloud" title="Synchronizácia a zálohy – podrobnosti sú v nastaveniach">
+   <span class="cloud-quick-dot"></span><span id="cloudQuickStatusText">Uložené lokálne</span>
+  </button>
+  <button id="undoBtn" class="ghost undo-btn" type="button" disabled title="Vrátiť poslednú zmenu (Ctrl + Z)">↶ Späť</button>
+ </div>
+
+ <div class="user site-user">
+  <span class="avatar">JV</span>
+  <div><strong>Jakub Varga</strong><small>Stavebná evidencia</small></div>
+ </div>
+</header>
+
+<section class="view active" id="dashboard">
+ <div class="dashboard-brand-strip"><div class="dashboard-brand-left"><div class="dashboard-brand-logo"><img src="assets/images/navigation-logo.png" alt="BETPRES"><div><strong>SiteDesk</strong><span>Stavebná evidencia · denná práca na stavbe</span></div></div></div><div class="dashboard-brand-certs"><span class="dashboard-cert">ISO 9001</span><span class="dashboard-cert">ISO 14001</span><span class="dashboard-cert">ISO 45001</span></div></div><div class="site-hero">
+  <div class="site-hero-copy">
+   <div class="site-date-pill" id="dashboardTodayLabel"></div>
+   <p>AKTÍVNA STAVBA</p>
+   <h1 id="dashTitle">Stavebná evidencia</h1>
+   <div class="site-project-meta">
+    <span>♙ <strong id="dashboardProjectManager">—</strong></span>
+    <span>⌖ <strong id="dashboardProjectAddress">—</strong></span>
+   </div>
+  </div>
+
+  <div class="site-hero-actions">
+   <button data-go="workers"><span>♟</span><strong>Pracovníci</strong><small>Doplniť dnešný stav</small></button>
+   <button data-go="defects"><span>!</span><strong>Vady</strong><small>Fotky a výzvy firmám</small></button>
+   <button data-go="siteMeetings"><span>◫</span><strong>Úloha</strong><small>Koordinačná porada</small></button>
+   <button data-go="workStatements"><span>▤</span><strong>Súpis prác</strong><small>Otvoriť mesačný súpis</small></button>
+   <button data-go="acceptance"><span>✓</span><strong>Preberanie</strong><small>Protokoly a termíny</small></button>
+  </div>
+ </div>
+
+ <div class="site-kpis">
+  <article class="site-kpi workers-today-card">
+   <div class="site-kpi-icon">♟</div>
+   <div><span>Pracovníci dnes</span><strong id="metricWorkersToday">0</strong><small id="metricWorkersDate">dnešný stav na stavbe</small></div>
+  </article>
+  <article class="site-kpi">
+   <div class="site-kpi-icon">!</div>
+   <div><span>Otvorené úlohy</span><strong id="dashboardOpenTasksMetric">0</strong><small>z poslednej koordinačnej porady</small></div>
+  </article>
+  <article class="site-kpi">
+   <div class="site-kpi-icon">⚠</div>
+   <div><span>Otvorené vady</span><strong id="dashboardOpenDefectsMetric">0</strong><small id="dashboardOverdueDefectsText">0 po termíne</small></div>
+  </article>
+  <article class="site-kpi">
+   <div class="site-kpi-icon">€</div>
+   <div><span>Fakturácia bez DPH</span><strong id="metricBilling">0 €</strong><small>celkom na aktívnej stavbe</small></div>
+  </article>
+  <article class="site-kpi site-kpi-compact">
+   <div class="site-kpi-icon">⇄</div>
+   <div><span>Odovzdania</span><strong id="metricHandovers">0</strong><small>uložených dokumentov</small></div>
+  </article>
+  <article class="site-kpi site-kpi-compact acceptance-kpi">
+   <div class="site-kpi-icon">✓</div>
+   <div><span>Preberacie protokoly</span><strong id="metricAcceptance">0</strong><small id="metricAcceptanceText">0 firiem bez protokolu</small></div>
+  </article>
+ </div>
+
+ <div class="site-dashboard-grid">
+  <article class="panel site-focus-card">
+   <div class="panel-head">
+    <div><p class="eyebrow">DNES A NAJBLIŽŠIE DNI</p><h2>Plán stavby</h2></div>
+    <button class="link-btn" data-go="calendar">Otvoriť kalendár</button>
+   </div>
+   <div id="dashboardTodayAgenda" class="site-agenda-list"></div>
+  </article>
+
+  <article class="panel site-focus-card">
+   <div class="panel-head">
+    <div><p class="eyebrow">KOORDINÁCIA</p><h2>Otvorené úlohy</h2></div>
+    <button class="link-btn" data-go="siteMeetings">Otvoriť poradu</button>
+   </div>
+   <div id="dashboardOpenTasksList" class="site-task-list"></div>
+  </article>
+
+  <article class="panel site-focus-card">
+   <div class="panel-head">
+    <div><p class="eyebrow">DOKUMENTY</p><h2>Posledné uložené</h2></div>
+    <button class="link-btn" data-go="documents">Archív</button>
+   </div>
+   <div id="dashboardRecentDocs" class="site-doc-list"></div>
+  </article>
+
+  <article class="panel site-finance-card span2">
+   <div class="panel-head">
+    <div><p class="eyebrow">FINANCIE</p><h2>Fakturácia podľa mesiacov</h2></div>
+    <button class="link-btn" data-go="billing">Detail fakturácie</button>
+   </div>
+   <div id="billingChart" class="bar-chart"></div>
+  </article>
+
+  <article class="panel site-suppliers-card">
+   <div class="panel-head">
+    <div><p class="eyebrow">DODÁVATELIA</p><h2>Najvyššia fakturácia</h2></div>
+   </div>
+   <div id="topCompanies" class="rank-list"></div>
+  </article>
+
+  <article class="panel site-focus-card">
+   <div class="panel-head">
+    <div><p class="eyebrow">PREBERANIE DOKONČENÝCH PRÁC</p><h2>Firmy a protokoly</h2></div>
+    <button class="link-btn" data-go="acceptance">Otvoriť protokoly</button>
+   </div>
+   <div id="dashboardAcceptanceOverview" class="acceptance-overview-list"></div>
+  </article>
+
+
+  <article class="panel site-projects-hidden">
+   <div id="projectCards" class="mini-list"></div>
+  </article>
+ </div>
+</section>
+
+<section class="view" id="quick">
+ <div class="page-title"><div><p>MOBILNÉ RÝCHLE AKCIE</p><h1>Rýchle zadávanie</h1></div><span id="quickDateLabel" class="counter"></span></div>
+ <div class="quick-grid">
+  <article class="panel quick-card quick-workers-card"><div class="panel-head"><div><p class="eyebrow">Dnešný stav</p><h2>Pracovníci</h2></div><button class="ghost" data-go="workers">Mesačný prehľad</button></div><div id="quickWorkersList" class="quick-worker-list"></div></article>
+  <article class="panel quick-card"><div class="panel-head"><div><p class="eyebrow">Koordinačná porada</p><h2>Nová úloha</h2></div></div><form id="quickTaskForm" class="quick-form"><label>Úloha<textarea id="quickTaskText" rows="4" required></textarea></label><label>Zodpovedný<input id="quickTaskResponsible"></label><label>Termín<input id="quickTaskDeadline" type="date"></label><button type="submit">Pridať do najbližšieho KD</button></form></article>
+  <article class="panel quick-card quick-links-card"><div class="panel-head"><div><p class="eyebrow">Dokumenty</p><h2>Rýchle otvorenie</h2></div></div><button data-go="handover">Odovzdanie pracoviska</button><button data-go="acceptance">Preberací protokol</button><button data-go="siteMeetings">Koordinačná porada</button></article>
+ </div>
+</section>
+
+<section class="view" id="projects">
+ <div class="page-title"><div><p>NASTAVENIA STAVIEB</p><h1>Stavby</h1></div><button id="addProjectBtn">+ Pridať stavbu</button></div>
+ <div class="project-warning"><strong>Vymazanie stavby je trvalé.</strong> Firmy zostanú v spoločnej databáze, ale odstránia sa zmluvy, fakturácia, stav pracovníkov a dokumenty danej stavby.</div>
+ <div id="projectsGrid" class="cards-grid"></div>
+</section>
+
+<section class="view" id="companies">
+ <div class="page-title">
+  <div><p>SUBDODÁVATELIA</p><h1>Firmy na stavbe</h1></div>
+  <div class="header-actions">
+   <button class="ghost" id="addNewCompanyBtn">+ Nová firma do databázy</button>
+   <button id="addCompanyBtn">+ Priradiť existujúcu firmu</button>
+  </div>
+ </div>
+ <div class="company-model-note">
+  <div class="company-model-icon">✓</div>
+  <div><strong>Firma sa vypĺňa iba raz.</strong><span>Na konkrétnej stavbe ju vyberieš zo spoločného zoznamu a zadáš typ dokladu + číslo + predmet činnosti.</span></div>
+ </div>
+ <article class="panel no-pad">
+  <div class="table-toolbar"><div class="searchbox">⌕ <input id="companySearch" placeholder="Hľadať firmu, IČO, kontakt alebo predmet činnosti na stavbe"></div><span id="companyCount" class="counter"></span></div>
+  <div class="table-wrap"><table class="company-table"><thead><tr><th>Firma</th><th>Doklad na stavbe</th><th>Adresa</th><th>PSČ</th><th>IČO</th><th>DIČ</th><th>IČ DPH</th><th>Kontakt</th><th>Telefón</th><th>Predmet činnosti</th><th></th></tr></thead><tbody id="companyTable"></tbody></table></div>
+ </article>
+</section>
+
+<section class="view" id="billing">
+ <div class="page-title"><div><p>MESAČNÁ EVIDENCIA</p><h1>Fakturácia</h1></div><button id="addBillingBtn">+ Pridať záznam</button></div>
+ <div class="billing-active-project">
+  <strong>Fakturácia aktívnej stavby:</strong>
+  <span id="billingActiveProjectName"></span>
+ </div>
+ <div class="billing-filter-panel panel">
+  <label>Vyhľadať firmu<input id="billingSearch" list="billingCompanyNames" placeholder="Začni písať názov firmy"><datalist id="billingCompanyNames"></datalist></label>
+  <label>Zobraziť konkrétnu firmu<select id="billingCompanyFilter"><option value="">Všetky firmy</option></select></label>
+  <label>Rok<select id="billingYearFilter"><option value="">Všetky roky</option></select></label>
+  <label>Mesiac<input id="billingMonthFilter" type="month"></label>
+  <button class="ghost" id="billingCurrentMonth">Aktuálny mesiac</button>
+  <button class="ghost" id="clearBillingFilters">Zrušiť filtre</button>
+ </div>
+ <div class="billing-month-banner">
+  <div>
+   <span>STAV FAKTURÁCIE ZA VYBRANÝ MESIAC</span>
+   <strong id="billingMonthAmount">0,00 €</strong>
+   <small id="billingMonthLabel">Vyber mesiac alebo ponechaj všetky mesiace</small>
+  </div>
+  <div class="billing-month-side">
+   <span>Počet firiem v mesiaci</span>
+   <strong id="billingMonthCompanyCount">0</strong>
+  </div>
+ </div>
+
+ <div class="metrics compact billing-metrics">
+  <article><span>Zobrazená fakturácia</span><strong id="billingTotal">0 €</strong></article>
+  <article><span>Zmluvná cena</span><strong id="billingContractPriceTotal">0 €</strong></article>
+  <article><span>Počet záznamov</span><strong id="billingCount">0</strong></article>
+  <article><span>Vybraná firma</span><strong id="billingSelectedCompany">Všetky</strong></article>
+ </div>
+
+ <article class="panel billing-month-panel">
+  <div class="panel-head">
+   <div><p>PREHĽAD PO MESIACOCH</p><h2 id="billingMonthOverviewTitle">Mesačný prehľad</h2></div>
+  </div>
+  <div id="billingMonthOverview" class="billing-month-overview"></div>
+ </article>
+
+ <div class="billing-grid">
+  <article class="panel no-pad"><div class="table-wrap billing-table-wrap"><table class="billing-table"><thead><tr><th>Firma</th><th>Mesiac</th><th class="num">Zmluvná cena bez DPH</th><th>Dodatok č.</th><th class="num">Fakturácia bez DPH</th><th></th></tr></thead><tbody id="billingTable"></tbody></table></div></article>
+  <article class="panel"><div class="panel-head"><div><p>HISTÓRIA FIRMY</p><h2 id="billingHistoryTitle">Vyber firmu</h2></div></div><div id="billingCompanyHistory" class="billing-history-empty">Po výbere firmy sa zobrazí, koľko a v ktorom mesiaci fakturovala.</div></article>
+ </div>
+</section>
+
+
+
+<section class="view" id="workStatements">
+ <div class="page-title">
+  <div><p>MESAČNÉ SÚPISY ZREALIZOVANÝCH PRÁC</p><h1>Súpis prác</h1></div>
+  <div class="header-actions">
+   <button class="ghost" id="previousWorkStatement">← Predchádzajúci mesiac</button><button class="ghost" id="newWorkStatement">Ďalší mesiac →</button>
+   <button class="ghost" id="toggleWorkDetails">Zobraziť detaily</button>
+   <button class="ghost" id="toggleWorkOverview">Rozšírené stĺpce</button>
+   <button id="saveWorkStatement">Uložiť súpis</button>
+   <button id="saveAndBillWorkStatement">Uložiť a pridať do fakturácie</button>
+  </div>
+ </div>
+
+ <article class="panel work-header-panel">
+  <div class="work-header-grid">
+   <label>Firma
+    <select id="workStatementCompany"></select>
+   </label>
+   <label>Otvorený doklad
+    <select id="workStatementSourceFilter"><option value="manual:zod">ZoD</option></select>
+   </label>
+   <label>Číslo ZoD / Obj.
+    <input id="workStatementContract" readonly>
+   </label>
+   <label>Obdobie súpisu
+    <input id="workStatementPeriod" type="month">
+   </label>
+   <label>Číslo súpisu
+    <input id="workStatementNumber" type="number" min="1" step="1">
+   </label>
+   <label>Objekt
+    <input id="workStatementObject" placeholder="napr. SO 101-01 – AD-A">
+   </label>
+   <label>Dátum súpisu
+    <input id="workStatementDate" type="date">
+   </label>
+   <label>Trvanie súpisu od
+    <input id="workStatementDateFrom" type="date">
+   </label>
+   <label>Trvanie súpisu do
+    <input id="workStatementDateTo" type="date">
+   </label>
+   <label class="work-scope-field">Predmet činnosti podľa dokladu
+    <textarea id="workStatementScope" rows="2" placeholder="Automaticky sa načíta z priradenia vybranej firmy"></textarea>
+   </label>
+  </div>
+ </article>
+
+ <article class="work-invoice-banner">
+  <div class="work-invoice-copy">
+   <span>SUMA NA FAKTÚRU ZA AKTUÁLNE OBDOBIE</span>
+   <strong id="workInvoiceAmount">0,00 €</strong>
+   <small id="workInvoicePeriod">bez DPH</small>
+  </div>
+  <div class="work-invoice-side">
+   <div class="work-invoice-company">
+    <span>Firma / súpis</span>
+    <strong id="workInvoiceCompanyStatement">—</strong>
+   </div>
+   <div class="work-invoice-side-block">
+    <span>Fakturované obdobie</span>
+    <strong id="workInvoicePeriodName">—</strong>
+   </div>
+   <div class="work-invoice-contract">
+    <span>Doklad</span>
+    <strong id="workInvoiceContractNumber">—</strong>
+   </div>
+   <div class="work-invoice-state">
+    <span>Stav</span>
+    <strong id="workStatementState">Rozpracovaný</strong>
+   </div>
+  </div>
+ </article>
+
+ <div class="work-actions">
+  <button id="addWorkRow">+ Pridať položku do vybraného dokladu</button>
+  <button class="ghost" id="pasteWorkRows">Vložiť riadky z Excelu</button>
+  <button class="ghost" id="copyWorkRow">Kopírovať označený riadok</button>
+  <button class="ghost" id="refreshPreviousWork">Prepočítať minulé obdobia</button>
+  <button class="danger" id="deleteWorkRow">Vymazať označené</button>
+  <input class="work-search-control" id="workSearch" type="search" placeholder="Hľadať kód alebo položku">
+  <select class="work-filter-control" id="workRowFilter" title="Filtrovať položky súpisu">
+   <option value="all">Všetky položky</option>
+   <option value="current">Práce v tomto mesiaci</option>
+   <option value="remaining">So zostatkom</option>
+   <option value="issues">Vyžadujú kontrolu</option>
+  </select>
+  <span class="work-visible-count" id="workVisibleCount"></span>
+  <span class="work-spacer"></span>
+  <button class="ghost" id="exportWorkXlsx">Excel pre subdodávateľa</button>
+  <button class="ghost" id="importCompletedWorkXlsx">Načítať vyplnený Excel</button>
+  <input id="completedWorkXlsxFile" class="hidden" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+  <button class="ghost" id="exportWorkPdf">Náhľad / tlač PDF</button>
+  <button class="ghost" id="exportWorkCsv">Export CSV</button>
+ </div>
+
+ <div class="work-paste-tip">
+  Najskôr hore vyber <strong>ZoD</strong> alebo konkrétny <strong>Dodatok</strong>. Nové aj vložené položky sa uložia iba do otvoreného dokladu. <strong>Export súpisu vždy obsahuje ZoD aj všetky dodatky.</strong><span class="formula-tip">Pre subdodávateľa použi „Excel pre subdodávateľa“. Vyplní iba zelené množstvá aktuálneho mesiaca a vrátený súbor načítaš bez prepisovania položiek.</span>
+ </div>
+
+ <article class="panel no-pad work-table-panel">
+  <div class="work-sheet-wrap">
+   <table class="work-sheet" id="workStatementTable">
+    <colgroup>
+     <col class="work-select-col"><col class="work-pc-col"><col class="work-type-col"><col class="work-code-col">
+     <col class="work-desc-col"><col class="work-unit-col"><col class="work-num-col"><col class="work-money-col"><col class="work-money-col">
+     <col class="work-num-col current-col"><col class="work-money-col current-col">
+     <col class="work-num-col previous-col"><col class="work-money-col previous-col">
+     <col class="work-num-col total-col"><col class="work-money-col total-col">
+     <col class="work-num-col remain-col"><col class="work-money-col remain-col">
+    </colgroup>
+    <thead>
+     <tr class="work-group-head">
+      <th rowspan="2"><input id="workSelectAll" class="work-row-select" type="checkbox" title="Označiť všetky riadky"></th>
+      <th rowspan="2">P. č.</th><th rowspan="2">Typ</th><th rowspan="2">Kód položky</th><th rowspan="2">Popis položky</th><th rowspan="2">MJ</th>
+      <th rowspan="2">Zmluvné<br>množstvo</th><th rowspan="2">J. cena<br>[EUR]</th><th rowspan="2">Cena celkom<br>[EUR]</th>
+      <th colspan="2" class="current-col" id="workCurrentPeriodHead">Aktuálne obdobie</th>
+      <th colspan="2" class="previous-col" id="workPreviousPeriodHead">Prestavané minulé obdobia</th>
+      <th colspan="2" class="total-col">Prestavané spolu</th>
+      <th colspan="2" class="remain-col">Zostatok</th>
+     </tr>
+     <tr class="work-sub-head">
+      <th class="current-col">Množstvo</th><th class="current-col">Cena [EUR]</th>
+      <th class="previous-col">Množstvo</th><th class="previous-col">Cena [EUR]</th>
+      <th class="total-col">Množstvo</th><th class="total-col">Cena [EUR]</th>
+      <th class="remain-col">Množstvo</th><th class="remain-col">Cena [EUR]</th>
+     </tr>
+    </thead>
+    <tbody id="workStatementBody"></tbody>
+   </table>
+  </div>
+ </article>
+
+ <div class="work-bottom-grid">
+  <article class="panel work-summary-card">
+   <h3>Rekapitulácia</h3>
+   <div><span>Zmluvná cena celkom</span><strong id="workContractTotal">0,00 €</strong></div>
+   <div><span>Prestavané do minulého obdobia</span><strong id="workPreviousTotal">0,00 €</strong></div>
+   <div class="work-current-summary-row"><span>Aktuálne obdobie – suma na faktúru</span><strong id="workCurrentTotal">0,00 €</strong></div>
+   <div><span>Prestavané spolu</span><strong id="workBuiltTotal">0,00 €</strong></div>
+   <div class="work-summary-main"><span>Zostáva fakturovať</span><strong id="workRemainingTotal">0,00 €</strong></div>
+  </article>
+  <article class="panel work-check-card">
+   <h3>Kontrola</h3>
+   <div><span>Počet položiek</span><strong id="workItemCount">0</strong></div>
+   <div><span>Prekročené množstvo</span><strong id="workOverCount">0</strong></div>
+   <div><span>Rozdiel množstvo × cena</span><strong id="workDifferenceCount">0</strong></div>
+   <p id="workCheckMessage">Súpis je pripravený.</p>
+  </article>
+  <article class="panel work-note-card">
+   <h3>Poznámka k fakturácii</h3>
+   <textarea id="workStatementNote" rows="7" placeholder="Čo sa týmto súpisom fakturuje alebo už bolo fakturované..."></textarea>
+   <small id="workAutoSaveLabel">Údaje sa ukladajú lokálne v prehliadači.</small>
+  </article>
+ </div>
+</section>
+
+<section class="view" id="purchases">
+ <div class="page-title">
+  <div><p>DODACIE LISTY A MATERIÁL</p><h1>Pasport skladu</h1></div>
+  <div class="header-actions">
+   <button id="scanDeliveryNote">📷 Odfotiť / načítať dodací list</button><input id="deliveryNoteImageInput" type="file" accept="image/png,image/jpeg,image/webp" capture="environment" hidden>
+   <button class="ghost" id="openPurchaseImport">Importovať Excel</button><button class="ghost" id="exportPurchasesPdf">Náhľad / PDF pasportu</button><button class="ghost" id="exportPurchasesCsv">Export CSV</button>
+   <button id="addPurchaseRow">+ Pridať riadok</button>
+  </div>
+ </div>
+ <div class="excel-help material-passport-help"><div><strong id="materialPassportSummary">Pasport skladu je pripravený.</strong></div><div>Fotografiu aplikácia spracuje lokálne. Pred uložením vždy skontroluj rozpoznané číslo dokladu a cenu.</div></div>
+ <div class="material-finance-summary">
+  <article class="material-finance-card is-total"><span>Materiál celkom</span><strong id="purchaseAmountTotal">0,00 €</strong><small>podľa aktuálneho filtra</small></article>
+  <article class="material-finance-card is-invoiced"><span>Odfakturované</span><strong id="purchaseAmountInvoiced">0,00 €</strong><small id="purchaseCountInvoiced">0 dodacích listov s faktúrou</small></article>
+  <article class="material-finance-card is-uninvoiced"><span>Neodfakturované</span><strong id="purchaseAmountUninvoiced">0,00 €</strong><small id="purchaseCountUninvoiced">0 dodacích listov bez faktúry</small></article>
+  <article class="material-finance-card is-missing-price"><span>Bez zadanej ceny</span><strong id="purchaseCountMissingPrice">0</strong><small>riadkov nemožno započítať do sumy</small></article>
+ </div>
+ <div class="purchase-filter-panel">
+  <label><span>Konkrétny materiál</span><input id="purchaseMaterialSearch" list="materialList" placeholder="napr. vata, EPS, obrubníky"></label>
+  <label><span>Dodávateľ / firma</span><select id="purchaseSupplierFilter"><option value="">Všetci dodávatelia</option></select></label>
+  <label><span>Mesiac dodania</span><select id="purchaseMonthFilter"><option value="">Všetky mesiace</option></select></label>
+  <label><span>Hľadať vo všetkých stĺpcoch</span><input id="purchaseSearch" placeholder="Číslo dokladu, faktúra, cena…"></label>
+  <button type="button" class="ghost" id="resetPurchaseFilters">Zrušiť filtre</button>
+ </div>
+ <article class="excel-panel">
+  <div class="excel-toolbar">
+   <div class="excel-name-box" id="excelCellName">A1</div>
+   <div class="excel-fx">fx</div>
+   <div class="excel-formula" id="excelFormula">Vyber bunku v tabuľke</div>
+   <div class="excel-tools">
+    <span id="purchaseResultCount"></span><button class="ghost purchase-page-button" id="purchasePrevPage">←</button><span id="purchasePageInfo"></span><button class="ghost purchase-page-button" id="purchaseNextPage">→</button>
+   </div>
+  </div>
+  <div class="excel-sheet-wrap">
+   <table class="excel-sheet">
+    <colgroup>
+     <col class="row-number-col"><col class="col-a"><col class="col-b"><col class="col-c"><col class="col-d"><col class="col-e"><col class="col-f"><col class="col-g">
+    </colgroup>
+    <thead>
+     <tr class="excel-letters"><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+     <tr class="excel-headers">
+      <th class="corner-filter">⌄</th>
+      <th>Dátum <span>⌄</span></th>
+      <th>Dodávateľ <span>⌄</span></th>
+      <th>Číslo dokladu <span>⌄</span></th>
+      <th>Faktúra číslo <span>⌄</span></th>
+      <th>Názov materiálu <span>⌄</span></th>
+      <th>Orientačná cena <span>⌄</span></th>
+      <th>P. č. <span>⌄</span></th>
+     </tr>
+    </thead>
+    <tbody id="purchaseTable"></tbody>
+   </table>
+  </div>
+  <div class="excel-statusbar">
+   <span>Pripravené</span>
+   <span id="excelStatus">Automatické ukladanie zapnuté</span>
+  </div>
+ </article>
+ <datalist id="supplierList"></datalist>
+ <datalist id="materialList"></datalist>
+</section>
+
+<section class="view" id="workers">
+ <div class="page-title">
+  <div><p>PRACOVNÍCI NA STAVBE A HODINOVÁ DOCHÁDZKA</p><h1>Stav pracovníkov</h1></div>
+  <div class="header-actions">
+   <button class="ghost" id="exportAllTimesheetsPdf">Exportovať všetky smenovky</button>
+   <button class="ghost worker-company-action" id="exportWorkersPdf">Exportovať stav do PDF</button>
+   <button class="ghost worker-betpres-action hidden" id="exportBetpresTimesheetPdf">Exportovať podsmenovku BETPRES</button>
+   <button class="ghost worker-thp-action hidden" id="exportThpTimesheetPdf">Exportovať podsmenovku THP</button>
+   <button class="ghost" id="workerCurrentMonth">Aktuálny mesiac</button>
+   <button class="worker-company-action" id="addWorkerCompany">+ Pridať firmu / skupinu</button>
+   <button class="worker-betpres-action hidden" id="addBetpresEmployee">+ Pridať pracovníka BETPRES</button>
+   <button class="worker-thp-action hidden" id="addThpEmployee">+ Pridať pracovníka THP</button>
+   <button class="ghost worker-company-hours-action hidden" id="exportCompanyHoursPdf">Exportovať jednu firemnú smenovku</button>
+   <button class="worker-company-hours-action hidden" id="addCompanyHourTimesheet">+ Pridať firmu na hodiny</button>
+  </div>
+ </div>
+
+ <div class="worker-mode-tabs panel">
+  <button class="active" data-worker-mode="companies">
+   <span>♟</span><div><strong>Firmy na stavbe</strong><small>Denný počet osôb za jednotlivé firmy</small></div>
+  </button>
+  <button data-worker-mode="betpres">
+   <span>◷</span><div><strong>Podsmenovka BETPRES</strong><small>Bežné hodiny alebo kód P / N / D</small></div>
+  </button>
+  <button data-worker-mode="thp">
+   <span>▦</span><div><strong>Podsmenovka THP</strong><small>Čisté polia: hodiny a nadčas</small></div>
+  </button>
+  <button data-worker-mode="companyHours">
+   <span>€</span><div><strong>Firmy na hodiny</strong><small>Hodinová smenovka + súpis prác</small></div>
+  </button>
+ </div>
+
+ <div class="worker-toolbar panel">
+  <label>Mesiac<input type="month" id="workerMonth"></label>
+  <button class="ghost" id="workerPrevMonth">← Predchádzajúci</button>
+  <button class="ghost" id="workerNextMonth">Nasledujúci →</button>
+  <button class="ghost worker-company-action" id="carryWorkerCompanies" title="Doplní chýbajúce firmy z predchádzajúceho mesiaca bez prenosu počtov pracovníkov">↩ Preniesť firmy z minulého mesiaca</button>
+  <span id="workerSheetStatus"></span>
+  <span class="worker-controls-hint" title="Klávesové ovládanie tabuľky">Enter ↓ · Shift+Enter ↑ · šípky po bunkách · Alt+1–4 režimy</span>
+ </div>
+
+ <div id="workerCompaniesPanel">
+  <div id="workerLiveHeader" class="worker-live-header"></div>
+  <div class="worker-note">Víkendy sú vyznačené sivou, sviatky červenou. Zapisuje sa počet pracovníkov firmy za konkrétny deň.</div>
+  <article class="worker-panel">
+   <div class="worker-table-wrap"><table class="worker-table"><thead id="workerHead"></thead><tbody id="workerBody"></tbody><tfoot id="workerFoot"></tfoot></table></div>
+  </article>
+ </div>
+
+<div id="betpresTimesheetPanel" class="hidden">
+  <div class="worker-note betpres-timesheet-note"><strong>Podsmenovka pracovníkov BETPRES:</strong> do každého dňa zapíš bežný pracovný čas alebo kód <strong>P, N alebo D</strong>. Každý deň má iba jedno políčko.</div>
+  <div class="worker-inline-actions"><button type="button" id="addBetpresEmployeeInline">+ Vybrať / pridať pracovníka BETPRES</button></div>
+
+  <div class="betpres-timesheet-summary">
+   <article><span>Pracovníkov</span><strong id="betpresEmployeeCount">0</strong></article>
+   <article><span>Odpracované hodiny</span><strong id="betpresHoursTotal">0 h</strong></article>
+   <article><span>Dní s výkonom</span><strong id="betpresWorkedDays">0</strong></article>
+  </div>
+
+  <article class="worker-panel">
+   <div class="worker-table-wrap betpres-timesheet-wrap">
+    <table class="worker-table betpres-timesheet-table">
+     <thead id="betpresTimeHead"></thead>
+     <tbody id="betpresTimeBody"></tbody>
+     <tfoot id="betpresTimeFoot"></tfoot>
+    </table>
+   </div>
+  </article>
+ </div>
+
+<div id="thpTimesheetPanel" class="hidden">
+  <div class="worker-note thp-timesheet-note">
+   <strong>Podsmenovka THP pracovníkov:</strong> každý deň má jedno políčko. Zapíš <strong>8</strong> pre bežný čas alebo <strong>8+2</strong> pre 8 hodín a 2 hodiny nadčasu. Bez nadčasu sa nič navyše nezobrazuje. Použiť môžeš aj kód <strong>P, N alebo D</strong>.
+  </div>
+  <div class="worker-inline-actions"><button type="button" id="addThpEmployeeInline">+ Vybrať / pridať pracovníka THP</button></div>
+
+  <div class="betpres-timesheet-summary thp-timesheet-summary">
+   <article><span>THP pracovníkov</span><strong id="thpEmployeeCount">0</strong></article>
+   <article><span>Odpracované hodiny</span><strong id="thpHoursTotal">0 h</strong></article>
+   <article><span>Nadčas spolu</span><strong id="thpOvertimeTotal">0 h</strong></article>
+  </div>
+
+  <article class="worker-panel">
+   <div class="worker-table-wrap thp-timesheet-wrap">
+    <table class="worker-table betpres-timesheet-table thp-timesheet-table">
+     <thead id="thpTimeHead"></thead>
+     <tbody id="thpTimeBody"></tbody>
+     <tfoot id="thpTimeFoot"></tfoot>
+    </table>
+   </div>
+  </article>
+ </div>
+
+ <div id="companyHoursPanel" class="hidden">
+  <div class="worker-note company-hours-note"><strong>Firemné hodinové smenovky:</strong> každá firma má vlastnú hodinovú smenovku a pod ňou mená pracovníkov podobne ako v podsmenovke BETPRES. Nepíše sa profesia/čo robí – iba meno pracovníka a ku každému samostatne hodiny po dňoch. Z hodín a sadzby vieš vytvoriť súpis prác alebo exportovať jednu firemnú smenovku.</div>
+  <div class="company-hours-summary">
+   <article><span>Firiem na hodiny</span><strong id="companyHoursCount">0</strong></article>
+   <article><span>Hodiny spolu</span><strong id="companyHoursTotal">0 h</strong></article>
+   <article><span>Suma spolu bez DPH</span><strong id="companyHoursAmount">0,00 €</strong></article>
+  </div>
+  <article class="worker-panel">
+   <div class="worker-table-wrap company-hours-wrap">
+    <table class="worker-table company-hours-table">
+     <thead id="companyHoursHead"></thead>
+     <tbody id="companyHoursBody"></tbody>
+     <tfoot id="companyHoursFoot"></tfoot>
+    </table>
+   </div>
+  </article>
+ </div>
+</section>
+
+<section class="view" id="handover">
+ <div class="page-title"><div><p>STAVBY › FIRMY › DOKUMENT</p><h1>Odovzdanie pracoviska</h1></div><div class="header-actions"><button class="ghost" id="newHandoverTop">Nová zápisnica</button><button class="ghost" id="editHandoverTop">Upraviť dokument</button><button class="ghost" id="printHandoverTop">Tlačiť / PDF</button><button id="saveHandoverTop">Uložiť zápisnicu</button></div></div>
+ <div class="handover-layout">
+  <aside class="wizard panel">
+   <h2>Vytvorenie odovzdania</h2>
+   <label><span><b>1</b> Vyberte stavbu</span><select id="handoverProject"></select></label>
+   <label><span><b>2</b> Vyberte firmu</span><select id="handoverCompany"></select></label>
+   <div class="divider"></div>
+   <h3>Nastavenia</h3>
+   <label>Dátum odovzdania<input id="handoverDate" type="date"></label>
+   <label>Deň povoleného vstupu<input id="entryDate" type="date"></label>
+   <button class="ghost full" id="editHandoverBtn">Upraviť dokument</button>
+   <button class="link-btn full" id="resetHandoverBtn">Obnoviť šablónu</button>
+   <button class="full handover-refresh-btn" id="generateHandover">
+    <span class="handover-refresh-icon">↻</span>
+    <span>Aktualizovať náhľad</span>
+   </button>
+  </aside>
+  <article class="preview-panel panel">
+   <div class="preview-toolbar"><span><b>Náhľad zápisnice</b> · 2 strany A4</span><div><button class="icon ghost" id="zoomOut">−</button><span id="zoomLabel">76 %</span><button class="icon ghost" id="zoomIn">+</button></div></div>
+   <div class="paper-stage" id="paperStage"><div class="papers" id="handoverPreview"></div></div>
+  </article>
+ </div>
+ <div class="bottom-actions"><button class="ghost" data-go="companies">← Späť na firmy</button><div><button class="ghost" id="editHandoverBottom">Upraviť dokument</button><button class="ghost" id="printHandover">Tlačiť / Uložiť PDF</button><button id="saveHandover">Uložiť zápisnicu</button></div></div>
+</section>
+
+
+<section class="view" id="acceptance">
+ <div class="page-title">
+  <div><p>PREBERANIE DOKONČENÝCH PRÁC</p><h1>Preberacie protokoly</h1></div>
+  <button id="addAcceptanceBtn">+ Nový preberací protokol</button>
+ </div>
+ <div class="module-project-note"><strong>Aktívna stavba:</strong> <span id="acceptanceProjectName"></span></div>
+ <div class="acceptance-summary">
+  <article><span>Firiem na stavbe</span><strong id="acceptanceCompaniesMetric">0</strong></article>
+  <article><span>Hotové protokoly</span><strong id="acceptanceDoneMetric">0</strong></article>
+  <article><span>Chýbajúce protokoly</span><strong id="acceptanceMissingMetric">0</strong></article>
+  <article><span>Dodatky / ZoD termíny</span><strong id="acceptanceTermsMetric">0</strong></article>
+ </div>
+ <div class="acceptance-page-note">Po výbere firmy sa do protokolu automaticky predvyplní firma, číslo ZoD / objednávky, predmet činnosti a termíny podľa ZoD zo záložky <strong>Firmy na stavbe → Doklad / predmet</strong>. Všetko môžeš v samotnom protokole ručne upraviť.</div>
+ <article class="panel no-pad">
+  <div class="table-toolbar">
+   <div class="searchbox">⌕ <input id="acceptanceSearch" placeholder="Hľadať firmu, predmet, ZoD alebo miesto preberania"></div>
+   <span id="acceptanceCount" class="counter"></span>
+  </div>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Firma</th><th>ZoD / Obj.</th><th>Predmet preberania</th><th>ZoD termíny</th><th>Posledný protokol</th><th>Stav</th><th></th></tr></thead>
+    <tbody id="acceptanceTable"></tbody>
+   </table>
+  </div>
+ </article>
+</section>
+
+<section class="view" id="siteMeetings">
+ <div class="page-title">
+  <div><p id="coordinationPageKicker">KAŽDÝ TÝŽDEŇ V UTOROK</p><h1 id="coordinationPageTitle">Zápis z koordinačnej porady</h1></div>
+  <div class="header-actions">
+   <button class="ghost" id="editControlDayInfo">Upraviť údaje</button>
+   <button class="ghost" id="editCoordinationText">Upraviť text ako vo Worde</button>
+   <button id="saveControlDayDocument">Uložiť zápis</button>
+   <button class="ghost" id="printSiteMeetings">Exportovať do PDF</button>
+  </div>
+ </div>
+
+ <div class="weekly-control-bar">
+  <button class="ghost" id="previousControlTuesday">← Predchádzajúci utorok</button>
+  <label><span id="coordinationDateLabel">Termín koordinačnej porady</span><input id="controlDayDate" type="date"></label>
+  <button class="ghost" id="nextControlTuesday">Ďalší utorok →</button>
+ </div>
+
+ <div class="control-day-metrics coordination-six-metrics">
+  <article><span id="coordinationMetricLabel">Koordinačná porada</span><strong id="controlDayNumberMetric">—</strong></article>
+  <article><span>Dátum</span><strong id="controlDayDateMetric">—</strong></article>
+  <article><span>Úloh</span><strong id="controlDayTaskCount">0</strong></article>
+  <article><span>Firiem na prezenčnej listine</span><strong id="controlDayAttendanceCount">0</strong></article>
+  <article><span>Stav dokumentu</span><strong id="controlDaySaveMetric">Rozpracovaný</strong></article>
+  <article><span>Posledný export PDF</span><strong id="controlDayExportMetric">—</strong></article>
+ </div>
+
+ <div class="control-day-workspace coordination-no-preview">
+  <div class="control-day-editor">
+   <article class="panel">
+    <div class="panel-head">
+     <div><p class="eyebrow">Základné údaje</p><h2 id="controlDayHeading">Koordinačná porada</h2></div>
+     <button class="ghost" id="editControlDayInfoInline">Upraviť</button>
+    </div>
+    <div id="controlDayInfoSummary" class="control-day-info-summary"></div>
+   </article>
+
+   <article class="panel">
+    <div class="panel-head">
+     <div><p class="eyebrow">Body zápisu a úlohy</p><h2>Dohodnuté úlohy</h2></div>
+     <div class="row-actions">
+      <button class="ghost" id="carryPreviousControlDayTasks" title="Preniesť alebo presne aktualizovať nesplnené úlohy podľa predchádzajúcej koordinačnej porady">↩ Preniesť / aktualizovať z minulého týždňa</button>
+      <button id="addControlDayTask">+ Pridať viac úloh firme</button>
+     </div>
+    </div>
+    <div class="table-wrap">
+     <table class="control-task-table">
+      <thead><tr><th>Č.</th><th>Úloha / zápis</th><th>Pôvodne zapísaná</th><th>Zodpovedný</th><th>Termín</th><th>Stav</th><th>Poznámka</th><th></th></tr></thead>
+      <tbody id="controlDayTaskTable"></tbody>
+     </table>
+    </div>
+   </article>
+
+   <article class="panel">
+    <div class="panel-head">
+     <div><p class="eyebrow">Prezenčná listina</p><h2>Firmy a účastníci</h2></div>
+     <button id="addCoordinationAttendee">+ Pridať firmu z databázy</button>
+    </div>
+    <div class="table-wrap">
+     <table>
+      <thead><tr><th>Č.</th><th>Meno a priezvisko</th><th>Firma</th><th>Funkcia</th><th>Kontakt</th><th></th></tr></thead>
+      <tbody id="coordinationAttendanceTable"></tbody>
+     </table>
+    </div>
+   </article>
+
+   <article class="panel coordination-export-panel">
+    <div>
+     <p class="eyebrow">DOKUMENT</p>
+     <h2>Uloženie a export zápisu</h2>
+     <p>Rozpracované údaje zostávajú v aplikácii. Do archívu Dokumenty sa zápis vloží až po kliknutí na „Uložiť zápis“.</p>
+    </div>
+    <div class="coordination-document-actions">
+     <button id="saveControlDayDocumentBottom">Uložiť zápis</button>
+     <button class="ghost" id="printSiteMeetingsBottom">Exportovať do PDF</button>
+    </div>
+   </article>
+  </div>
+ </div>
+
+ <div id="controlDayPreview" hidden></div>
+</section>
+
+
+<section class="view" id="calendar">
+ <div class="page-title">
+  <div><p>PLÁNOVANIE STAVBY</p><h1>Kalendár</h1></div>
+ </div>
+ <div class="calendar-toolbar panel simple-calendar-toolbar">
+  <button class="ghost" id="calendarPrev">←</button>
+  <label>Mesiac<input id="calendarMonth" type="month"></label>
+  <button class="ghost" id="calendarToday">Dnes</button>
+  <button class="ghost" id="calendarNext">→</button>
+ </div>
+ <article class="panel calendar-panel simple-calendar-panel">
+  <div class="calendar-weekdays">
+   <span>Po</span><span>Ut</span><span>St</span><span>Št</span><span>Pi</span><span>So</span><span>Ne</span>
+  </div>
+  <div id="calendarGrid" class="calendar-grid simple-calendar-grid"></div>
+ </article>
+</section>
+
+
+<section class="view" id="defects">
+ <div class="page-title">
+  <div><p>KONTROLA KVALITY A ODSTRAŇOVANIE VÁD</p><h1>Vady a nedorobky</h1></div>
+  <div class="header-actions">
+   <button class="ghost" id="exportSelectedDefectsPdf">PDF z vybraných</button>
+   <button id="addDefectBtn">+ Nová vada</button>
+  </div>
+ </div>
+
+ <div class="metrics compact defect-metrics">
+  <article><span>Otvorené vady</span><strong id="defectOpenCount">0</strong></article>
+  <article><span>Po termíne</span><strong id="defectOverdueCount">0</strong></article>
+  <article><span>Vybrané do PDF</span><strong id="defectSelectedCount">0</strong></article>
+  <article><span>Fotografie</span><strong id="defectPhotoCount">0</strong></article>
+ </div>
+
+ <article class="panel defect-toolbar">
+  <div class="defect-filter-grid">
+   <label>Hľadať<input id="defectSearch" placeholder="Firma, miesto, popis alebo číslo vady"></label>
+   <label>Firma<select id="defectCompanyFilter"><option value="">Všetky firmy</option></select></label>
+   <label>Stav<select id="defectStatusFilter"><option value="">Všetky stavy</option><option>Nová</option><option>Odoslaná firme</option><option>V riešení</option><option>Odstránená</option><option>Skontrolovaná</option><option>Uzavretá</option></select></label>
+   <label>Zobrazenie<select id="defectDeadlineFilter"><option value="">Všetky termíny</option><option value="overdue">Iba po termíne</option><option value="week">Termín do 7 dní</option></select></label>
+  </div>
+  <div class="defect-selection-actions">
+   <label class="defect-select-all"><input id="selectAllDefects" type="checkbox"> Označiť všetky viditeľné</label>
+   <button class="ghost" id="clearDefectSelection">Zrušiť výber</button>
+   <button class="ghost" id="markDefectsSent">Označiť ako odoslané</button>
+  </div>
+ </article>
+
+ <div id="defectCompanyGroups"></div>
+</section>
+
+<section class="view" id="materialSamples">
+ <div id="materialSamplesApp"></div>
+</section>
+
+<section class="view" id="documents">
+ <div class="page-title"><div><p>ARCHÍV</p><h1>Dokumenty a zápisnice</h1></div></div>
+ <article class="panel no-pad"><div class="table-wrap"><table><thead><tr><th>Dátum</th><th>Stavba</th><th>Firma</th><th>Zmluva</th><th>Typ dokumentu</th><th>Stav</th><th></th></tr></thead><tbody id="documentsTable"></tbody></table></div></article>
+</section>
+
+<section class="view" id="excelImport">
+ <div class="page-title"><div><p>HROMADNÉ NAHRATIE ÚDAJOV</p><h1>Import z Excelu</h1></div></div>
+ <div class="import-layout">
+  <article class="panel"><h2>1. Vyber súbor a cieľ</h2><div class="form-grid"><label class="span2">Excel alebo CSV<input id="excelImportFile" type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label><label>Importovať do<select id="excelImportTarget"><option value="companies">Spoločná databáza firiem</option><option value="billing">Fakturácia aktívnej stavby</option><option value="workers">Stav pracovníkov</option></select></label><label id="excelImportMonthWrap">Mesiac pracovníkov<input id="excelImportMonth" type="month"></label></div><div class="import-actions"><button id="readExcelImport" type="button">Načítať náhľad</button><button id="executeExcelImport" type="button" class="ghost" disabled>Importovať údaje</button></div><div id="excelImportStatus" class="import-status"></div></article>
+  <article class="panel no-pad"><div class="table-toolbar"><strong>Náhľad prvých riadkov</strong><span id="excelImportCount" class="counter">0 riadkov</span></div><div class="table-wrap"><table id="excelImportPreview"><tbody><tr><td style="padding:30px;text-align:center;color:#789">Vyber súbor a načítaj náhľad.</td></tr></tbody></table></div></article>
+ </div>
+</section>
+
+<section class="view" id="appearance">
+ <div class="page-title"><div><p>OSOBNÉ NASTAVENIE</p><h1>Vzhľad aplikácie</h1></div><div class="header-actions"><button class="ghost" id="appearanceReset">Obnoviť BETPRES vzhľad</button></div></div>
+ <div class="appearance-layout">
+  <article class="panel appearance-main-card">
+   <div class="panel-head"><div><p class="eyebrow">MOTÍV</p><h2>Vyber prostredie, v ktorom sa ti pracuje najlepšie</h2></div><span id="appearanceSaved" class="appearance-saved">Automaticky uložené</span></div>
+   <div class="desktop-theme-choices" id="desktopThemeChoices">
+    <button type="button" data-desktop-theme="system"><span class="desktop-theme-preview theme-system"><i></i></span><strong>Systémový</strong><small>Podľa Windows</small></button>
+    <button type="button" data-desktop-theme="light"><span class="desktop-theme-preview theme-light"><i></i></span><strong>Svetlý</strong><small>Jasné pracovné prostredie</small></button>
+    <button type="button" data-desktop-theme="dark"><span class="desktop-theme-preview theme-dark"><i></i></span><strong>Tmavý</strong><small>Príjemnejší večer</small></button>
+   </div>
+  </article>
+  <aside class="panel appearance-live-preview">
+   <div class="appearance-preview-window"><div class="preview-sidebar"><img src="assets/images/navigation-logo.png" alt="Betpres"><i></i><i></i><i></i></div><div class="preview-work"><span></span><div class="preview-card"><b>Stav pracovníkov</b><i></i><i></i><i></i></div><div class="preview-card short"><b>Dnešný prehľad</b><i></i></div></div></div>
+   <p>Náhľad sa mení okamžite. Obsah a exportované dokumenty zostanú bez zmeny.</p>
+  </aside>
+ </div>
+ <article class="panel appearance-options-card">
+  <div class="appearance-option-row"><div><strong>Veľkosť písma</strong><small>Zväčší text aj ovládacie prvky v celej aplikácii.</small></div><select id="desktopFontScale"><option value="0.94">Menšie</option><option value="1">Štandardné</option><option value="1.08">Väčšie</option><option value="1.16">Najväčšie</option></select></div>
+  <div class="appearance-option-row"><div><strong>Kontrast</strong><small>Pri vyššej hodnote budú okraje a text výraznejšie.</small></div><div class="appearance-range"><input id="desktopContrast" type="range" min="0" max="100" value="45"><output id="desktopContrastValue">45</output></div></div>
+  <label class="appearance-option-row"><div><strong>Kompaktné zobrazenie</strong><small>Zmenší medzery, aby bolo na obrazovke viac údajov.</small></div><input id="desktopCompact" class="appearance-switch" type="checkbox"></label>
+  <label class="appearance-option-row"><div><strong>Priehľadná horná lišta</strong><small>Jemné rozmazanie obsahu pod navigáciou.</small></div><input id="desktopTransparentHeader" class="appearance-switch" type="checkbox" checked></label>
+ </article>
+</section>
+
+<section class="view" id="data">
+ <div class="page-title"><div><p>ZÁLOHA</p><h1>Dáta a export</h1></div></div>
+ <div class="cards-grid two"><article class="panel"><h2>Záloha údajov</h2><p>Exportuj všetky stavby, firmy, zmluvy, fakturáciu, stav pracovníkov, preberacie protokoly, zápisy z koordinačných porád a upravené zápisnice.</p><button id="exportJson">Exportovať JSON</button></article><article class="panel"><h2>Import a obnova</h2><p>Importuj predchádzajúcu zálohu alebo obnov demo údaje.</p><label class="file-btn">Importovať JSON<input id="importJson" type="file" accept="application/json,.json"></label><button class="ghost" id="restoreAutoBackup">Obnoviť poslednú automatickú zálohu</button><button class="danger" id="resetData">Obnoviť demo údaje</button></article></div>
+</section>
+
+<section class="view" id="cloud">
+ <div class="page-title">
+  <div><p>CENTRÁLNA DATABÁZA A SYNCHRONIZÁCIA</p><h1>Cloud a databáza</h1></div>
+  <div class="header-actions"><button class="ghost" id="cloudRefreshStatus">Obnoviť stav</button></div>
+ </div>
+
+ <div class="cloud-status-grid">
+  <article class="cloud-status-card"><span>Pripojenie</span><strong id="cloudConnectionLabel">Nenastavené</strong><small id="cloudConnectionDetail">Aplikácia pracuje iba lokálne.</small></article>
+  <article class="cloud-status-card"><span>Používateľ</span><strong id="cloudUserLabel">Neprihlásený</strong><small id="cloudUserDetail">Prihlásenie je potrebné na synchronizáciu.</small></article>
+  <article class="cloud-status-card"><span>Technická verzia zálohy</span><strong id="cloudVersionLabel">—</strong><small id="cloudVersionDetail">Diagnostický údaj dostupný iba v nastaveniach.</small></article>
+  <article class="cloud-status-card"><span>Režim</span><strong id="cloudModeLabel">Lokálny</strong><small id="cloudModeDetail">Lokálne dáta zostávajú zachované.</small></article>
+ </div>
+
+ <div class="cloud-layout">
+  <article class="panel">
+   <div class="panel-head"><div><p class="eyebrow">1. PRIPOJENIE</p><h2>Supabase projekt</h2></div></div>
+   <div class="form-grid">
+    <label class="span2">Project URL<input id="cloudProjectUrl" placeholder="https://xxxxxxxx.supabase.co"></label>
+    <label class="span2">Publishable / anon key<input id="cloudPublishableKey" type="password" placeholder="sb_publishable_... alebo anon key"></label>
+    <label class="span2">Názov pracovného priestoru<input id="cloudWorkspaceName" value="Medická – pilot"></label>
+   </div>
+   <div class="cloud-button-row">
+    <button id="saveCloudConfig">Uložiť nastavenie</button>
+    <button class="ghost" id="testCloudConnection">Otestovať projekt</button>
+    <button id="pairMobileDevice" type="button">Spárovať mobil cez QR</button>
+    <button class="ghost" id="exportCloudConnection">Exportovať pripojenie pre kolegu</button>
+    <label class="ghost cloud-import-label">Importovať pripojenie<input id="importCloudConnection" type="file" accept="application/json,.json"></label>
+   </div>
+   <div class="database-hint">Do aplikácie sa zadáva iba verejný publishable/anon kľúč. Nikdy sem nevkladaj service role key ani heslo databázy.</div>
+  </article>
+
+  <article class="panel">
+   <div class="panel-head"><div><p class="eyebrow">2. PRIHLÁSENIE</p><h2>Používateľ SiteDesk</h2></div></div>
+   <div class="form-grid">
+    <label class="span2">Meno používateľa<input id="cloudDisplayName" placeholder="napr. Peter Baláž"></label>
+    <label class="span2">E-mail<input id="cloudEmail" type="email" autocomplete="username"></label>
+    <label class="span2">Heslo<input id="cloudPassword" type="password" autocomplete="current-password"></label>
+   </div>
+   <div class="cloud-button-row">
+    <button id="cloudSignIn">Prihlásiť</button>
+    <button class="ghost" id="cloudSignUp">Vytvoriť účet</button>
+    <button class="danger hidden" id="cloudSignOut">Odhlásiť</button>
+   </div>
+   <div id="cloudAuthMessage" class="cloud-message">Na tomto počítači ostaneš prihlásený aj po zatvorení aplikácie. Heslo sa neukladá; uloží sa obnoviteľná prihlasovacia relácia pre tento účet Windows.</div>
+  </article>
+ </div>
+
+ <article class="panel">
+  <div class="panel-head"><div><p class="eyebrow">3. PRVÁ SYNCHRONIZÁCIA</p><h2>Lokálne dáta a cloud</h2></div></div>
+  <div class="cloud-sync-actions">
+   <button id="cloudPushData">Odoslať lokálne dáta do cloudu</button>
+   <button class="ghost" id="cloudPullData">Načítať cloudové dáta do počítača</button>
+   <button class="danger" id="cloudForcePush">Prepísať cloud lokálnymi dátami</button>
+  </div>
+  <label class="cloud-auto-toggle"><input id="cloudAutoSync" type="checkbox"> Automaticky odosielať zmeny a kontrolovať nové dáta z mobilu alebo iného počítača</label>
+  <div id="cloudSyncMessage" class="cloud-message">Pred prvým odoslaním si aplikácia ponechá lokálnu zálohu. Načítanie dát z cloudu takisto vytvorí lokálnu zálohu aktuálneho stavu.</div>
+ </article>
+
+ <article class="panel team-pilot-panel">
+  <div class="panel-head">
+   <div><p class="eyebrow">4. TÍM STAVBY</p><h2>Medická – používatelia</h2></div>
+   <span id="cloudCurrentRoleBadge" class="team-role-badge">neprihlásený</span>
+  </div>
+  <div id="teamOwnerControls" class="team-owner-controls hidden">
+   <div class="form-grid team-add-grid">
+    <label class="span2">E-mail kolegu<input id="teamMemberEmail" type="email" placeholder="kolega@firma.sk"></label>
+    <label>Prístup
+     <select id="teamMemberRole">
+      <option value="editor">Editor – môže upravovať</option>
+      <option value="viewer">Čítanie – bez cloudového ukladania</option>
+     </select>
+    </label>
+    <div class="team-add-action"><button id="teamAddMember" type="button">Pridať kolegu</button></div>
+   </div>
+   <div class="database-hint">Kolega si musí najprv vytvoriť vlastný účet rovnakým e-mailom. Heslá sa medzi kolegami nezdieľajú.</div>
+  </div>
+  <div id="teamMessage" class="cloud-message">Po prihlásení sa zobrazí tím pracovného priestoru.</div>
+  <div class="team-table-wrap">
+   <table class="team-table">
+    <thead><tr><th>Používateľ</th><th>Rola</th><th>Pridaný</th><th></th></tr></thead>
+    <tbody id="teamMembersBody"><tr><td colspan="4">Zatiaľ nenačítané.</td></tr></tbody>
+   </table>
+  </div>
+ </article>
+
+ <div class="cloud-layout team-secondary-layout">
+  <article class="panel">
+   <div class="panel-head"><div><p class="eyebrow">5. HISTÓRIA</p><h2>Posledné cloudové zmeny</h2></div><button class="ghost" id="refreshTeamActivity">Obnoviť</button></div>
+   <div id="teamActivityList" class="team-activity-list"><div class="team-empty">Zatiaľ nenačítané.</div></div>
+  </article>
+
+  <article class="panel">
+   <div class="panel-head"><div><p class="eyebrow">6. PILOTNÉ TESTOVANIE</p><h2>Pripomienky kolegov</h2></div></div>
+   <div class="form-grid">
+    <label>Kategória
+     <select id="pilotFeedbackCategory">
+      <option>Všeobecné</option>
+      <option>Kalendár</option>
+      <option>Pracovníci</option>
+      <option>Koordinačné porady</option>
+      <option>Protokoly</option>
+      <option>Súpisy prác</option>
+      <option>Fakturácia</option>
+      <option>Materiál</option>
+      <option>Vady</option>
+      <option>Cloud</option>
+     </select>
+    </label>
+    <label class="span2">Pripomienka<textarea id="pilotFeedbackText" rows="3" placeholder="Čo nefungovalo, čo bolo nejasné alebo čo by sa malo zjednodušiť"></textarea></label>
+   </div>
+   <div class="cloud-button-row"><button id="submitPilotFeedback" type="button">Pridať pripomienku</button></div>
+   <div id="pilotFeedbackList" class="pilot-feedback-list"><div class="team-empty">Zatiaľ bez pripomienok.</div></div>
+  </article>
+ </div>
+
+ <article class="panel team-safety-note">
+  <h2>Bezpečné skúšanie troch používateľov</h2>
+  <p>Každé cloudové uloženie kontroluje verziu. Ak dvaja používatelia upravia rovnakú verziu súčasne, druhé uloženie sa zastaví a neprepíše novšie dáta.</p>
+ </article>
+
+ <article class="panel cloud-steps">
+  <h2>Čo treba urobiť v Supabase</h2>
+  <ol>
+   <li>Vytvoriť nový Supabase projekt na svojom účte.</li>
+   <li>V existujúcom projekte otvoriť SQL Editor a spustiť súbor <strong>SUPABASE_TEAM_PILOT.sql</strong>.</li>
+   <li>V Project Settings → API skopírovať Project URL a publishable/anon key.</li>
+   <li>Každý z troch používateľov si vytvorí vlastný účet; vlastník potom pridá kolegov e-mailom.</li>
+   <li>Prvýkrát stlačiť <strong>Odoslať lokálne dáta do cloudu</strong>.</li>
+  </ol>
+ </article>
+</section>
+</main>
+</div>
+
+<div class="modal hidden" id="mobilePairingModal"><div class="modal-card mobile-pairing-card">
+ <div class="modal-head"><div><p>PREPOJENIE ZARIADENÍ</p><h2>Spárovať mobil alebo iPad</h2><small>Nastavenie cloudu sa prenesie bez ručného prepisovania.</small></div><button class="close" data-close="mobilePairingModal">×</button></div>
+ <div class="mobile-pairing-layout">
+  <div class="pairing-qr-wrap"><img id="mobilePairingQr" alt="QR kód na spárovanie mobilnej aplikácie BETPRES SiteDesk"><span id="mobilePairingQrStatus">Pripravujem QR kód…</span></div>
+  <div class="pairing-steps">
+   <b>Na mobile alebo iPade</b>
+   <ol><li>Otvor fotoaparát a nasnímaj QR kód.</li><li>Otvor ponúknutý odkaz BETPRES SiteDesk.</li><li>Skontroluj e-mail, zadaj heslo iba prvýkrát a stlač „Pripojiť“.</li></ol>
+   <div class="pairing-safe-note"><strong>Bezpečné párovanie</strong><span>QR obsahuje iba Project URL, verejný publishable kľúč, pracovný priestor a e-mail. Neobsahuje heslo ani service role kľúč.</span></div>
+  </div>
+ </div>
+ <label class="pairing-link-label">Párovací odkaz<input id="mobilePairingLink" readonly></label>
+ <div class="modal-actions"><button type="button" class="ghost" id="copyMobilePairingLink">Kopírovať odkaz</button><button type="button" id="openMobilePairingLink">Otvoriť mobilnú aplikáciu</button></div>
+</div></div>
+
+
+<div class="modal hidden" id="defectModal"><div class="modal-card wide">
+ <div class="modal-head">
+  <div><p>VADA ALEBO NEDOROBOK</p><h2 id="defectModalTitle">Nová vada</h2></div>
+  <button class="close" data-close="defectModal">×</button>
+ </div>
+ <form id="defectForm" class="form-grid">
+  <input id="defectId" type="hidden">
+  <label>Firma<select id="defectCompany" required></select></label>
+  <label>Číslo vady<input id="defectNumber" placeholder="vytvorí sa automaticky"></label>
+  <label class="span2">Miesto<input id="defectLocation" required placeholder="napr. 3. NP – byt B3.12 – obývacia izba"></label>
+  <label class="span2">Popis vady<textarea id="defectDescription" rows="4" required></textarea></label>
+  <label>Termín odstránenia<input id="defectDueDate" type="date"></label>
+  <label>Závažnosť<select id="defectSeverity"><option>Bežná</option><option>Dôležitá</option><option>Urgentná</option></select></label>
+  <label>Stav<select id="defectStatus"><option>Nová</option><option>Odoslaná firme</option><option>V riešení</option><option>Odstránená</option><option>Skontrolovaná</option><option>Uzavretá</option></select></label>
+  <label>Zodpovedná osoba<input id="defectResponsible"></label>
+  <label class="span2 defect-photo-input">Fotografie
+   <input id="defectPhotoFiles" type="file" accept="image/*" multiple>
+   <small>Fotografie sa automaticky zmenšia. Pri cloudovej synchronizácii sa nahrajú do súborového úložiska.</small>
+  </label>
+  <div class="span2 defect-photo-editor" id="defectPhotoEditor"></div>
+  <div class="modal-actions span2">
+   <button type="button" class="ghost" data-close="defectModal">Zrušiť</button>
+   <button type="submit">Uložiť vadu</button>
+  </div>
+ </form>
+</div></div>
+
+<div class="modal hidden" id="historyModal"><div class="modal-card wide"><div class="modal-head"><div><p>HISTÓRIA ZMIEN</p><h2 id="historyModalTitle">Verzie dokumentu</h2></div><button class="close" data-close="historyModal">×</button></div><div class="history-summary" id="historySummary"></div><div class="table-wrap"><table><thead><tr><th>Verzia</th><th>Dátum a čas</th><th>Zmena</th><th></th></tr></thead><tbody id="historyTable"></tbody></table></div></div></div>
+
+<div class="modal hidden" id="companyModal"><div class="modal-card wide"><div class="modal-head"><div><p>SPOLOČNÁ DATABÁZA FIRIEM</p><h2 id="companyModalTitle">Pridať novú firmu</h2></div><button class="close" data-close="companyModal">×</button></div>
+<form id="companyForm" class="form-grid">
+ <input type="hidden" id="companyId">
+ <label class="span2">Firma<input id="companyName" required></label>
+ <label>Adresa<input id="companyAddress"></label>
+ <label>PSČ a mesto<input id="companyPostal"></label>
+ <label>IČO<input id="companyIco"></label>
+ <label>DIČ<input id="companyDic"></label>
+ <label>IČ DPH<input id="companyIcdph"></label>
+ <label>Kontaktná osoba<input id="companyContact"></label>
+ <label>Telefón<input id="companyPhone"></label>
+ <textarea id="companyScope" class="hidden" rows="1"></textarea>
+ <div class="database-hint span2">Tieto údaje sa ukladajú iba raz. Číslo zmluvy a predmet činnosti sa zadávajú až pri priradení firmy na konkrétnu stavbu.</div>
+ <div class="modal-actions span2"><button type="button" class="ghost" data-close="companyModal">Zrušiť</button><button type="submit">Uložiť firmu</button></div>
+</form></div></div>
+
+<div class="modal hidden" id="assignCompanyModal"><div class="modal-card"><div class="modal-head"><div><p>FIRMA NA STAVBE</p><h2 id="assignCompanyTitle">Priradiť existujúcu firmu</h2></div><button class="close" data-close="assignCompanyModal">×</button></div>
+<form id="assignCompanyForm" class="form-grid">
+ <input type="hidden" id="assignmentId">
+ <label class="span2">Firma zo spoločnej databázy<select id="assignCompanySelect" required></select></label>
+ <div class="company-preview span2" id="assignCompanyPreview"></div>
+ <label>Typ dokladu<select id="assignContractType"><option value="ZoD">Zmluva o dielo (ZoD)</option><option value="Obj">Objednávka (Obj.)</option></select></label>
+ <label class="contract-field">Číslo ZoD / objednávky<input id="assignContract" required placeholder="napr. 07/1916/2026 alebo OBJ-2026-01"></label>
+ <label>Začiatok podľa ZoD<input id="assignContractStart" type="date"></label>
+ <label>Dokončenie podľa ZoD<input id="assignContractEnd" type="date"></label>
+ <label>Zmluvná cena podľa ZoD bez DPH<input id="assignContractPrice" placeholder="napr. 405 000,00 €"></label>
+ <label class="span2">Predmet činnosti na tejto stavbe<textarea id="assignScope" rows="4" placeholder="napr. omietky, murárske práce, ZTI, elektroinštalácia..."></textarea></label>
+ <div class="assignment-info span2"><strong>Aktívna stavba:</strong> <span id="assignProjectName"></span><br>Základné údaje firmy sa prevezmú automaticky. Typ dokladu, číslo, predmet činnosti, termíny a zmluvná cena patria ku konkrétnej stavbe.</div>
+ <div class="modal-actions span2"><button type="button" class="ghost" data-close="assignCompanyModal">Zrušiť</button><button type="submit">Uložiť priradenie</button></div>
+</form></div></div>
+
+<div class="modal hidden" id="assignmentAddendumModal"><div class="modal-card"><div class="modal-head"><div><p>DODATOK K DOKLADU FIRMY</p><h2 id="assignmentAddendumTitle">Pridať dodatok</h2></div><button class="close" data-close="assignmentAddendumModal">×</button></div>
+<form id="assignmentAddendumForm" class="form-grid">
+ <input type="hidden" id="assignmentAddendumAssignmentId">
+ <input type="hidden" id="assignmentAddendumId">
+ <div class="assignment-info span2"><strong>Firma:</strong> <span id="assignmentAddendumCompanyName"></span><br>Dodatok sa zobrazí aj v prepínači dokladov v súpise prác.</div>
+ <label>Číslo dodatku<input id="assignmentAddendumNumber" required placeholder="napr. 1 alebo 1/2026"></label>
+ <label>Názov dodatku<input id="assignmentAddendumName" required placeholder="napr. Práce navyše – 5. NP"></label>
+ <label class="span2">Cena dodatku bez DPH<input id="assignmentAddendumPrice" inputmode="decimal" placeholder="napr. 12 500,00 €"></label>
+ <div class="span2 assignment-addendum-list" id="assignmentAddendumList"></div>
+ <div class="modal-actions span2"><button type="button" class="ghost" data-close="assignmentAddendumModal">Zrušiť</button><button type="submit">Uložiť dodatok</button></div>
+</form></div></div>
+
+<div class="modal hidden" id="projectModal"><div class="modal-card wide"><div class="modal-head"><div><p>STAVBA A ÚDAJE PRE DOKUMENTY</p><h2>Pridať stavbu</h2></div><button class="close" data-close="projectModal">×</button></div><form id="projectForm" class="form-grid"><label class="span2">Názov stavby<input id="projectName" required></label><label>Adresa<input id="projectAddress"></label><label>Mesto<input id="projectCity"></label><label>Kataster a obec<input id="projectCadastre"></label><label>Kraj<input id="projectRegion"></label><label>Stavbyvedúci<input id="projectManager"></label><label>Telefón<input id="projectManagerPhone"></label><label>Miesto spísania dokumentu<input id="projectDocumentCity" placeholder="napr. Košiciach"></label><label>Stavebné povolenie<input id="projectPermit" value="áno"></label><label class="span2">Stavebná čiara<textarea id="projectConstructionLine" rows="2"></textarea></label><label>Smerové a výškové body<input id="projectSurvey" value="geodetickým vytýčením"></label><label>Prísun mechanizmov<input id="projectMechanisms"></label><label>Odber elektriny<input id="projectElectricity" value="Zo staveniskového rozvádzača"></label><label>Odber vody<input id="projectWater" value="Staveniskové rozvody"></label><label class="span2">Inžinierske siete<textarea id="projectNetworks" rows="2"></textarea></label><label class="span2">Odovzdanie projektovej dokumentácie<input id="projectDocumentation" value="Bola odovzdaná projektová dokumentácia"></label><div class="modal-actions span2"><button type="button" class="ghost" data-close="projectModal">Zrušiť</button><button type="submit">Uložiť stavbu</button></div></form></div></div>
+
+
+<div class="modal hidden" id="workPasteModal"><div class="modal-card wide">
+ <div class="modal-head">
+  <div><p>SÚPIS PRÁC</p><h2>Vložiť riadky z Excelu</h2></div>
+  <button class="close" data-close="workPasteModal">×</button>
+ </div>
+ <div class="work-paste-columns"><strong>Šablóna stĺpcov:</strong> P. č. · Typ · Kód · Popis · MJ · Zmluvné množstvo · J. cena · Cena celkom · Aktuálne množstvo (voliteľné)</div>
+ <div class="work-paste-doc-grid">
+  <div class="assignment-info"><strong>Riadky sa vložia do otvoreného dokladu:</strong> <span id="workPasteSelectedDoc">ZoD</span></div>
+ </div>
+ <div class="work-paste-template">
+  <strong>Postup:</strong> V Exceli môžeš buď označiť riadky bez hlavičky, skopírovať ich cez Ctrl+C a vložiť sem, alebo načítať celý súbor podľa šablóny súpisu. Riadky sa uložia do dokladu, ktorý máš otvorený v hlavičke súpisu.
+  <br>Šablóna sa číta zo stĺpcov: <code>PČ · Typ · Kód · Popis · MJ · Množstvo · J.cena · Cena celkom · Aktuálne množstvo</code>.
+ </div>
+ <div class="work-paste-file-box">
+  <label>Importovať zo súboru Excel / CSV podľa šablóny súpisu
+   <input id="workPasteFile" type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+  </label>
+  <div class="work-paste-file-actions">
+   <button type="button" class="ghost" id="readWorkPasteFile">Načítať zo šablóny</button>
+   <span id="workPasteFileStatus" class="work-paste-file-status">Súbor sa len načíta do poľa nižšie; samotné vloženie spravíš tlačidlom „Vložiť riadky“.</span>
+  </div>
+ </div>
+ <textarea id="workPasteTextarea" rows="12" placeholder="15	K	273321411.S	Betón základových dosiek...	m3	405,871	10,00	4 058,61"></textarea>
+ <div class="modal-actions">
+  <button type="button" class="ghost" data-close="workPasteModal">Zrušiť</button>
+  <button type="button" id="confirmWorkPaste">Vložiť riadky</button>
+ </div>
+</div></div>
+
+<div class="modal hidden" id="workReturnImportModal"><div class="modal-card wide work-return-card">
+ <div class="modal-head">
+  <div><p>NÁVRATOVÝ EXCEL OD SUBDODÁVATEĽA</p><h2>Kontrola doplneného súpisu</h2></div>
+  <button class="close" data-close="workReturnImportModal">×</button>
+ </div>
+ <div class="work-return-file" id="workReturnFileName">—</div>
+ <div class="work-return-summary" id="workReturnSummary"></div>
+ <div class="work-return-message" id="workReturnMessage"></div>
+ <div class="table-wrap work-return-preview-wrap"><table class="work-return-preview">
+  <thead><tr><th>Položka</th><th>Pôvodné množstvo</th><th>Nové množstvo</th><th>Rozdiel</th><th>Kontrola</th></tr></thead>
+  <tbody id="workReturnPreviewBody"></tbody>
+ </table></div>
+ <div class="work-return-help">Import mení iba stĺpec <strong>Aktuálny mesiac – množstvo</strong>. Rozpočet, ceny, minulé čerpanie, ZoD a dodatky ostávajú chránené.</div>
+ <div class="modal-actions">
+  <button type="button" class="ghost" data-close="workReturnImportModal">Zrušiť</button>
+  <button type="button" id="confirmWorkReturnImport">Potvrdiť a doplniť súpis</button>
+ </div>
+</div></div>
+
+
+<div class="modal hidden" id="budgetImportModal"><div class="modal-card wide">
+ <div class="modal-head">
+  <div><p>ROZPOČET SUBDODÁVKY</p><h2>Import rozpočtu z Excelu</h2></div>
+  <button class="close" data-close="budgetImportModal">×</button>
+ </div>
+ <div class="form-grid">
+  <label class="span2">Firma<select id="budgetImportCompany"></select></label>
+  <label>Typ dokladu<select id="budgetImportDocType"><option value="ZoD">ZoD</option><option value="Dodatok">Dodatok</option></select></label>
+  <label>Číslo dodatku / označenie<input id="budgetImportDocNumber" placeholder="napr. 1, 2 alebo 1/2026"></label>
+  <label class="span2">Názov rozpočtu<input id="budgetImportTitle" placeholder="napr. ZoD – pôvodný rozpočet, Dodatok č. 1"></label>
+  <label class="span2">Excel alebo CSV s rozpočtom<input id="budgetImportFile" type="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
+  <label class="span2"><input id="budgetImportAddToStatement" type="checkbox" checked> Po importe vložiť položky aj do aktuálne otvoreného súpisu prác</label>
+ </div>
+ <div class="work-budget-hint">Nový import nepúšťa Excel naslepo. Najprv načíta náhľad, potom si skontroluješ alebo zmeníš riadok hlavičky a priradenie stĺpcov. Povinné je hlavne <strong>Popis položky</strong>, odporúčané sú <strong>MJ, Množstvo a J. cena</strong>.</div>
+ <div class="import-actions"><button id="readBudgetImport" type="button">Načítať náhľad</button><button id="executeBudgetImport" type="button" class="ghost" disabled>Importovať rozpočet</button></div>
+ <div id="budgetImportStatus" class="import-status"></div>
+ <div class="budget-import-mapping hidden" id="budgetImportMappingWrap">
+  <h3>Mapovanie stĺpcov z Excelu</h3>
+  <small>Ak aplikácia stĺpce netrafila, vyber správny stĺpec ručne. Riadky nad hlavičkou sa ignorujú.</small>
+  <div class="budget-import-map-grid">
+   <label>Riadok s hlavičkou<select id="budgetImportHeaderRow"></select></label>
+   <label>P. č.<select id="budgetMapPc"></select></label>
+   <label>Typ<select id="budgetMapType"></select></label>
+   <label>Kód položky<select id="budgetMapCode"></select></label>
+   <label>Popis položky <span class="budget-import-required">*</span><select id="budgetMapDescription"></select></label>
+   <label>MJ<select id="budgetMapUnit"></select></label>
+   <label>Množstvo<select id="budgetMapContractQty"></select></label>
+   <label>J. cena<select id="budgetMapUnitPrice"></select></label>
+   <label>Cena celkom<select id="budgetMapContractTotal"></select></label>
+  </div>
+  <div class="budget-import-map-note">Tip: pri rozpočtoch s objektmi/oddielmi nechaj tieto riadky v importe ako typ <strong>D</strong> – v súpise budú slúžiť ako oddiely.</div>
+  <div class="budget-import-raw-table" id="budgetImportRawPreview"></div>
+ </div>
+ <div class="budget-import-summary" id="budgetImportSummary"><div><span>Položky</span><strong>0</strong></div><div><span>Rozpočet bez DPH</span><strong>0,00 €</strong></div><div><span>Doklad</span><strong>—</strong></div></div>
+ <div class="table-wrap"><table id="budgetImportPreview" class="work-budget-preview-table"><tbody><tr><td style="padding:26px;text-align:center;color:#789">Vyber Excel a klikni na Načítať náhľad.</td></tr></tbody></table></div>
+ <div class="modal-actions">
+  <button type="button" class="ghost" data-close="budgetImportModal">Zrušiť</button>
+  <button type="button" id="executeBudgetImportBottom">Importovať rozpočet</button>
+ </div>
+</div></div>
+
+<div class="modal hidden" id="billingModal"><div class="modal-card">
+ <div class="modal-head"><div><p>FAKTURÁCIA FIRMY</p><h2 id="billingModalTitle">Pridať fakturáciu</h2></div><button class="close" data-close="billingModal">×</button></div>
+ <form id="billingForm" class="form-grid">
+  <input id="billingId" type="hidden">
+  <label class="span2">Firma<select id="billingCompany" required></select></label>
+  <label>Mesiac<input id="billingMonth" type="month" required></label>
+  <label>Fakturácia bez DPH<input id="billingAmount" type="number" min="0" step="0.01" required></label>
+  <label>Zmluvná cena bez DPH
+   <input id="billingContractPrice" type="number" min="0" step="0.01" placeholder="Ručne doplň zmluvnú cenu">
+   <small class="billing-contract-hint">Po prvom uložení sa pri ďalšej fakturácii firmy predvyplní automaticky.</small>
+  </label>
+  <label>Dodatok č.<input id="billingAmendmentNo" placeholder="napr. Dodatok č. 1 alebo 1/2026"></label>
+  <div class="database-hint span2">Zmluvná cena a číslo dodatku sa zadávajú ručne. Pri ďalšom mesačnom zázname ich môžeš znovu doplniť alebo nechať prázdne.</div>
+  <div class="modal-actions span2"><button type="button" class="ghost" data-close="billingModal">Zrušiť</button><button type="submit">Uložiť</button></div>
+ </form>
+</div></div>
+
+
+
+
+<div class="modal hidden" id="acceptanceModal"><div class="modal-card wide">
+ <div class="modal-head"><div><p>PREBERACÍ PROTOKOL</p><h2 id="acceptanceModalTitle">Nový preberací protokol</h2></div><button class="close" data-close="acceptanceModal">×</button></div>
+ <form id="acceptanceForm" class="form-grid">
+  <input type="hidden" id="acceptanceId">
+  <label>Dátum preberania<input id="acceptanceDate" type="date" required></label>
+  <label>Firma<select id="acceptanceCompany" required></select></label>
+  <label>Číslo protokolu<input id="acceptanceProtocolNo" placeholder="napr. PP-07/2026"></label>
+  <label>Číslo ZoD / objednávky<input id="acceptanceContractNo" placeholder="napr. 07/1916/2026"></label>
+  <label class="span2">Predmet preberania<input id="acceptanceSubject" required placeholder="napr. Cementové potery objekt A"></label>
+  <label class="span2">Dodatky / odpočty (1 riadok = dodatok; sumu píš na koniec riadku)<textarea id="acceptanceAdditions" rows="3" placeholder="Dodatok č. 1 – zmena rozsahu prác | 8 150,00 €
+Dodatok č. 2 – doplnkové práce | 5 716,56 €
+Menejpráce | -2 000,00 €"></textarea></label>
+  <label>Miesto / objekt / podlažie<input id="acceptanceLocation" placeholder="napr. Objekt A, 3.–5. NP"></label>
+  <label>Začiatok podľa ZoD<input id="acceptanceContractStart" type="date"></label>
+  <label>Dokončenie podľa ZoD<input id="acceptanceContractEnd" type="date"></label>
+  <label>Skutočný začiatok<input id="acceptanceActualStart" type="date"></label>
+  <label>Skutočné dokončenie<input id="acceptanceActualEnd" type="date"></label>
+  <label>Cena diela podľa ZoD<input id="acceptanceContractPrice" placeholder="napr. 405 000,00 €"></label>
+  <label>Cena dodatkov spolu<input id="acceptanceAdditionsPrice" readonly placeholder="počíta sa z dodatkov"></label>
+  <label>Skutočná cena diela<input id="acceptanceActualPrice" readonly placeholder="ZoD ± dodatky"></label>
+  <div class="assignment-info span2 acceptance-calculation-note"><strong>Výpočet ceny:</strong> Skutočná cena diela sa počíta automaticky ako <b>zmluvná cena podľa ZoD ± dodatky</b>. Pri dodatkoch môžeš písať plusové aj mínusové sumy.</div>
+  <label>Výsledok<select id="acceptanceResult">
+   <option>Prevzaté bez vád</option>
+   <option>Prevzaté s vadami a nedorobkami</option>
+   <option>Neprevzaté</option>
+  </select></label>
+  <label>Za objednávateľa<input id="acceptanceClientRep" placeholder="Meno zástupcu BETPRES"></label>
+  <label>Za zhotoviteľa<input id="acceptanceSupplierRep" placeholder="Meno zástupcu firmy"></label>
+  <label class="span2">Odovzdané doklady (1 riadok = 1 doklad)<textarea id="acceptanceDocuments" rows="4" placeholder="Kópie stavebného denníka
+Revízne správy
+Certifikáty"></textarea></label>
+  <label class="span2">Vady, nedorobky a poznámky<textarea id="acceptanceNotes" rows="5" placeholder="Popis zistení, termín odstránenia alebo ďalšie podmienky"></textarea></label>
+  <label>Zmluvné pokuty sa<select id="acceptancePenalty"><option>Neuplatňujú</option><option>Uplatňujú</option></select></label>
+  <label>Zrážka za zníženú kvalitu sa<select id="acceptanceQualityDeduction"><option>Neuplatňuje</option><option>Uplatňuje</option></select></label>
+  <label class="span2">Dôvod udelenia zmluvnej pokuty / zrážky<textarea id="acceptancePenaltyReason" rows="3" placeholder="Nie je"></textarea></label>
+  <label class="span2">Záručná lehota<textarea id="acceptanceWarranty" rows="3" placeholder="Za akosť Diela je 60 mesiacov..."></textarea></label>
+  <label class="span2">Vyjadrenie objednávateľa<textarea id="acceptanceClientStatement" rows="3"></textarea></label>
+  <label class="span2">Vyjadrenie zhotoviteľa<textarea id="acceptanceSupplierStatement" rows="3"></textarea></label>
+  <div class="modal-actions span2"><button type="button" class="ghost" data-close="acceptanceModal">Zrušiť</button><button type="submit">Uložiť protokol</button></div>
+ </form>
+</div></div>
+
+<div class="modal hidden" id="controlDayInfoModal"><div class="modal-card wide">
+ <div class="modal-head"><div><p id="coordinationInfoKicker">ZÁPIS Z KOORDINAČNEJ PORADY</p><h2>Upraviť základné údaje</h2></div><button class="close" data-close="controlDayInfoModal">×</button></div>
+ <form id="controlDayInfoForm" class="form-grid">
+  <label><span id="coordinationNumberLabel">Číslo koordinačnej porady</span><input id="controlDayNumber" required placeholder="napr. KP č. 24"></label>
+  <label>Dátum – utorok<input id="controlDayInfoDate" type="date" required></label>
+  <label>Čas<input id="controlDayTime" type="time"></label>
+  <label>Miesto<input id="controlDayPlace" placeholder="Zariadenie staveniska"></label>
+  <label>Viedol<input id="controlDayChairperson" placeholder="Stavbyvedúci"></label>
+  <label>Zápis vyhotovil<input id="controlDayRecorder" placeholder="Meno zapisovateľa"></label>
+  <label><span id="coordinationNextDateLabel">Nasledujúca koordinačná porada</span><input id="controlDayNextDate" type="date"></label>
+  <label>Stav zápisu<select id="controlDayStatus">
+   <option>Plánovaný</option><option>Uskutočnený</option><option>Uzavretý</option>
+  </select></label>
+  <input id="controlDayAgenda" type="hidden">
+  <input id="controlDayGeneralNotes" type="hidden">
+  <div class="modal-actions span2"><button type="button" class="ghost" data-close="controlDayInfoModal">Zrušiť</button><button type="submit">Uložiť údaje</button></div>
+ </form>
+</div></div>
+
+
+<div class="modal hidden" id="coordinationTextModal"><div class="modal-card extra-wide">
+ <div class="modal-head">
+  <div><p>KOORDINAČNÁ PORADA</p><h2>Upraviť text zápisu</h2></div>
+  <button class="close" data-close="coordinationTextModal">×</button>
+ </div>
+
+ <div class="coord-word-section">
+  <label>Program koordinačnej porady</label>
+  <div class="coord-word-toolbar" data-editor-toolbar="coordinationAgendaEditor">
+   <button type="button" data-rich-command="bold" title="Tučné"><b>B</b></button>
+   <button type="button" data-rich-command="italic" title="Kurzíva"><i>I</i></button>
+   <button type="button" data-rich-command="underline" title="Podčiarknuté"><u>U</u></button>
+   <span></span>
+   <button type="button" data-rich-command="insertUnorderedList" title="Odrážky">• Zoznam</button>
+   <button type="button" data-rich-command="insertOrderedList" title="Číslovanie">1. Zoznam</button>
+   <span></span>
+   <button type="button" data-rich-command="justifyLeft" title="Zarovnať vľavo">≡</button>
+   <button type="button" data-rich-command="justifyCenter" title="Zarovnať na stred">≣</button>
+   <button type="button" data-rich-command="removeFormat" title="Odstrániť formátovanie">Vyčistiť</button>
+  </div>
+  <div id="coordinationAgendaEditor" class="coord-word-editor" contenteditable="true"></div>
+ </div>
+
+ <div class="coord-word-section">
+  <label>Všeobecné poznámky a záver</label>
+  <div class="coord-word-toolbar" data-editor-toolbar="coordinationNotesEditor">
+   <button type="button" data-rich-command="bold" title="Tučné"><b>B</b></button>
+   <button type="button" data-rich-command="italic" title="Kurzíva"><i>I</i></button>
+   <button type="button" data-rich-command="underline" title="Podčiarknuté"><u>U</u></button>
+   <span></span>
+   <button type="button" data-rich-command="insertUnorderedList" title="Odrážky">• Zoznam</button>
+   <button type="button" data-rich-command="insertOrderedList" title="Číslovanie">1. Zoznam</button>
+   <span></span>
+   <button type="button" data-rich-command="justifyLeft" title="Zarovnať vľavo">≡</button>
+   <button type="button" data-rich-command="justifyCenter" title="Zarovnať na stred">≣</button>
+   <button type="button" data-rich-command="removeFormat" title="Odstrániť formátovanie">Vyčistiť</button>
+  </div>
+  <div id="coordinationNotesEditor" class="coord-word-editor coord-word-editor-large" contenteditable="true"></div>
+ </div>
+
+ <div class="modal-actions">
+  <button type="button" class="ghost" data-close="coordinationTextModal">Zrušiť</button>
+  <button type="button" id="saveCoordinationText">Uložiť text zápisu</button>
+ </div>
+</div></div>
+
+<div class="modal hidden" id="controlDayTaskModal"><div class="modal-card wide">
+ <div class="modal-head"><div><p>ÚLOHA Z KOORDINAČNEJ PORADY</p><h2 id="controlDayTaskModalTitle">Pridať úlohu</h2></div><button class="close" data-close="controlDayTaskModal">×</button></div>
+ <form id="controlDayTaskForm" class="form-grid">
+  <input type="hidden" id="controlDayTaskId">
+  <label class="span2">Úloha / zápis<textarea id="controlDayTaskText" rows="4" required placeholder="Čo bolo dohodnuté alebo čo je potrebné vykonať"></textarea></label>
+  <label>Firma<select id="controlDayTaskCompany"><option value="">Bez priradenej firmy</option></select></label>
+  <label>Zodpovedná osoba<input id="controlDayTaskResponsible" placeholder="Firma alebo konkrétna osoba"></label>
+  <label>Termín splnenia<input id="controlDayTaskDeadline" type="date"></label>
+  <label>Stav<select id="controlDayTaskStatus">
+   <option>Bez vyjadrenia</option><option>Otvorené</option><option>Prebieha</option><option>Nesplnené</option><option>Po termíne</option><option>Splnené</option>
+  </select></label>
+  <label class="span2">Poznámka<textarea id="controlDayTaskNote" rows="3"></textarea></label>
+  <div class="modal-actions span2"><button type="button" class="ghost" data-close="controlDayTaskModal">Zrušiť</button><button type="submit">Uložiť úlohu</button></div>
+ </form>
+</div></div>
+
+
+<div class="modal hidden" id="bulkControlDayTaskModal"><div class="modal-card wide bulk-task-modal-card">
+ <div class="modal-head">
+  <div><p id="bulkControlDayTaskKicker">VIAC ÚLOH PRE JEDNU FIRMU</p><h2 id="bulkControlDayTaskTitle">Pridať úlohy z koordinačnej porady</h2></div>
+  <button class="close" data-close="bulkControlDayTaskModal">×</button>
+ </div>
+ <form id="bulkControlDayTaskForm">
+  <div class="bulk-task-company-grid">
+   <label>Firma
+    <select id="bulkControlDayTaskCompany" required>
+     <option value="">Vyber firmu</option>
+    </select>
+   </label>
+   <label>Zodpovedná osoba pre všetky
+    <input id="bulkControlDayTaskResponsible" placeholder="Konkrétna osoba alebo vedúci firmy">
+   </label>
+   <label>Stav pre všetky
+    <select id="bulkControlDayTaskStatus">
+     <option>Bez vyjadrenia</option>
+     <option>Otvorené</option>
+     <option>Prebieha</option>
+     <option>Nesplnené</option>
+     <option>Po termíne</option>
+     <option>Splnené</option>
+    </select>
+   </label>
+  </div>
+
+  <div class="bulk-task-heading">
+   <div>
+    <strong>Úlohy pre vybranú firmu</strong>
+    <small>Každý bod môže mať vlastný text, osobu, termín, stav a poznámku.</small>
+   </div>
+   <button type="button" class="ghost" id="addBulkControlDayTaskRow">+ Pridať ďalšiu úlohu</button>
+  </div>
+
+  <div id="bulkControlDayTaskRows" class="bulk-task-rows"></div>
+
+  <div class="modal-actions">
+   <button type="button" class="ghost" data-close="bulkControlDayTaskModal">Zrušiť</button>
+   <button type="submit" id="saveBulkControlDayTasks">Uložiť všetky úlohy</button>
+  </div>
+ </form>
+</div></div>
+
+<div class="modal hidden" id="coordinationAttendeeModal"><div class="modal-card"><div class="modal-head"><div><p>PREZENČNÁ LISTINA</p><h2 id="coordinationAttendeeTitle">Pridať účastníka</h2></div><button class="close" data-close="coordinationAttendeeModal">×</button></div><form id="coordinationAttendeeForm" class="form-grid"><input type="hidden" id="coordinationAttendeeId"><label class="span2">Firma zo spoločnej databázy<select id="coordinationAttendeeCompany"><option value="">Bez firmy / vlastný názov</option></select></label><label class="span2">Meno a priezvisko<input id="coordinationAttendeeName" placeholder="Kontaktná osoba firmy"></label><label>Vlastný názov firmy<input id="coordinationAttendeeCustomCompany"></label><label>Funkcia<input id="coordinationAttendeeRole" placeholder="Stavbyvedúci, majster, dozor…"></label><label class="span2">Kontakt<input id="coordinationAttendeeContact"></label><div class="modal-actions span2"><button type="button" class="ghost" data-close="coordinationAttendeeModal">Zrušiť</button><button type="submit">Uložiť na prezenčnú listinu</button></div></form></div></div>
+
+<div class="modal hidden" id="calendarEventModal"><div class="modal-card">
+ <div class="modal-head">
+  <div><p>KALENDÁR STAVBY</p><h2 id="calendarEventModalTitle">Nová udalosť</h2></div>
+  <button class="close" data-close="calendarEventModal">×</button>
+ </div>
+ <form id="calendarEventForm" class="form-grid">
+  <input type="hidden" id="calendarEventId">
+  <label class="span2">Dátum
+   <input id="calendarEventDate" type="date" required>
+  </label>
+  <label class="span2">Názov udalosti
+   <input id="calendarEventTitle" required placeholder="napr. Nástup fasádnikov, stretnutie, betonáž">
+  </label>
+  <label>Čas
+   <input id="calendarEventStart" type="time">
+  </label>
+  <label>Firma
+   <select id="calendarEventCompany"><option value="">Bez firmy</option></select>
+  </label>
+  <label class="span2">Farba udalosti
+   <div class="calendar-color-control">
+    <input id="calendarEventColor" type="color" value="#2563eb" aria-label="Farba udalosti">
+    <span id="calendarEventColorPreview">Ukážka udalosti</span>
+   </div>
+  </label>
+  <label class="span2">Poznámka
+   <textarea id="calendarEventNote" rows="4"></textarea>
+  </label>
+  <div class="modal-actions span2">
+   <button type="button" class="danger hidden" id="deleteCalendarEvent">Vymazať</button>
+   <button type="button" class="ghost" data-close="calendarEventModal">Zrušiť</button>
+   <button type="submit">Uložiť</button>
+  </div>
+ </form>
+</div></div>
+
+<div class="modal hidden" id="workerCompanyModal"><div class="modal-card"><div class="modal-head"><div><p>STAV PRACOVNÍKOV</p><h2>Pridať firmu alebo skupinu</h2></div><button class="close" data-close="workerCompanyModal">×</button></div>
+<form id="workerCompanyForm" class="form-grid">
+ <label class="span2">Firma zo spoločnej databázy
+  <select id="workerDatabaseCompany"><option value="">Nevybraná – použijem vlastný názov</option></select>
+ </label>
+ <label class="span2">Vlastný názov firmy / skupiny
+  <input id="workerCustomName" placeholder="napr. Elektrikári objekt A, Murári 5. NP, Partia Čech">
+ </label>
+ <div class="database-hint span2">Vyber firmu z databázy alebo napíš vlastný názov. Ak vyplníš oboje, v tabuľke sa zobrazí vlastný názov.</div>
+ <div class="worker-name-preview span2" id="workerNamePreview"><strong>Vyber firmu alebo zadaj vlastný názov</strong><span>Tento názov sa zobrazí v tabuľke aj v PDF.</span></div>
+ <div class="modal-actions span2"><button type="button" class="ghost" data-close="workerCompanyModal">Zrušiť</button><button type="submit">Pridať do mesiaca</button></div>
+</form></div></div>
+
+<div class="modal hidden" id="deliveryNoteOcrModal"><div class="modal-card extra-wide delivery-ocr-card">
+ <div class="modal-head"><div><p>PASPORT SKLADU · OCR + CODEX AI</p><h2>Kontrola dodacieho listu</h2><small>OCR prebehne lokálne. Codex následne overí firmu, materiál, množstvo a orientačnú cenu cez internet. Pred uložením všetko skontroluj.</small></div><button class="close" data-close="deliveryNoteOcrModal">×</button></div>
+ <div class="delivery-ocr-layout">
+  <div class="delivery-ocr-preview"><img id="deliveryNotePreview" alt="Náhľad dodacieho listu"><div id="deliveryOcrStatus">Pripravujem fotografiu…</div></div>
+  <form id="deliveryNoteOcrForm" class="form-grid">
+   <label>Dátum dodania<input id="deliveryOcrDate" type="date" required></label>
+   <label>Dodávateľ<input id="deliveryOcrSupplier" list="supplierList" placeholder="napr. DEK"></label>
+   <label>Číslo dodacieho listu<input id="deliveryOcrDocumentNo" required></label>
+   <label>Číslo faktúry<input id="deliveryOcrInvoiceNo" placeholder="zostáva prázdne, doplníš neskôr"></label>
+   <label class="span2">Stručný názov materiálu<input id="deliveryOcrMaterial" required placeholder="napr. Vata / tepelná izolácia alebo Spotrebný materiál"></label>
+   <label>Kategória materiálu<input id="deliveryOcrCategory" placeholder="určí AI; môžeš upraviť"></label>
+   <label>Množstvo / balenie<input id="deliveryOcrQuantity" placeholder="napr. 12 bal. · 86,4 m²"></label>
+   <label>Orientačná cena dodacieho listu<input id="deliveryOcrPrice" inputmode="decimal" placeholder="napr. 1 859,37 €"></label>
+   <label>P. č.<input id="deliveryOcrSequence" readonly></label>
+   <section class="span2 delivery-ai-review" id="deliveryAiReview" aria-live="polite">
+    <div><strong>AI rozpis materiálu</strong><span id="deliveryAiConfidence">Čakám na fotografiu.</span></div>
+    <div id="deliveryAiMaterialLines" class="delivery-ai-lines">Po rozpoznaní tu uvidíš materiály, množstvá, prepočet ceny a použité zdroje.</div>
+    <div id="deliveryAiPriceBasis" class="delivery-ai-basis"></div>
+   </section>
+   <details class="span2 delivery-ocr-raw"><summary>Zobraziť rozpoznaný text</summary><textarea id="deliveryOcrRawText" rows="8" readonly></textarea></details>
+   <div class="modal-actions span2"><button type="button" class="ghost" id="deliveryAiRetry">Znova vyhodnotiť AI</button><button type="button" class="ghost" data-close="deliveryNoteOcrModal">Zrušiť</button><button type="submit">Uložiť do pasportu</button></div>
+  </form>
+ </div>
+</div></div>
+
+<div class="modal hidden" id="companyHourModal"><div class="modal-card"><div class="modal-head"><div><p>FIREMNÁ HODINOVÁ SMENOVKA</p><h2>Pridať firmu na hodiny</h2></div><button class="close" data-close="companyHourModal">×</button></div>
+<form id="companyHourForm" class="form-grid">
+ <label class="span2">Firma zo spoločnej databázy
+  <select id="companyHourCompany"><option value="">Nevybraná – vytvorím vlastnú firmu</option></select>
+ </label>
+ <label class="span2">Vlastný názov firmy
+  <input id="companyHourCustomName" placeholder="napr. Montážna partia XY">
+ </label>
+ <label>Hodinová sadzba bez DPH
+  <input id="companyHourRate" type="text" inputmode="decimal" required placeholder="napr. 18 alebo 18,50">
+ </label>
+ <label>Popis do súpisu
+  <input id="companyHourDescription" placeholder="napr. Hodinové práce podľa smenovky">
+ </label>
+ <label class="span2">Mená pracovníkov – voliteľné, vieš ich dopísať aj neskôr v tabuľke
+  <textarea id="companyHourWorkers" placeholder="Každé meno môže byť na nový riadok, napr.
+Ján Novák
+Peter Horváth
+Marek Kováč"></textarea>
+ </label>
+ <div class="database-hint span2">Sadzba sa zadáva pri založení smenovky. Pracovníci sú samostatné riadky ako v podsmenovke BETPRES – píšeš iba mená, bez profesie. Mená vieš dopísať priamo do tabuľky a každému pracovníkovi zadávaš hodiny osobitne.</div>
+ <div class="worker-name-preview span2" id="companyHourPreview"><strong>Vyber firmu alebo zadaj vlastný názov</strong><span>Firma sa použije aj pre vytvorenie súpisu prác.</span></div>
+ <div class="modal-actions span2"><button type="button" class="ghost" data-close="companyHourModal">Zrušiť</button><button type="submit">Pridať smenovku</button></div>
+</form></div></div>
+
+<div class="modal hidden" id="betpresEmployeeModal"><div class="modal-card">
+ <div class="modal-head">
+  <div><p>PODSMENOVKA BETPRES</p><h2>Pridať pracovníka</h2></div>
+  <button class="close" data-close="betpresEmployeeModal">×</button>
+ </div>
+ <form id="betpresEmployeeForm" class="form-grid">
+  <label class="span2">Meno a priezvisko
+   <input id="betpresEmployeeName" list="betpresEmployeeSuggestions" required placeholder="Vyber existujúce meno alebo napíš nové">
+   <datalist id="betpresEmployeeSuggestions"></datalist>
+  </label>
+  <label class="span2">Pracovná pozícia
+   <input id="betpresEmployeePosition" placeholder="napr. tesár, murár, pomocný pracovník">
+  </label>
+  <label class="span2">Odmena v percentách
+   <input id="betpresEmployeeReward" type="text" inputmode="decimal" placeholder="napr. 10">
+  </label>
+  <div class="database-hint span2">Pracovník sa prenesie aj do nasledujúceho mesiaca, ale odpracované hodiny zostanú prázdne.</div>
+  <div class="modal-actions span2">
+   <button type="button" class="ghost" data-close="betpresEmployeeModal">Zrušiť</button>
+   <button type="submit">Pridať do podsmenovky</button>
+  </div>
+ </form>
+</div></div>
+
+<div class="modal hidden" id="thpEmployeeModal"><div class="modal-card">
+ <div class="modal-head">
+  <div><p>PODSMENOVKA THP</p><h2>Pridať THP pracovníka</h2></div>
+  <button class="close" data-close="thpEmployeeModal">×</button>
+ </div>
+ <form id="thpEmployeeForm" class="form-grid">
+  <label class="span2">Meno a priezvisko
+   <input id="thpEmployeeName" list="thpEmployeeSuggestions" required placeholder="Vyber existujúce meno alebo napíš nové">
+   <datalist id="thpEmployeeSuggestions"></datalist>
+  </label>
+  <label class="span2">Pracovná pozícia
+   <input id="thpEmployeePosition" placeholder="napr. stavbyvedúci, asistent, majster">
+  </label>
+  <div class="database-hint span2">Pracovník sa prenesie do nasledujúceho mesiaca. Hodiny, nadčasy a kódy ostanú prázdne.</div>
+  <div class="modal-actions span2">
+   <button type="button" class="ghost" data-close="thpEmployeeModal">Zrušiť</button>
+   <button type="submit">Pridať do podsmenovky THP</button>
+  </div>
+ </form>
+</div></div>
+
+<div class="modal hidden" id="handoverEditorModal"><div class="modal-card document-editor-card"><div class="modal-head"><div><p>UPRAVITEĽNÁ ZÁPISNICA</p><h2>Editor odovzdania pracoviska</h2><small>Ručné zmeny vrátane mien sa uložia do konkrétnej zápisnice, nie do databázy firmy alebo stavby.</small></div><button class="close" data-close="handoverEditorModal">×</button></div><form id="handoverEditorForm"><div id="handoverEditorFields" class="handover-editor-fields"></div><div class="modal-actions sticky-actions"><button type="button" class="ghost" data-close="handoverEditorModal">Zrušiť</button><button type="button" class="ghost" id="editorResetTemplate">Obnoviť šablónu</button><button type="submit">Uložiť ručné úpravy</button></div></form></div></div>
+
+<div class="modal hidden site-command-modal" id="commandPalette">
+ <div class="modal-card site-command-card">
+  <div class="modal-head">
+   <div><p>RÝCHLE OTVORENIE</p><h2>Kam chceš ísť?</h2></div>
+   <button class="close" data-close="commandPalette">×</button>
+  </div>
+  <div class="site-command-search">⌕ <input id="commandSearch" placeholder="Napíš napríklad pracovníci, súpis, porada..." autocomplete="off"></div>
+  <div class="site-command-grid" id="commandGrid">
+   <button data-command-label="prehľad stavby domov" data-go="dashboard"><span>⌂</span><strong>Prehľad stavby</strong><small>Hlavný pracovný panel</small></button>
+   <button data-command-label="rýchle zadávanie" data-go="quick"><span>⚡</span><strong>Rýchle zadávanie</strong><small>Pracovníci a úlohy</small></button>
+   <button data-command-label="kalendár plánovanie" data-go="calendar"><span>▣</span><strong>Kalendár</strong><small>Stretnutia a nástupy firiem</small></button>
+   <button data-command-label="stav pracovníkov ľudia" data-go="workers"><span>♟</span><strong>Stav pracovníkov</strong><small>Firmy a podsmenovka BETPRES</small></button>
+   <button data-command-label="vady nedorobky fotografie kvalita" data-go="defects"><span>!</span><strong>Vady a nedorobky</strong><small>Fotografie, výber a PDF</small></button>
+   <button data-command-label="koordinačná porada úlohy" data-go="siteMeetings"><span>◫</span><strong>Koordinačná porada</strong><small>Úlohy, uloženie a PDF</small></button>
+   <button data-command-label="kontrolný deň kontrolné dni úlohy" data-go="controlDays"><span>▣</span><strong>Kontrolné dni</strong><small>Kontrola prác, úlohy a PDF</small></button>
+   <button data-command-label="vzorkovanie vzorky materiál investor technický list pasport" data-go="materialSamples"><span>◇</span><strong>Vzorkovanie materiálov</strong><small>Technické listy, schválenie a pasport</small></button>
+   <button data-command-label="pasport skladu dodacie listy material" data-go="purchases"><span>▥</span><strong>Pasport skladu</strong><small>Foto dodacieho listu a OCR</small></button>
+   <button data-command-label="fakturácia faktúry" data-go="billing"><span>€</span><strong>Fakturácia</strong><small>Faktúry podľa firiem</small></button>
+   <button data-command-label="súpis prác výkon" data-go="workStatements"><span>▤</span><strong>Súpis prác</strong><small>Mesačné výkony a export</small></button>
+   <button data-command-label="dokumenty archív" data-go="documents"><span>▤</span><strong>Dokumenty</strong><small>Uložené dokumenty a história</small></button>
+   <button data-command-label="odovzdanie pracoviska" data-go="handover"><span>⇄</span><strong>Odovzdanie pracoviska</strong><small>Nová zápisnica</small></button>
+   <button data-command-label="preberací protokol" data-go="acceptance"><span>✓</span><strong>Preberací protokol</strong><small>Odovzdanie vykonaných prác</small></button>
+   <button data-command-label="firmy zmluvy" data-go="companies"><span>♙</span><strong>Firmy a zmluvy</strong><small>Databáza dodávateľov</small></button>
+   <button data-command-label="cloud databáza synchronizácia supabase" data-go="cloud"><span>☁</span><strong>Cloud a databáza</strong><small>Pripojenie a synchronizácia</small></button>
+  </div>
+ </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="assets/js/data/seed-data.js"></script><script src="assets/js/data/material-passport-data.js"></script><script src="assets/js/vendor/jszip.min.js"></script>
+<script src="assets/js/legacy/sitedesk-core.js"></script>
+<script src="assets/js/features/work-spreadsheet.js"></script>
+<script src="assets/js/features/work-statement-roundtrip.js"></script>
+<script src="assets/js/features/pdf-preview.js"></script>
+<script src="assets/js/features/timesheet-pdf-export.js"></script>
+<script src="assets/js/features/mobile-diary-dashboard.js"></script>
+<script src="assets/js/features/appearance-settings.js"></script>
+<script src="assets/js/features/ai-assistant.js"></script>
+<script src="assets/js/features/material-samples.js"></script></body></html>

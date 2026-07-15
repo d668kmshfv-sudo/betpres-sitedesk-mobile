@@ -1,0 +1,1 @@
+window.MATERIAL_PASSPORT_DATA=[];window.MATERIAL_PASSPORT_INFO={rows:0,lastSequence:"",lastDate:""};
