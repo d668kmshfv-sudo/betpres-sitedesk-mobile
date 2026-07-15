@@ -29,10 +29,11 @@
     }
    }finally{
     const target=new URL("./",location.href);
-    target.searchParams.set("refresh",`1.0.10-${Date.now()}`);
+    target.searchParams.set("refresh",`1.0.11-${Date.now()}`);
     setTimeout(()=>location.replace(target.href),250)
    }
   })()
  </script>
 </body>
 </html>
+
