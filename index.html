@@ -13,7 +13,7 @@
  <link rel="manifest" href="manifest.webmanifest">
  <link rel="apple-touch-icon" href="assets/app-icon.png">
  <link rel="icon" href="assets/app-icon.svg">
- <link rel="stylesheet" href="styles.css?v=1.0.11">
+ <link rel="stylesheet" href="styles.css?v=1.0.12">
 </head>
 <body>
  <div id="app" class="app">
@@ -50,7 +50,7 @@
      <button class="quick-card defect" type="button" data-action="add-defect"><span>!</span><b>Vada / nedorobok</b><small>Pridať aj fotografiu</small></button>
      <button class="quick-card diary" type="button" data-action="add-diary"><span>✎</span><b>Denný zápis</b><small>Rýchla poznámka zo stavby</small></button>
      <button class="quick-card workers" type="button" data-route="workers"><span>♟</span><b>Pracovníci</b><small>Firmy, BETPRES aj THP</small></button>
-     <button class="quick-card meetings" type="button" data-route="meetings"><span>◫</span><b>Koordinačná porada</b><small>Úlohy a firmy priamo na stavbe</small></button>
+     <button class="quick-card samples" type="button" data-route="samples"><span>◇</span><b>Vzorky</b><small>Materiál a technický list</small></button>
     </div>
     <section class="summary-card">
      <div class="section-title"><div><p class="eyebrow">DNES NA STAVBE</p><h2>Rýchly prehľad</h2></div><span id="homeProjectBadge" class="soft-badge">—</span></div>
@@ -118,6 +118,12 @@
     <div id="diaryList" class="item-list"></div>
    </section>
 
+   <section class="screen" data-screen="samples">
+    <div class="screen-head"><div><p class="eyebrow">SCHVAĽOVANIE MATERIÁLOV</p><h1>Materiálové vzorky</h1></div><button class="primary-circle" type="button" data-action="add-sample">+</button></div>
+    <label class="search-box full"><span>⌕</span><input id="sampleSearch" type="search" placeholder="Materiál, výrobca alebo firma"></label>
+    <div id="sampleList" class="item-list"></div>
+   </section>
+
    <section class="screen settings-screen" data-screen="settings">
     <div class="screen-head"><div><p class="eyebrow">APLIKÁCIA</p><h1>Nastavenia</h1></div></div>
     <section class="settings-card">
@@ -150,7 +156,7 @@
       <div><p class="eyebrow">IPHONE A IPAD</p><h2>Inštalácia na plochu</h2><p>Otvor túto stránku v Safari, stlač <b>Zdieľať</b> a potom <b>Pridať na plochu</b>.</p></div>
      <button id="installHelpButton" class="secondary-button full" type="button">Zobraziť postup</button>
     </section>
-    <p class="app-version">BETPRES SiteDesk Mobile 1.0.11 · iPhone a iPad · kompatibilné so SiteDesk 5.0.70</p>
+    <p class="app-version">BETPRES SiteDesk Mobile 1.0.12 · iPhone a iPad · kompatibilné so SiteDesk 5.0.75</p>
    </section>
   </main>
 
@@ -160,9 +166,10 @@
    <button type="button" data-route="materials"><span>▤</span><small>Materiál</small></button>
    <button type="button" data-route="defects"><span>!</span><small>Vady</small></button>
    <button type="button" data-route="workers"><span>♟</span><small>Pracovníci</small></button>
-   <button type="button" data-route="meetings"><span>◫</span><small>Porady</small></button>
-   <button type="button" data-route="calendar"><span>▣</span><small>Kalendár</small></button>
+   <button type="button" data-route="samples"><span>◇</span><small>Vzorky</small></button>
    <button type="button" data-route="diary"><span>✎</span><small>Denník</small></button>
+   <button class="tablet-only-nav" type="button" data-route="meetings"><span>◫</span><small>Porady</small></button>
+   <button class="tablet-only-nav" type="button" data-route="calendar"><span>▣</span><small>Kalendár</small></button>
   </nav>
 
   <div id="sheetBackdrop" class="sheet-backdrop" hidden></div>
@@ -174,6 +181,7 @@
   <div id="toast" class="toast" hidden></div>
  </div>
  <script src="vendor/tesseract.min.js" defer></script>
- <script src="app.js?v=1.0.11" defer></script>
+ <script src="app.js?v=1.0.12" defer></script>
 </body>
 </html>
+
