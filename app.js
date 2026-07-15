@@ -359,7 +359,8 @@
 
  function sampleCompanyOptions(item){
   const current=item?.companyId||(!item||/betpres/i.test(item.submittedBy||"")?"__betpres__":"");
-  return `<option value="__betpres__" ${current==="__betpres__"?"selected":""}>BETPRES, s.r.o.</option>`+app.data.companies.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),"sk")).map(companyItem=>`<option value="${esc(companyItem.id)}" ${companyItem.id===current?"selected":""}>${esc(companyItem.name)}</option>`).join("")
+  const assigned=new Set(app.data.assignments.filter(assignment=>assignment.projectId===app.projectId).map(assignment=>assignment.companyId)),companies=app.data.companies.filter(companyItem=>assigned.has(companyItem.id)||companyItem.id===current).sort((a,b)=>String(a.name).localeCompare(String(b.name),"sk"));
+  return `<option value="__betpres__" ${current==="__betpres__"?"selected":""}>BETPRES, s.r.o.</option>`+companies.map(companyItem=>`<option value="${esc(companyItem.id)}" ${companyItem.id===current?"selected":""}>${esc(companyItem.name)}</option>`).join("")
  }
 
  function openSampleForm(sampleId=""){
