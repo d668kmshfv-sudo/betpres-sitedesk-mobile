@@ -175,7 +175,7 @@
   });
   document.querySelectorAll("[data-ai-action]").forEach(button=>button.addEventListener("click",()=>runAssistant(button.dataset.aiAction,"")));
   document.addEventListener("keydown",event=>{
-   if(event.ctrlKey&&event.shiftKey&&event.key.toLowerCase()==="a"){
+   if(event.ctrlKey&&event.shiftKey&&String(event.key||"").toLowerCase()==="a"){
     event.preventDefault();
     document.getElementById("siteDeskAiLayer")?.classList.contains("open")?closeAssistant():openAssistant()
    }else if(event.key==="Escape"&&document.getElementById("siteDeskAiLayer")?.classList.contains("open"))closeAssistant()

@@ -1,4 +1,5 @@
-const CACHE = "betpres-sitedesk-ipad-1.0.1";
+const CACHE = "betpres-sitedesk-ipad-1.0.2";
+const CACHE_PREFIX = "betpres-sitedesk-ipad-";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest",
   "assets/styles/app.css", "assets/styles/appearance-settings.css",
@@ -9,6 +10,7 @@ const SHELL = [
   "assets/js/vendor/jszip.min.js", "assets/js/vendor/exceljs.min.js", "assets/js/legacy/sitedesk-core.js",
   "assets/js/features/work-spreadsheet.js", "assets/js/features/work-statement-roundtrip.js",
   "assets/js/features/pdf-preview.js", "assets/js/features/timesheet-pdf-export.js",
+  "assets/js/features/machine-passport.js",
   "assets/js/features/mobile-diary-dashboard.js", "assets/js/features/appearance-settings.js",
   "assets/js/features/ai-assistant.js", "assets/js/features/material-samples.js"
 ];
@@ -18,7 +20,7 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener("fetch", (event) => {

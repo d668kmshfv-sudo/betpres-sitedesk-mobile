@@ -433,10 +433,41 @@
   }
  };
 
- var importButton = byId("importCompletedWorkXlsx");
- var fileInput = byId("completedWorkXlsxFile");
- if (importButton && fileInput) {
-  importButton.onclick = function () { fileInput.value = ""; fileInput.click(); };
+  var importButton = byId("importCompletedWorkXlsx");
+  var fileInput = byId("completedWorkXlsxFile");
+  if (importButton && fileInput) {
+   function desktopSelectionFile(selection) {
+    var binary = atob(selection.dataBase64 || "");
+    var bytes = new Uint8Array(binary.length);
+    for (var index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+    return new File([bytes], selection.name || "vyplneny-supis.xlsx", { type: selection.type || "application/octet-stream" });
+   }
+   async function processDesktopSelection(selection) {
+    var file = desktopSelectionFile(selection);
+    importButton.disabled = true;
+    var original = importButton.textContent;
+    importButton.textContent = "Kontrolujem súpis…";
+    try { await readReturnedFile(file); }
+    catch (error) { alert("Súpis sa nepodarilo načítať: " + (error && error.message ? error.message : error)); }
+    finally { importButton.disabled = false; importButton.textContent = original; }
+   }
+   importButton.type = "button";
+   importButton.onclick = async function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (window.betpresDesktop && typeof window.betpresDesktop.selectWorkStatementFile === "function") {
+     try {
+      var selection = await window.betpresDesktop.selectWorkStatementFile();
+      if (selection && !selection.canceled) await processDesktopSelection(selection);
+     } catch (error) {
+      alert("Súbor sa nepodarilo vybrať: " + (error && error.message ? error.message : error));
+     }
+     return;
+    }
+    fileInput.value = "";
+    if (typeof fileInput.showPicker === "function") fileInput.showPicker();
+    else fileInput.click();
+   };
   fileInput.onchange = async function () {
    var file = fileInput.files && fileInput.files[0];
    if (!file) return;
@@ -446,10 +477,51 @@
    try { await readReturnedFile(file); }
    catch (error) { alert("Excel sa nepodarilo načítať: " + (error && error.message ? error.message : error)); }
    finally { importButton.disabled = false; importButton.textContent = original; }
-  };
- }
+   };
+  }
 
- var confirmButton = byId("confirmWorkReturnImport");
+  var exchangeOpenButton = byId("workExchangeOpen");
+  var exchangeModal = byId("workExchangeModal");
+  var exchangeContext = byId("workExchangeContext");
+  var exchangeExportButton = byId("workExchangeExport");
+  var exchangeImportButton = byId("workExchangeImport");
+  function refreshExchangeContext() {
+   var statement = getWorkStatement(false);
+   if (!statement) {
+    exchangeContext.textContent = "Najprv otvor súpis konkrétnej firmy a mesiaca.";
+    exchangeExportButton.disabled = true;
+    exchangeImportButton.disabled = true;
+    return false;
+   }
+   var firm = company(statement.companyId);
+   var itemCount = (statement.items || []).filter(function (item) { return !isWorkDocSectionItem(item); }).length;
+   exchangeContext.textContent = (firm && firm.name || "Firma") + " · " + formatBillingMonth(statement.period) + " · súpis č. " + (statement.number || "—") + " · " + itemCount + " položiek";
+   exchangeExportButton.disabled = false;
+   exchangeImportButton.disabled = false;
+   return true;
+  }
+  if (exchangeOpenButton && exchangeModal) exchangeOpenButton.onclick = function () {
+   refreshExchangeContext();
+   exchangeModal.classList.remove("hidden");
+  };
+  if (exchangeExportButton) exchangeExportButton.onclick = async function () {
+   if (!refreshExchangeContext()) return;
+   exchangeExportButton.disabled = true;
+   var original = exchangeExportButton.textContent;
+   exchangeExportButton.textContent = "Pripravujem Excel…";
+   try { await exportButton.onclick(); }
+   finally {
+    exchangeExportButton.disabled = false;
+    exchangeExportButton.textContent = original;
+   }
+  };
+  if (exchangeImportButton) exchangeImportButton.onclick = function () {
+   if (!refreshExchangeContext()) return;
+   exchangeModal.classList.add("hidden");
+   importButton.click();
+  };
+
+  var confirmButton = byId("confirmWorkReturnImport");
  if (confirmButton) confirmButton.onclick = function () {
   if (!pendingImport || pendingImport.result.fatal || !pendingImport.result.updates.length) return;
   var statement = state.workStatements.find(function (item) { return item.id === pendingImport.statementId; });

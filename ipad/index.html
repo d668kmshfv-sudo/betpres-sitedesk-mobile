@@ -2,10 +2,10 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk iPad"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk iPad 1.0.1</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css"><link rel="stylesheet" href="assets/styles/appearance-settings.css"><link rel="stylesheet" href="assets/styles/ai-assistant.css"><link rel="stylesheet" href="assets/styles/material-samples.css"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.0.1">
+<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk iPad"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk iPad 1.0.2 · SiteDesk 5.0.85</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css"><link rel="stylesheet" href="assets/styles/appearance-settings.css"><link rel="stylesheet" href="assets/styles/ai-assistant.css"><link rel="stylesheet" href="assets/styles/material-samples.css"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.0.2">
 
-<script src="assets/js/ipad-bridge.js?v=1.0.1"></script>
+<script src="assets/js/ipad-bridge.js?v=1.0.2"></script>
 <script src="assets/js/bootstrap/startup-guard.js"></script>
 
 </head>
@@ -14,7 +14,7 @@
 <aside class="sidebar site-sidebar" id="sidebar">
  <div class="brand site-brand">
   <img src="assets/images/navigation-logo.png" alt="Betpres">
- <div><strong>BETPRES</strong><small>SiteDesk 5.0.75</small></div>
+    <div><strong>BETPRES</strong><small>SiteDesk 5.0.85</small></div>
  </div>
 
  <nav class="site-nav">
@@ -27,6 +27,7 @@
   <div class="nav-group">
    <div class="nav-group-label">DENNÁ PRÁCA</div>
    <button class="nav-btn" data-view="calendar"><span class="nav-icon">▣</span><span>Kalendár</span></button>
+   <button class="nav-btn" data-view="mobileDiary"><span class="nav-icon">✎</span><span>Denník z mobilu</span></button>
    <button class="nav-btn" data-view="workers"><span class="nav-icon">♟</span><span>Stav pracovníkov</span></button>
    <button class="nav-btn" data-view="defects"><span class="nav-icon">!</span><span>Vady a nedorobky</span></button>
    <button class="nav-btn" data-view="siteMeetings"><span class="nav-icon">◫</span><span>Koordinačné porady</span></button>
@@ -38,12 +39,13 @@
    <button class="nav-btn" data-view="billing"><span class="nav-icon">€</span><span>Fakturácia</span></button>
    <button class="nav-btn" data-view="workStatements"><span class="nav-icon">▤</span><span>Súpis prác</span></button>
    <button class="nav-btn" data-view="purchases"><span class="nav-icon">▥</span><span>Pasport skladu</span></button>
+   <button class="nav-btn" data-view="concrete"><span class="nav-icon">◆</span><span>Betóny</span></button>
+   <button class="nav-btn" data-view="machines"><span class="nav-icon">⚙</span><span>Pasport strojov</span></button>
   </div>
 
   <div class="nav-group">
   <div class="nav-group-label">DOKUMENTY</div>
    <button class="nav-btn" data-view="materialSamples"><span class="nav-icon">◇</span><span>Vzorkovanie materiálov</span></button>
-   <button class="nav-btn" data-view="documents"><span class="nav-icon">▤</span><span>Archív dokumentov</span></button>
    <button class="nav-btn" data-view="handover"><span class="nav-icon">⇄</span><span>Odovzdanie pracoviska</span></button>
    <button class="nav-btn" data-view="acceptance"><span class="nav-icon">✓</span><span>Preberacie protokoly</span></button>
   </div>
@@ -57,11 +59,16 @@
    <button class="nav-btn" data-view="cloud"><span class="nav-icon">☁</span><span>Cloud a databáza</span></button>
    <button class="nav-btn" data-view="data"><span class="nav-icon">⇩</span><span>Dáta a záloha</span></button>
   </div>
+
+  <div class="nav-group">
+   <div class="nav-group-label">ARCHÍV</div>
+   <button class="nav-btn" data-view="documents"><span class="nav-icon">▤</span><span>Archív dokumentov</span></button>
+  </div>
  </nav>
 
  <div class="site-sidebar-footer">
   <div class="site-version-dot"></div>
-  <div><strong>SiteDesk 5.0.75</strong><small>Codex AI · vzorky · smenovky</small></div>
+  <div><strong>SiteDesk 5.0.85</strong><small>Pasporty · súpisy · smenovky</small></div>
  </div>
 </aside>
 <main class="main">
@@ -203,6 +210,23 @@
   <article class="panel quick-card"><div class="panel-head"><div><p class="eyebrow">Koordinačná porada</p><h2>Nová úloha</h2></div></div><form id="quickTaskForm" class="quick-form"><label>Úloha<textarea id="quickTaskText" rows="4" required></textarea></label><label>Zodpovedný<input id="quickTaskResponsible"></label><label>Termín<input id="quickTaskDeadline" type="date"></label><button type="submit">Pridať do najbližšieho KD</button></form></article>
   <article class="panel quick-card quick-links-card"><div class="panel-head"><div><p class="eyebrow">Dokumenty</p><h2>Rýchle otvorenie</h2></div></div><button data-go="handover">Odovzdanie pracoviska</button><button data-go="acceptance">Preberací protokol</button><button data-go="siteMeetings">Koordinačná porada</button></article>
  </div>
+</section>
+
+<section class="view" id="mobileDiary">
+ <div class="page-title">
+  <div><p>ZÁPISY ZO STAVBY</p><h1>Denník z mobilu</h1></div>
+  <div class="header-actions"><button class="ghost" id="mobileDiaryPageRefresh">Načítať z cloudu</button></div>
+ </div>
+ <div class="mobile-diary-page-help">
+  <div><strong>Spoločný denník pre mobil aj počítač</strong><span>Po synchronizácii tu uvidíš záznamy, ktoré píšeš v mobile pre aktívnu stavbu.</span></div>
+  <button class="ghost" type="button" data-go="cloud">Nastavenie prepojenia</button>
+ </div>
+ <div class="mobile-diary-page-toolbar">
+  <label><span>Hľadať v denníku</span><input id="mobileDiarySearch" type="search" placeholder="Úloha, text alebo miesto"></label>
+  <label><span>Stav záznamu</span><select id="mobileDiaryStatusFilter"><option value="active">Aktívne</option><option value="all">Všetky</option><option value="done">Dokončené</option></select></label>
+  <span id="mobileDiaryPageCount">0 záznamov</span>
+ </div>
+ <div id="mobileDiaryPageList" class="mobile-diary-page-list"></div>
 </section>
 
 <section class="view" id="projects">
@@ -365,15 +389,16 @@
   </select>
   <span class="work-visible-count" id="workVisibleCount"></span>
   <span class="work-spacer"></span>
-  <button class="ghost" id="exportWorkXlsx">Excel pre subdodávateľa</button>
-  <button class="ghost" id="importCompletedWorkXlsx">Načítať vyplnený Excel / PDF</button>
+  <button class="ghost work-exchange-open" id="workExchangeOpen" type="button">↔ Výmena súpisu s firmou</button>
+  <button class="hidden" id="exportWorkXlsx" type="button">Excel pre subdodávateľa</button>
+  <button class="hidden" id="importCompletedWorkXlsx" type="button">Načítať vyplnený Excel / PDF</button>
   <input id="completedWorkXlsxFile" class="hidden" type="file" accept=".xlsx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
   <button class="ghost" id="exportWorkPdf">Náhľad / tlač PDF</button>
   <button class="ghost" id="exportWorkCsv">Export CSV</button>
  </div>
 
  <div class="work-paste-tip">
-  Najskôr hore vyber <strong>ZoD</strong> alebo konkrétny <strong>Dodatok</strong>. Nové aj vložené položky sa uložia iba do otvoreného dokladu. <strong>Export súpisu vždy obsahuje ZoD aj všetky dodatky.</strong><span class="formula-tip">Subdodávateľ v Exceli vypĺňa iba zelené množstvá aktuálneho mesiaca. Späť môžeš načítať XLSX; PDF načítaj v počítačovej aplikácii.</span>
+  Najskôr hore vyber <strong>ZoD</strong> alebo konkrétny <strong>Dodatok</strong>. Nové aj vložené položky sa uložia iba do otvoreného dokladu. <strong>Export súpisu vždy obsahuje ZoD aj všetky dodatky.</strong><span class="formula-tip">Subdodávateľ v Exceli vypĺňa iba zelené množstvá aktuálneho mesiaca. Späť môžeš načítať XLSX alebo textové PDF; pred uložením vždy uvidíš kontrolný náhľad zmien.</span>
  </div>
 
  <article class="panel no-pad work-table-panel">
@@ -447,7 +472,7 @@
   <article class="material-finance-card is-total"><span>Materiál celkom</span><strong id="purchaseAmountTotal">0,00 €</strong><small>podľa aktuálneho filtra</small></article>
   <article class="material-finance-card is-invoiced"><span>Odfakturované</span><strong id="purchaseAmountInvoiced">0,00 €</strong><small id="purchaseCountInvoiced">0 dodacích listov s faktúrou</small></article>
   <article class="material-finance-card is-uninvoiced"><span>Neodfakturované</span><strong id="purchaseAmountUninvoiced">0,00 €</strong><small id="purchaseCountUninvoiced">0 dodacích listov bez faktúry</small></article>
-  <article class="material-finance-card is-missing-price"><span>Bez zadanej ceny</span><strong id="purchaseCountMissingPrice">0</strong><small>riadkov nemožno započítať do sumy</small></article>
+ <article class="material-finance-card is-missing-price"><span>Bez zadanej ceny</span><strong id="purchaseCountMissingPrice">0</strong><small>riadkov nemožno započítať do sumy</small></article>
  </div>
  <div class="purchase-filter-panel">
   <label><span>Konkrétny materiál</span><input id="purchaseMaterialSearch" list="materialList" placeholder="napr. vata, EPS, obrubníky"></label>
@@ -468,10 +493,10 @@
   <div class="excel-sheet-wrap">
    <table class="excel-sheet">
     <colgroup>
-     <col class="row-number-col"><col class="col-a"><col class="col-b"><col class="col-c"><col class="col-d"><col class="col-e"><col class="col-f"><col class="col-g">
+     <col class="row-number-col"><col class="col-a"><col class="col-b"><col class="col-c"><col class="col-d"><col class="col-e"><col class="col-f"><col class="col-g"><col class="col-h"><col class="col-i">
     </colgroup>
     <thead>
-     <tr class="excel-letters"><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th></tr>
+     <tr class="excel-letters"><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th></tr>
      <tr class="excel-headers">
       <th class="corner-filter">⌄</th>
       <th>Dátum <span>⌄</span></th>
@@ -479,6 +504,8 @@
       <th>Číslo dokladu <span>⌄</span></th>
       <th>Faktúra číslo <span>⌄</span></th>
       <th>Názov materiálu <span>⌄</span></th>
+      <th>Množstvo <span>⌄</span></th>
+      <th>MJ <span>⌄</span></th>
       <th>Orientačná cena <span>⌄</span></th>
       <th>P. č. <span>⌄</span></th>
      </tr>
@@ -493,6 +520,60 @@
  </article>
  <datalist id="supplierList"></datalist>
  <datalist id="materialList"></datalist>
+</section>
+
+<section class="view" id="concrete">
+ <div class="page-title">
+  <div><p>BETÓNOVÉ DODÁVKY A FAKTURÁCIA</p><h1>Betóny</h1></div>
+  <div class="header-actions"><button class="ghost" id="openConcretePurchases">Otvoriť Pasport skladu</button><button class="ghost" id="exportConcreteCsv">Export CSV</button></div>
+ </div>
+ <div class="excel-help concrete-help"><div><strong>Automatický prehľad betónu z Pasportu skladu</strong></div><div>Zadaj napríklad „Betón C30/37“, množstvo a MJ m³. Riadok sa tu zobrazí automaticky.</div></div>
+ <div class="concrete-overview-bar">
+  <div><span>DODANÉ SPOLU</span><strong id="concreteQuantityDelivered">0 m³</strong></div>
+  <div><span>ODFAKTUROVANÉ</span><strong id="concreteQuantityInvoiced">0 m³</strong></div>
+  <div class="pending"><span>ČAKÁ NA FAKTÚRU</span><strong id="concreteQuantityPending">0 m³</strong></div>
+ </div>
+ <div class="concrete-class-panel">
+  <div class="concrete-class-head"><div><span>BETÓN PODĽA PEVNOSTNEJ TRIEDY</span><strong>Prehľad m³ podľa označenia, napríklad C30/37</strong></div><small id="concreteClassCount">0 tried</small></div>
+  <div id="concreteClassSummary" class="concrete-class-summary"><div class="concrete-class-empty">Po zadaní materiálu, napríklad Betón C30/37, sa tu zobrazí jeho súčet.</div></div>
+ </div>
+ <div class="concrete-filter-panel">
+  <label>Hľadať<input id="concreteSearch" type="search" placeholder="Dodávateľ, doklad, faktúra…"></label>
+  <label>Pevnostná trieda<select id="concreteClassFilter"><option value="">Všetky triedy</option></select></label>
+  <label>Dodávateľ<select id="concreteSupplierFilter"><option value="">Všetci dodávatelia</option></select></label>
+  <label>Mesiac<select id="concreteMonthFilter"><option value="">Všetky mesiace</option></select></label>
+  <button class="ghost" id="resetConcreteFilters">Zrušiť filtre</button><span id="concreteResultCount">0 riadkov</span>
+ </div>
+ <article class="excel-panel concrete-passport-panel">
+  <div class="excel-sheet-wrap"><table class="excel-sheet concrete-table">
+   <thead><tr class="excel-headers"><th>Dátum</th><th>Dodávateľ</th><th>Číslo dokladu</th><th>Faktúra číslo</th><th>Názov materiálu</th><th>Trieda</th><th>Množstvo</th><th>Stav</th><th>P. č.</th></tr></thead>
+   <tbody id="concreteTable"></tbody>
+  </table></div>
+  <div class="excel-statusbar"><span>Údaje sú prepojené s Pasportom skladu</span><span id="concreteSaveStatus">Automatické ukladanie zapnuté</span></div>
+ </article>
+</section>
+
+<section class="view" id="machines">
+ <div class="page-title">
+  <div><p>STROJE, MECHANIZMY A VÝKONY</p><h1>Pasport strojov</h1></div>
+  <div class="header-actions"><button class="ghost" id="exportMachinesPdf">Náhľad / PDF pasportu</button><button class="ghost" id="exportMachinesCsv">Export CSV</button><button id="addMachineRow">+ Pridať riadok</button></div>
+ </div>
+ <div class="machine-passport-tools">
+  <label>Hľadať<input id="machineSearch" type="search" placeholder="Dodávateľ, stroj, činnosť…"></label>
+  <label>Dodávateľ<select id="machineSupplierFilter"><option value="">Všetci dodávatelia</option></select></label>
+  <label>Mesiac<select id="machineMonthFilter"><option value="">Všetky mesiace</option></select></label>
+  <button class="ghost" id="resetMachineFilters">Zrušiť filtre</button><span id="machineResultCount"></span>
+ </div>
+ <article class="excel-panel machine-passport-panel">
+  <div class="excel-toolbar"><div class="excel-name-box" id="machineCellName">A1</div><div class="excel-fx">fx</div><div class="excel-formula" id="machineFormula">Vyber bunku v tabuľke</div></div>
+  <div class="excel-sheet-wrap"><table class="excel-sheet machine-passport-table">
+   <colgroup><col class="row-number-col"><col><col><col><col><col><col><col><col></colgroup>
+   <thead><tr class="excel-letters"><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th></tr>
+   <tr class="excel-headers"><th>⌄</th><th>Dátum</th><th>Dodávateľ</th><th>Číslo stazky</th><th>Faktúra číslo</th><th>Názov stroja</th><th>Činnosť</th><th>Výkon</th><th>P. č.</th></tr></thead>
+   <tbody id="machinePassportBody"></tbody>
+  </table></div>
+  <div class="excel-statusbar"><span>Pripravené</span><span id="machineSaveStatus">Automatické ukladanie zapnuté</span></div>
+ </article>
 </section>
 
 <section class="view" id="workers">
@@ -747,6 +828,7 @@
 <section class="view" id="calendar">
  <div class="page-title">
   <div><p>PLÁNOVANIE STAVBY</p><h1>Kalendár</h1></div>
+  <div class="header-actions"><button class="ghost danger-outline" id="clearCalendarEvents">Vymazať kalendár</button><button id="addCalendarEvent">+ Nová udalosť</button></div>
  </div>
  <div class="calendar-toolbar panel simple-calendar-toolbar">
   <button class="ghost" id="calendarPrev">←</button>
@@ -783,6 +865,7 @@
   <div class="defect-filter-grid">
    <label>Hľadať<input id="defectSearch" placeholder="Firma, miesto, popis alebo číslo vady"></label>
    <label>Firma<select id="defectCompanyFilter"><option value="">Všetky firmy</option></select></label>
+   <label>Typ<select id="defectTypeFilter"><option value="">Všetky typy</option><option>Vada / nedorobok</option><option>Porušenie BOZP</option></select></label>
    <label>Stav<select id="defectStatusFilter"><option value="">Všetky stavy</option><option>Nová</option><option>Odoslaná firme</option><option>V riešení</option><option>Odstránená</option><option>Skontrolovaná</option><option>Uzavretá</option></select></label>
    <label>Zobrazenie<select id="defectDeadlineFilter"><option value="">Všetky termíny</option><option value="overdue">Iba po termíne</option><option value="week">Termín do 7 dní</option></select></label>
   </div>
@@ -993,15 +1076,16 @@
 
 <div class="modal hidden" id="defectModal"><div class="modal-card wide">
  <div class="modal-head">
-  <div><p>VADA ALEBO NEDOROBOK</p><h2 id="defectModalTitle">Nová vada</h2></div>
+  <div><p>VADA, NEDOROBOK ALEBO BOZP</p><h2 id="defectModalTitle">Nový záznam</h2></div>
   <button class="close" data-close="defectModal">×</button>
  </div>
  <form id="defectForm" class="form-grid">
   <input id="defectId" type="hidden">
+  <label class="span2">Typ záznamu<select id="defectType"><option>Vada / nedorobok</option><option>Porušenie BOZP</option></select></label>
   <label>Firma<select id="defectCompany" required></select></label>
-  <label>Číslo vady<input id="defectNumber" placeholder="vytvorí sa automaticky"></label>
+  <label>Číslo záznamu<input id="defectNumber" placeholder="vytvorí sa automaticky"></label>
   <label class="span2">Miesto<input id="defectLocation" required placeholder="napr. 3. NP – byt B3.12 – obývacia izba"></label>
-  <label class="span2">Popis vady<textarea id="defectDescription" rows="4" required></textarea></label>
+  <label class="span2">Popis vady alebo porušenia BOZP<textarea id="defectDescription" rows="4" required></textarea></label>
   <label>Termín odstránenia<input id="defectDueDate" type="date"></label>
   <label>Závažnosť<select id="defectSeverity"><option>Bežná</option><option>Dôležitá</option><option>Urgentná</option></select></label>
   <label>Stav<select id="defectStatus"><option>Nová</option><option>Odoslaná firme</option><option>V riešení</option><option>Odstránená</option><option>Skontrolovaná</option><option>Uzavretá</option></select></label>
@@ -1013,7 +1097,7 @@
   <div class="span2 defect-photo-editor" id="defectPhotoEditor"></div>
   <div class="modal-actions span2">
    <button type="button" class="ghost" data-close="defectModal">Zrušiť</button>
-   <button type="submit">Uložiť vadu</button>
+   <button type="submit">Uložiť záznam</button>
   </div>
  </form>
 </div></div>
@@ -1095,6 +1179,29 @@
  </div>
 </div></div>
 
+<div class="modal hidden" id="workExchangeModal"><div class="modal-card wide work-exchange-card">
+ <div class="modal-head">
+  <div><p>VÝMENA SÚPISU SO SUBDODÁVATEĽOM</p><h2>Odovzdať a načítať súpis</h2></div>
+  <button class="close" type="button" data-close="workExchangeModal">×</button>
+ </div>
+ <div class="work-exchange-context" id="workExchangeContext">Vyber otvorený súpis firmy.</div>
+ <div class="work-exchange-flow">
+  <article class="work-exchange-step">
+   <span class="work-exchange-number">1</span>
+   <div><small>ODOVZDAŤ FIRME</small><h3>Vytvoriť Excel pre subdodávateľa</h3><p>Aplikácia vloží položky ZoD aj dodatkov. Firma doplní iba zelené množstvá aktuálneho mesiaca.</p></div>
+   <button type="button" id="workExchangeExport">Stiahnuť Excel</button>
+  </article>
+  <div class="work-exchange-arrow">↓</div>
+  <article class="work-exchange-step return">
+   <span class="work-exchange-number">2</span>
+   <div><small>NAČÍTAŤ SPÄŤ</small><h3>Vybrať doplnený súbor</h3><p>Vyber vrátený Excel alebo textové PDF. Pred zápisom vždy uvidíš kontrolu rozdielov.</p></div>
+   <button type="button" id="workExchangeImport">Vybrať Excel / PDF</button>
+  </article>
+ </div>
+ <div class="work-exchange-note"><strong>Nič sa neprepíše automaticky.</strong> Aplikácia mení len množstvá aktuálneho mesiaca a zmenu musíš potvrdiť v náhľade.</div>
+ <div class="modal-actions"><button type="button" class="ghost" data-close="workExchangeModal">Zavrieť</button></div>
+</div></div>
+
 <div class="modal hidden" id="workReturnImportModal"><div class="modal-card wide work-return-card">
  <div class="modal-head">
   <div><p>NÁVRATOVÝ SÚPIS OD SUBDODÁVATEĽA</p><h2>Kontrola doplneného súpisu</h2></div>
@@ -1107,7 +1214,7 @@
   <thead><tr><th>Položka</th><th>Pôvodné množstvo</th><th>Nové množstvo</th><th>Rozdiel</th><th>Kontrola</th></tr></thead>
   <tbody id="workReturnPreviewBody"></tbody>
  </table></div>
- <div class="work-return-help">Import mení iba stĺpec <strong>Aktuálny mesiac – množstvo</strong>. Rozpočet, ceny, minulé čerpanie, ZoD a dodatky ostávajú chránené.</div>
+ <div class="work-return-help">Import z Excelu alebo PDF mení iba stĺpec <strong>Aktuálny mesiac – množstvo</strong>. Rozpočet, ceny, minulé čerpanie, ZoD a dodatky ostávajú chránené. Pri naskenovanom PDF použi radšej pôvodný Excel.</div>
  <div class="modal-actions">
   <button type="button" class="ghost" data-close="workReturnImportModal">Zrušiť</button>
   <button type="button" id="confirmWorkReturnImport">Potvrdiť a doplniť súpis</button>
@@ -1527,6 +1634,7 @@ Marek Kováč"></textarea>
 <script src="assets/js/features/work-spreadsheet.js"></script>
 <script src="assets/js/features/work-statement-roundtrip.js"></script>
 <script src="assets/js/features/pdf-preview.js"></script>
+<script src="assets/js/features/machine-passport.js"></script>
 <script src="assets/js/features/timesheet-pdf-export.js"></script>
 <script src="assets/js/features/mobile-diary-dashboard.js"></script>
 <script src="assets/js/features/appearance-settings.js"></script>

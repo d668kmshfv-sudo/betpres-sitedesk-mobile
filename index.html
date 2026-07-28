@@ -13,7 +13,7 @@
  <link rel="manifest" href="manifest.webmanifest">
  <link rel="apple-touch-icon" href="assets/app-icon.png">
  <link rel="icon" href="assets/app-icon.svg">
- <link rel="stylesheet" href="styles.css?v=1.0.13">
+ <link rel="stylesheet" href="styles.css?v=1.0.14">
 </head>
 <body>
  <div id="app" class="app">
@@ -47,7 +47,7 @@
     </div>
     <div class="quick-grid">
      <button class="quick-card material" type="button" data-action="add-material"><span>▤</span><b>Dodací list</b><small>Odfotiť alebo zapísať</small></button>
-     <button class="quick-card defect" type="button" data-action="add-defect"><span>!</span><b>Vada / nedorobok</b><small>Pridať aj fotografiu</small></button>
+     <button class="quick-card defect" type="button" data-action="add-defect"><span>!</span><b>Vada / BOZP</b><small>Pridať aj fotografiu</small></button>
      <button class="quick-card diary" type="button" data-action="add-diary"><span>✎</span><b>Denný zápis</b><small>Rýchla poznámka zo stavby</small></button>
      <button class="quick-card workers" type="button" data-route="workers"><span>♟</span><b>Pracovníci</b><small>Firmy, BETPRES aj THP</small></button>
      <button class="quick-card samples" type="button" data-route="samples"><span>◇</span><b>Vzorky</b><small>Materiál a technický list</small></button>
@@ -75,7 +75,7 @@
    </section>
 
    <section class="screen" data-screen="defects">
-    <div class="screen-head"><div><p class="eyebrow">KONTROLA KVALITY</p><h1>Vady a nedorobky</h1></div><button class="primary-circle" type="button" data-action="add-defect">+</button></div>
+    <div class="screen-head"><div><p class="eyebrow">KONTROLA KVALITY A BOZP</p><h1>Vady, nedorobky a BOZP</h1></div><button class="primary-circle" type="button" data-action="add-defect">+</button></div>
     <div class="segmented" data-filter-group="defects"><button class="active" data-value="open">Otvorené</button><button data-value="all">Všetky</button><button data-value="done">Hotové</button></div>
     <label class="search-box full"><span>⌕</span><input id="defectSearch" type="search" placeholder="Hľadať vadu, miesto alebo firmu"></label>
     <div id="defectsList" class="item-list"></div>
@@ -157,7 +157,7 @@
      <button id="installHelpButton" class="secondary-button full" type="button">Zobraziť postup</button>
      <a class="primary-button full ipad-full-link" href="ipad/">Otvoriť plnú verziu pre iPad</a>
     </section>
-    <p class="app-version">BETPRES SiteDesk Mobile 1.0.13 · iPhone a iPad · kompatibilné so SiteDesk 5.0.75</p>
+    <p class="app-version">BETPRES SiteDesk Mobile 1.0.14 · iPhone, iPad a notebook · kompatibilné so SiteDesk 5.0.85</p>
    </section>
   </main>
 
@@ -181,7 +181,6 @@
   </section>
   <div id="toast" class="toast" hidden></div>
  </div>
- <script src="vendor/tesseract.min.js" defer></script>
- <script src="app.js?v=1.0.13" defer></script>
+ <script src="app.js?v=1.0.14" defer></script>
 </body>
 </html>

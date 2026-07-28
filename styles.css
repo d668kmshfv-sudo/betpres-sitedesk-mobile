@@ -55,3 +55,5 @@ html.compact .quick-card{min-height:116px;padding:13px}html.compact .quick-card>
 @media(max-width:360px){.brand-button img{width:82px}.brand-button>span{display:none}.project-strip{padding-left:13px;padding-right:13px}.main-content{padding-left:12px;padding-right:12px}.quick-card{padding:13px}.worker-row{grid-template-columns:1fr 108px}.employee-hours-row{grid-template-columns:minmax(0,1fr) 84px}.employee-hours-row.thp{grid-template-columns:minmax(0,1fr) 68px 68px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .ipad-full-link { text-decoration: none; }
+.defect-type-badge{display:inline-flex;width:max-content;margin-bottom:5px;padding:3px 8px;border-radius:999px;font-size:11px;font-style:normal;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
+.defect-type-badge.bozp{color:#8a3200;background:#fff0df;border:1px solid #f5bd79}

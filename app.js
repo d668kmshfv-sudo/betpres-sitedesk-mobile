@@ -4,6 +4,8 @@
  const KEYS={
   config:"betpres-mobile-cloud-v1",
   session:"betpres-mobile-session-v1",
+  desktopConfig:"betpres-stavebna-evidencia-v7-cloud-config",
+  desktopSession:"betpres-stavebna-evidencia-v7-cloud-session",
   snapshot:"betpres-mobile-snapshot-v1",
   queue:"betpres-mobile-queue-v1",
   appearance:"betpres-mobile-appearance-v1",
@@ -27,6 +29,10 @@
  const project=id=>app.data.projects.find(item=>item.id===id);
  const selectedProject=()=>project(app.projectId);
  const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
+ const tokenIssuedAt=session=>{try{const raw=String(session?.access_token||"").split(".")[1].replace(/-/g,"+").replace(/_/g,"/"),payload=JSON.parse(atob(raw+"=".repeat((4-raw.length%4)%4)));return Number(payload.iat||0)}catch{return 0}};
+ const sessionRank=session=>Math.max(Number(session?.expires_at||0),tokenIssuedAt(session),Number(session?._savedAt||0)/1000);
+ const freshestSession=()=>{const sessions=[read(KEYS.session,null),read(KEYS.desktopSession,null)].filter(item=>item?.access_token);return sessions.sort((a,b)=>sessionRank(b)-sessionRank(a))[0]||null};
+ let refreshSessionPromise=null,scheduledSyncTimer=null,continuousSyncTimer=null;
 
  const app={
   route:"home",
@@ -41,7 +47,7 @@
   photoUrls:new Map(),
   syncRunning:false,
   config:Object.assign({url:"",key:"",workspaceName:"Medická – pilot",role:"none",version:0,workspaceId:"",email:""},read(KEYS.config,{})),
-  session:read(KEYS.session,null),
+  session:freshestSession(),
   data:normalizeData(read(KEYS.snapshot,{})),
   queue:read(KEYS.queue,[]),
   appearance:Object.assign({theme:"system",fontScale:"1",contrast:45,compact:false},read(KEYS.appearance,{}))
@@ -52,8 +58,32 @@
   ARRAYS.forEach(key=>{if(!Array.isArray(data[key]))data[key]=[]});
   return data
  }
- function saveConfig(){localStorage.setItem(KEYS.config,JSON.stringify(app.config))}
- function saveSession(){if(app.session)localStorage.setItem(KEYS.session,JSON.stringify(app.session));else localStorage.removeItem(KEYS.session)}
+ function saveConfig(){
+  localStorage.setItem(KEYS.config,JSON.stringify(app.config));
+  const desktop=read(KEYS.desktopConfig,{});
+  localStorage.setItem(KEYS.desktopConfig,JSON.stringify({...desktop,url:app.config.url||desktop.url||"",key:app.config.key||desktop.key||"",workspaceName:app.config.workspaceName||desktop.workspaceName||"Medická – pilot",autoSync:true,lastCloudVersion:Number(app.config.version||desktop.lastCloudVersion||0),lastCloudId:app.config.workspaceId||desktop.lastCloudId||"",currentRole:app.config.role||desktop.currentRole||"none",lastEmail:app.config.email||app.session?.user?.email||desktop.lastEmail||""}))
+ }
+ function saveSession(){
+  if(app.session){
+   app.session={...app.session,_savedAt:Date.now()};
+   const value=JSON.stringify(app.session);
+   localStorage.setItem(KEYS.session,value);
+   localStorage.setItem(KEYS.desktopSession,value)
+  }else{
+   localStorage.removeItem(KEYS.session);
+   localStorage.removeItem(KEYS.desktopSession)
+  }
+ }
+ function reconcileSession(){
+  const freshest=freshestSession();
+  if(freshest){
+   if(sessionRank(freshest)>=sessionRank(app.session))app.session=freshest;
+   const value=JSON.stringify(app.session);
+   localStorage.setItem(KEYS.session,value);
+   localStorage.setItem(KEYS.desktopSession,value)
+  }
+  return app.session
+ }
  function saveSnapshot(){localStorage.setItem(KEYS.snapshot,JSON.stringify(app.data))}
  function saveQueue(){localStorage.setItem(KEYS.queue,JSON.stringify(app.queue));updatePendingBadge()}
  function saveAppearance(){localStorage.setItem(KEYS.appearance,JSON.stringify(app.appearance))}
@@ -189,7 +219,13 @@
   $("materialsList").innerHTML=items.length?items.map(item=>`<article class="list-item"><span class="item-icon">${esc(item.sequence||"▤")}</span><div class="item-main"><strong>${esc(item.material||"Materiál bez názvu")}</strong><span>${esc(item.supplier||"Dodávateľ neuvedený")} · ${esc(item.documentNo||"bez čísla dokladu")}</span></div><div class="item-side"><strong>${esc(item.estimatedPrice||"—")}</strong><small>${formatDate(item.date)}${item.invoiceNo?" · faktúra":" · neodfakt."}</small></div></article>`).join(""):`<div class="empty-state">Nenašiel sa žiadny dodací list. Stlač + a odfoť alebo zapíš prvý.</div>`
  }
 
- function isDefectDone(item){return /odstránen|uzavret|hotov|splnen/i.test(String(item.status||""))}
+ function normalizeDefectStatus(value){
+  const status=String(value||"").trim();
+  if(status==="Otvorená")return"Nová";
+  if(status==="Prebieha")return"V riešení";
+  return status||"Nová"
+ }
+ function isDefectDone(item){return /odstránen|skontrolovan|uzavret|hotov|splnen/i.test(normalizeDefectStatus(item.status))}
  function mobilePhotoImage(photo,className=""){
   const classes=className?` class="${className}"`:"";
   if(photo?.dataUrl)return`<img${classes} src="${photo.dataUrl}" alt="Fotografia vady">`;
@@ -214,11 +250,11 @@
  }
  function renderDefects(){
   const query=$("defectSearch").value.trim().toLowerCase();
-  let items=currentProjectItems("defects").filter(item=>!query||[item.description,item.location,item.number,company(item.companyId)?.name].some(value=>String(value||"").toLowerCase().includes(query)));
+  let items=currentProjectItems("defects").filter(item=>!query||[item.type,item.description,item.location,item.number,company(item.companyId)?.name].some(value=>String(value||"").toLowerCase().includes(query)));
   if(app.defectFilter==="open")items=items.filter(item=>!isDefectDone(item));
   if(app.defectFilter==="done")items=items.filter(isDefectDone);
   items.sort((a,b)=>String(a.dueDate||"9999").localeCompare(String(b.dueDate||"9999")));
-  $("defectsList").innerHTML=items.length?items.map(item=>`<article class="list-item defect-mobile-card" data-defect-id="${esc(item.id)}"><span class="status-dot ${isDefectDone(item)?"done":""}"></span><div class="item-main"><strong class="${/vysok/i.test(item.severity||"")?"severity-high":""}">${esc(item.number?`${item.number} · `:"")}${esc(item.description||"Vada bez popisu")}</strong><span>${esc(item.location||"Miesto neuvedené")} · ${esc(company(item.companyId)?.name||"Bez firmy")}</span>${Array.isArray(item.photos)&&item.photos.length?`<div class="defect-mobile-photos">${item.photos.slice(0,2).map(photo=>mobilePhotoImage(photo,"defect-mobile-thumb")).join("")}${item.photos.length>2?`<b>+${item.photos.length-2}</b>`:""}</div><span>📷 ${item.photos.length} fotografií</span>`:""}</div><div class="item-side"><strong>${esc(item.status||"Otvorená")}</strong><small>termín ${formatDate(item.dueDate)}</small><button type="button" class="defect-edit-button" data-edit-defect="${esc(item.id)}">Upraviť</button></div></article>`).join(""):`<div class="empty-state">V tomto filtri nie sú žiadne vady ani nedorobky.</div>`;
+  $("defectsList").innerHTML=items.length?items.map(item=>`<article class="list-item defect-mobile-card" data-defect-id="${esc(item.id)}"><span class="status-dot ${isDefectDone(item)?"done":""}"></span><div class="item-main">${/bozp/i.test(item.type||"")?`<em class="defect-type-badge bozp">Porušenie BOZP</em>`:""}<strong class="${/vysok/i.test(item.severity||"")?"severity-high":""}">${esc(item.number?`${item.number} · `:"")}${esc(item.description||"Vada bez popisu")}</strong><span>${esc(item.location||"Miesto neuvedené")} · ${esc(company(item.companyId)?.name||"Bez firmy")}</span>${Array.isArray(item.photos)&&item.photos.length?`<div class="defect-mobile-photos">${item.photos.slice(0,2).map(photo=>mobilePhotoImage(photo,"defect-mobile-thumb")).join("")}${item.photos.length>2?`<b>+${item.photos.length-2}</b>`:""}</div><span>📷 ${item.photos.length} fotografií</span>`:""}</div><div class="item-side"><strong>${esc(normalizeDefectStatus(item.status))}</strong><small>termín ${formatDate(item.dueDate)}</small><button type="button" class="defect-edit-button" data-edit-defect="${esc(item.id)}">Upraviť</button></div></article>`).join(""):`<div class="empty-state">V tomto filtri nie sú žiadne vady, nedorobky ani porušenia BOZP.</div>`;
   qa("[data-edit-defect]",$("defectsList")).forEach(button=>button.onclick=event=>{event.stopPropagation();openDefectForm(button.dataset.editDefect)});
   qa("[data-defect-id]",$("defectsList")).forEach(card=>{card.onclick=event=>{if(event.target.closest("button,a,input,select,textarea"))return;openDefectForm(card.dataset.defectId)}});
   requestAnimationFrame(()=>hydrateMobileCloudPhotos($("defectsList")))
@@ -401,15 +437,15 @@
  }
 
  function openDefectForm(defectId=""){
-  const existing=defectId?app.data.defects.find(item=>item.id===defectId&&item.projectId===app.projectId):null,isEdit=Boolean(existing),severities=["Nízka","Stredná","Vysoká"],statuses=["Otvorená","Prebieha","Odoslaná firme","Odstránená"],selectedSeverity=existing?.severity||"Stredná",selectedStatus=existing?.status||"Otvorená";
-  showSheet({eyebrow:"KONTROLA KVALITY",title:isEdit?`Upraviť vadu č. ${existing.number||""}`:"Nová vada / nedorobok",html:`<form id="defectFormMobile" class="sheet-form"><label>Popis vady<textarea id="defectDescriptionInput" required placeholder="Čo treba opraviť alebo dokončiť?">${esc(existing?.description||"")}</textarea></label><div class="form-split"><label>Miesto<input id="defectLocationInput" value="${esc(existing?.location||"")}" placeholder="napr. 6. NP, byt 34"></label><label>Termín<input id="defectDueInput" type="date" value="${esc(existing?.dueDate||"")}"></label></div><label>Zodpovedná firma<select id="defectCompanyInput">${companyOptions(existing?.companyId||"")}</select></label><label>Zodpovedná osoba<input id="defectResponsibleInput" value="${esc(existing?.responsible||companyResponsible(existing?.companyId)||"")}" placeholder="Doplní sa podľa firmy"></label><div class="form-split"><label>Závažnosť<select id="defectSeverityInput">${severities.map(value=>`<option ${value===selectedSeverity?"selected":""}>${value}</option>`).join("")}</select></label><label>Stav<select id="defectStatusInput">${statuses.map(value=>`<option ${value===selectedStatus?"selected":""}>${value}</option>`).join("")}</select></label></div><div class="photo-picker"><label>📷 Odfotiť<input id="defectCameraInput" type="file" accept="image/*" capture="environment"></label><label>🖼 Vybrať z galérie<input id="defectGalleryInput" type="file" accept="image/*" multiple></label></div><div id="defectPhotoPreview" class="defect-photo-preview-mobile"></div><p id="defectPhotoStatus" class="form-note">${isEdit?`Uložené fotografie: ${Array.isArray(existing.photos)?existing.photos.length:0} / 6. Môžeš doplniť ďalšie.`:"Môžeš spolu pridať najviac 6 fotografií."}</p><div class="sheet-actions"><button type="button" class="cancel">Zrušiť</button><button class="submit" type="submit">${isEdit?"Uložiť zmeny":"Uložiť vadu"}</button></div></form>`,onReady:()=>{
+  const existing=defectId?app.data.defects.find(item=>item.id===defectId&&item.projectId===app.projectId):null,isEdit=Boolean(existing),types=["Vada / nedorobok","Porušenie BOZP"],severities=["Nízka","Stredná","Vysoká"],statuses=["Nová","Odoslaná firme","V riešení","Odstránená","Skontrolovaná","Uzavretá"],selectedType=existing?.type||"Vada / nedorobok",selectedSeverity=existing?.severity||"Stredná",selectedStatus=normalizeDefectStatus(existing?.status);
+  showSheet({eyebrow:"KONTROLA KVALITY A BOZP",title:isEdit?`Upraviť záznam č. ${existing.number||""}`:"Nová vada / porušenie BOZP",html:`<form id="defectFormMobile" class="sheet-form"><label>Typ záznamu<select id="defectTypeInput">${types.map(value=>`<option ${value===selectedType?"selected":""}>${value}</option>`).join("")}</select></label><label>Popis<textarea id="defectDescriptionInput" required placeholder="Čo treba opraviť, dokončiť alebo odstrániť?">${esc(existing?.description||"")}</textarea></label><div class="form-split"><label>Miesto<input id="defectLocationInput" value="${esc(existing?.location||"")}" placeholder="napr. 6. NP, byt 34"></label><label>Termín<input id="defectDueInput" type="date" value="${esc(existing?.dueDate||"")}"></label></div><label>Zodpovedná firma<select id="defectCompanyInput">${companyOptions(existing?.companyId||"")}</select></label><label>Zodpovedná osoba<input id="defectResponsibleInput" value="${esc(existing?.responsible||companyResponsible(existing?.companyId)||"")}" placeholder="Doplní sa podľa firmy"></label><div class="form-split"><label>Závažnosť<select id="defectSeverityInput">${severities.map(value=>`<option ${value===selectedSeverity?"selected":""}>${value}</option>`).join("")}</select></label><label>Stav<select id="defectStatusInput">${statuses.map(value=>`<option ${value===selectedStatus?"selected":""}>${value}</option>`).join("")}</select></label></div><div class="photo-picker"><label>📷 Odfotiť<input id="defectCameraInput" type="file" accept="image/*" capture="environment"></label><label>🖼 Vybrať z galérie<input id="defectGalleryInput" type="file" accept="image/*" multiple></label></div><div id="defectPhotoPreview" class="defect-photo-preview-mobile"></div><p id="defectPhotoStatus" class="form-note">${isEdit?`Uložené fotografie: ${Array.isArray(existing.photos)?existing.photos.length:0} / 6. Môžeš doplniť ďalšie.`:"Môžeš spolu pridať najviac 6 fotografií."}</p><div class="sheet-actions"><button type="button" class="cancel">Zrušiť</button><button class="submit" type="submit">${isEdit?"Uložiť zmeny":"Uložiť záznam"}</button></div></form>`,onReady:()=>{
    let photos=clone(Array.isArray(existing?.photos)?existing.photos:[]);
    const renderPhotoPreview=()=>{const preview=$("defectPhotoPreview");preview.innerHTML=photos.map((photo,index)=>`<div>${mobilePhotoImage(photo,"defect-edit-thumb")}<button type="button" data-remove-mobile-photo="${index}" aria-label="Odstrániť fotografiu">×</button></div>`).join("");qa("[data-remove-mobile-photo]",preview).forEach(button=>button.onclick=()=>{photos.splice(Number(button.dataset.removeMobilePhoto),1);$("defectPhotoStatus").textContent=`Fotografie: ${photos.length} / 6`;renderPhotoPreview()});requestAnimationFrame(()=>hydrateMobileCloudPhotos(preview))};
    const addDefectPhotos=async event=>{const status=$("defectPhotoStatus"),free=Math.max(0,6-photos.length),files=[...event.target.files].slice(0,free);if(!free){status.textContent="K vade je už uložených maximálne 6 fotografií.";event.target.value="";return}status.textContent="Pripravujem fotografie…";try{for(const file of files)photos.push(await imageData(file,1400,.72));status.textContent=`Uložené a pripravené fotografie: ${photos.length} / 6${event.target.files.length>files.length?" · ďalšie sa nezmestili":""}`;renderPhotoPreview()}catch(error){status.textContent=`Fotografiu sa nepodarilo pridať: ${error.message}`}event.target.value=""};qa("#defectCameraInput,#defectGalleryInput").forEach(input=>input.onchange=addDefectPhotos);renderPhotoPreview();
    $("defectCompanyInput").onchange=()=>{$("defectResponsibleInput").value=companyResponsible($("defectCompanyInput").value)};
    if(!$("defectResponsibleInput").value)$("defectResponsibleInput").value=companyResponsible($("defectCompanyInput").value);
    q(".cancel",$("defectFormMobile")).onclick=closeSheet;
-   $("defectFormMobile").onsubmit=event=>{event.preventDefault();const number=existing?.number||String(Math.max(0,...currentProjectItems("defects").map(item=>Number(String(item.number||"").replace(/\D/g,""))||0))+1),status=$("defectStatusInput").value,companyId=$("defectCompanyInput").value,record={...(existing||{}),id:existing?.id||uid("defect"),projectId:app.projectId,companyId,number,location:$("defectLocationInput").value.trim(),description:$("defectDescriptionInput").value.trim(),dueDate:$("defectDueInput").value,severity:$("defectSeverityInput").value,status,responsible:$("defectResponsibleInput").value.trim()||companyResponsible(companyId),photos,createdAt:existing?.createdAt||isoNow(),updatedAt:isoNow(),sentAt:status==="Odoslaná firme"?(existing?.sentAt||isoNow()):(existing?.sentAt||"")};upsertRecord("defects",record,"add-defect");closeSheet();route("defects");toast(isEdit?"Zmeny vady boli uložené.":"Vada bola uložená.")}
+   $("defectFormMobile").onsubmit=event=>{event.preventDefault();const number=existing?.number||String(Math.max(0,...currentProjectItems("defects").map(item=>Number(String(item.number||"").replace(/\D/g,""))||0))+1),status=$("defectStatusInput").value,companyId=$("defectCompanyInput").value,record={...(existing||{}),id:existing?.id||uid("defect"),projectId:app.projectId,companyId,number,type:$("defectTypeInput").value,location:$("defectLocationInput").value.trim(),description:$("defectDescriptionInput").value.trim(),dueDate:$("defectDueInput").value,severity:$("defectSeverityInput").value,status,responsible:$("defectResponsibleInput").value.trim()||companyResponsible(companyId),photos,createdAt:existing?.createdAt||isoNow(),updatedAt:isoNow(),sentAt:status==="Odoslaná firme"?(existing?.sentAt||isoNow()):(existing?.sentAt||"")};upsertRecord("defects",record,"add-defect");closeSheet();route("defects");toast(isEdit?"Zmeny záznamu boli uložené.":"Záznam bol uložený.")}
   }})
  }
 
@@ -547,10 +583,20 @@
   const response=await fetch(normalizeUrl(app.config.url)+path,{...options,headers:{...authHeaders(options.json!==false),...(options.headers||{})}});if(!response.ok){let message=`HTTP ${response.status}`;try{const data=await response.json();message=data.message||data.error_description||data.error||message}catch{}throw new Error(message)}if(response.status===204)return null;return (response.headers.get("content-type")||"").includes("application/json")?response.json():response
  }
  async function ensureSession(){
+  reconcileSession();
   if(!app.session?.access_token)throw new Error("Najprv sa prihlás.");
-  if(Number(app.session.expires_at||0)-Date.now()/1000>90)return;
+  if(Number(app.session.expires_at||0)-Date.now()/1000>180)return;
   if(!app.session.refresh_token)throw new Error("Prihlásenie vypršalo.");
-  const response=await rawCloud("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:app.session.refresh_token})});response.expires_at=Math.floor(Date.now()/1000)+Number(response.expires_in||3600);app.session=response;saveSession()
+  if(refreshSessionPromise)return refreshSessionPromise;
+  const previous=app.session;
+  refreshSessionPromise=(async()=>{
+   const response=await rawCloud("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:previous.refresh_token})});
+   response.expires_at=Math.floor(Date.now()/1000)+Number(response.expires_in||3600);
+   app.session={...previous,...response,user:response.user||previous.user};
+   saveSession();
+   return app.session
+  })();
+  try{return await refreshSessionPromise}finally{refreshSessionPromise=null}
  }
  async function cloud(path,options={}){await ensureSession();return rawCloud(path,options)}
  async function signIn(email,password){
@@ -594,7 +640,19 @@
    connectionLabel("online",`Cloud v${app.config.version}`);renderProjectSelect();renderRoute();renderSettings();if(!silent)toast("SiteDesk je synchronizovaný.")
   }catch(error){connectionLabel("offline",app.queue.length?`${app.queue.length} čaká`:"Chyba cloudu");setCloudMessage(error.message,"error");if(!silent)toast(error.message)}finally{app.syncRunning=false;$("syncButton").classList.remove("syncing")}
  }
- function autoSync(){if(navigator.onLine&&app.session?.access_token)setTimeout(()=>sync({silent:true}),500)}
+ function autoSync(){
+  clearTimeout(scheduledSyncTimer);
+  if(navigator.onLine&&app.session?.access_token)scheduledSyncTimer=setTimeout(()=>sync({silent:true}),500)
+ }
+ function resumeSync(){
+  reconcileSession();
+  if(document.hidden||!navigator.onLine||!app.session?.access_token)return;
+  sync({silent:true})
+ }
+ function startContinuousSync(){
+  clearInterval(continuousSyncTimer);
+  continuousSyncTimer=setInterval(resumeSync,30000)
+ }
 
  function openQuickOpen(){
   const commands=[
@@ -640,7 +698,9 @@
   $("signOutButton").onclick=()=>{app.session=null;app.config.role="none";saveSession();saveConfig();renderSettings();connectionLabel("offline",app.queue.length?`${app.queue.length} čaká`:"Offline");toast("Mobil bol odhlásený.")};
   $("installHelpButton").onclick=openInstallHelp;
   document.addEventListener("keydown",event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){event.preventDefault();openQuickOpen();return}if(event.key==="Escape"){if(!$("bottomSheet").hidden)closeSheet();else if(app.focusMode)setFocusMode(false)}});
-  addEventListener("online",()=>sync({silent:true}));addEventListener("offline",()=>connectionLabel("offline","Offline"));
+  addEventListener("online",resumeSync);addEventListener("offline",()=>connectionLabel("offline","Offline"));
+  addEventListener("focus",resumeSync);addEventListener("pageshow",resumeSync);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)resumeSync()});
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",applyAppearance)
  }
 
@@ -665,7 +725,8 @@
   if(pairing.paired)setCloudMessage(app.session?.access_token?"Mobil je spárovaný a prihlásenie ostalo zachované.":"Mobil je spárovaný. Skontroluj e-mail a zadaj heslo iba prvýkrát.","success");
   if(pairing.error)setCloudMessage(pairing.error,"error");
   registerServiceWorker();
-  if(navigator.onLine&&app.session?.access_token)sync({silent:true});else connectionLabel("offline",app.queue.length?`${app.queue.length} čaká`:"Offline")
+  startContinuousSync();
+  if(navigator.onLine&&app.session?.access_token)resumeSync();else connectionLabel("offline",app.queue.length?`${app.queue.length} čaká`:"Offline")
  }
  document.addEventListener("DOMContentLoaded",init)
 })();

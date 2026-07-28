@@ -1,8 +1,8 @@
-# BETPRES SiteDesk Mobile 1.0.0
+# BETPRES SiteDesk Mobile 1.0.14
 
-Mobilná aplikácia je PWA určená pre iPhone. Po zverejnení na HTTPS adrese sa správa ako bežná aplikácia, má vlastnú ikonu a základné údaje fungujú aj bez signálu.
+PWA aplikácia je určená pre iPhone a iPad a používa rovnaký cloudový pracovný priestor ako SiteDesk 5.0.85 na notebookoch. Po zverejnení na HTTPS adrese sa správa ako bežná aplikácia, má vlastnú ikonu a základné údaje fungujú aj bez signálu.
 
-## Inštalácia na iPhone
+## Inštalácia na iPhone alebo iPad
 
 1. Otvorte HTTPS adresu mobilnej aplikácie v Safari.
 2. V spodnej lište stlačte **Zdieľať** (štvorec so šípkou nahor).
@@ -20,11 +20,11 @@ Mobilná aplikácia je PWA určená pre iPhone. Po zverejnení na HTTPS adrese s
 ## Moduly
 
 - Pasport materiálu s lokálnym OCR dodacích listov
-- Vady a nedorobky s fotografiami
+- Vady, nedorobky a porušenia BOZP s fotografiami
 - Denný denník zo stavby
 - Stav pracovníkov po firmách
 - Kalendár termínov a úloh
-- Offline fronta a bezpečná synchronizácia s aktuálnou cloudovou verziou
+- Offline fronta, zachované prihlásenie a automatická synchronizácia každých 30 sekúnd aj po návrate do aplikácie
 
 OCR a fotografie sa spracujú lokálne. Verejný Supabase anon/publishable kľúč nie je heslo databázy; service-role kľúč sa do aplikácie nikdy nevkladá.
 

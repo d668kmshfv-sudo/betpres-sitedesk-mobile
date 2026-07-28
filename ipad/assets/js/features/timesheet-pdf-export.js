@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.0.76";
+var APP_VERSION = "5.0.85";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -195,7 +195,7 @@ function splitRows(rows, size) {
     }
     body += '<td class="sum">' + html(displayValue(total)) + "</td></tr>";
    });
-   var totals = '<tr><td colspan="2" class="name">Spolu za deň</td>';
+    var totals = isThp ? "" : '<tr><td colspan="2" class="name">Spolu za deň</td>';
    var grand = 0;
    for (var day = 1; day <= info.days; day += 1) {
     var dayTotal = allRows.reduce(function (sum, row) { return sum + (Number(row.values && row.values[day]) || 0); }, 0);
@@ -255,10 +255,10 @@ function splitRows(rows, size) {
     var overtimeDayTotal = isThp ? rows.reduce(function (sum, row) { return sum + attendanceHours(row.overtime && row.overtime[day]); }, 0) : 0;
     grand += dayTotal;
     overtimeGrand += overtimeDayTotal;
-     totals += '<td class="' + dayMeta(month, day).className + '">' + (isThp ? combinedHtml(dayTotal || "", overtimeDayTotal || "") : html(displayValue(dayTotal || ""))) + "</td>";
-   }
-    totals += '<td class="sum">' + (isThp ? combinedHtml(grand, overtimeGrand) : html(displayValue(grand))) + "</td></tr>";
-   var table = '<table class="employee-timesheet-table ' + (isThp ? "thp-employee-timesheet-table" : "betpres-employee-timesheet-table") + '"><thead>' + tableHead(month, isThp ? "Meno a pozícia" : "Meno, pozícia a odmena", false) + "</thead><tbody>" + body + "</tbody><tfoot>" + totals + "</tfoot></table>";
+     if (!isThp) totals += '<td class="' + dayMeta(month, day).className + '">' + html(displayValue(dayTotal || "")) + "</td>";
+    }
+    if (!isThp) totals += '<td class="sum">' + html(displayValue(grand)) + "</td></tr>";
+    var table = '<table class="employee-timesheet-table ' + (isThp ? "thp-employee-timesheet-table" : "betpres-employee-timesheet-table") + '"><thead>' + tableHead(month, isThp ? "Meno a pozícia" : "Meno, pozícia a odmena", false) + "</thead><tbody>" + body + "</tbody>" + (totals ? "<tfoot>" + totals + "</tfoot>" : "") + "</table>";
     var detail = rows.length + " pracovníkov" + (isThp ? " · hodiny a nadčas pod sebou" : " · bežné hodiny");
     var summary = isThp && !grand && !overtimeGrand ? "" : displayValue(grand) + " h" + (isThp && overtimeGrand ? " · " + displayValue(overtimeGrand) + " h nadčas" : "");
    pages.push(page(title, month, pageIndex + 1, chunks.length, detail, table, summary));
@@ -303,7 +303,7 @@ function splitRows(rows, size) {
 
  async function exportWorkerStatusPdf() {
   var month = currentMonth();
-  return savePdf("Stav pracovníkov", "stav-pracovnikov-" + safePart(projectLabel()) + "-" + month + ".pdf", companyStatusPages(month));
+  return savePdf("Stav pracovníkov", "Stav pracovníkov " + fmtDateISO(todayISO()) + ".pdf", companyStatusPages(month));
  }
 
  async function exportEmployeePdf(kind) {

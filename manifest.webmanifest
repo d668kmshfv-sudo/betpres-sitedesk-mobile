@@ -2,7 +2,7 @@
   "id": "./",
   "name": "BETPRES SiteDesk Mobile",
   "short_name": "SiteDesk",
-  "description": "Mobilná stavebná evidencia BETPRES",
+  "description": "Spoločná stavebná evidencia BETPRES pre iPhone, iPad a notebook",
   "lang": "sk",
   "dir": "ltr",
   "start_url": "./?source=installed",
@@ -23,7 +23,7 @@
   ],
   "shortcuts": [
     {"name": "Dodací list", "short_name": "Materiál", "url": "./?open=materials"},
-    {"name": "Vada alebo nedorobok", "short_name": "Vada", "url": "./?open=defects"},
+    {"name": "Vada alebo porušenie BOZP", "short_name": "Vada / BOZP", "url": "./?open=defects"},
     {"name": "Stav pracovníkov", "short_name": "Pracovníci", "url": "./?open=workers"},
     {"name": "Koordinačná porada", "short_name": "Porada", "url": "./?open=meetings"}
   ]

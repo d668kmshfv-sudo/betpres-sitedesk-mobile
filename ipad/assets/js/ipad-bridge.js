@@ -8,34 +8,70 @@
     desktopSession: "betpres-stavebna-evidencia-v7-cloud-session"
   };
 
-  const read = (key) => {
-    try { return JSON.parse(localStorage.getItem(key) || "null"); }
-    catch { return null; }
+  const read = (key, fallback = null) => {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+    catch { return fallback; }
   };
+  const tokenIssuedAt = (session) => {
+    try {
+      const raw = String(session?.access_token || "").split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      return Number(JSON.parse(atob(raw + "=".repeat((4 - raw.length % 4) % 4))).iat || 0);
+    } catch { return 0; }
+  };
+  const sessionRank = (session) => Math.max(
+    Number(session?.expires_at || 0),
+    tokenIssuedAt(session),
+    Number(session?._savedAt || 0) / 1000
+  );
 
-  const mobileConfig = read(KEYS.mobileConfig);
-  const mobileSession = read(KEYS.mobileSession);
-  const desktopConfig = read(KEYS.desktopConfig) || {};
-
-  if (mobileConfig?.url && mobileConfig?.key && (!desktopConfig.url || !desktopConfig.key)) {
+  function reconcileConfig() {
+    const mobile = read(KEYS.mobileConfig, {});
+    const desktop = read(KEYS.desktopConfig, {});
+    const url = mobile.url || desktop.url || "";
+    const key = mobile.key || desktop.key || "";
+    const workspaceName = mobile.workspaceName || desktop.workspaceName || "Medická – pilot";
+    if (!url || !key) return;
     localStorage.setItem(KEYS.desktopConfig, JSON.stringify({
-      ...desktopConfig,
-      url: mobileConfig.url,
-      key: mobileConfig.key,
-      workspaceName: mobileConfig.workspaceName || "Medická – pilot",
-      autoSync: true,
-      lastCloudVersion: Number(mobileConfig.version || 0),
-      lastCloudId: mobileConfig.workspaceId || "",
-      currentRole: mobileConfig.role || "none",
-      lastEmail: mobileConfig.email || mobileSession?.user?.email || ""
+      ...desktop,
+      url, key, workspaceName, autoSync: true,
+      lastCloudVersion: Math.max(Number(desktop.lastCloudVersion || 0), Number(mobile.version || 0)),
+      lastCloudId: desktop.lastCloudId || mobile.workspaceId || "",
+      currentRole: desktop.currentRole || mobile.role || "none",
+      lastEmail: desktop.lastEmail || mobile.email || ""
+    }));
+    localStorage.setItem(KEYS.mobileConfig, JSON.stringify({
+      ...mobile,
+      url, key, workspaceName,
+      version: Math.max(Number(mobile.version || 0), Number(desktop.lastCloudVersion || 0)),
+      workspaceId: mobile.workspaceId || desktop.lastCloudId || "",
+      role: mobile.role || desktop.currentRole || "none",
+      email: mobile.email || desktop.lastEmail || ""
     }));
   }
 
-  if (mobileSession?.access_token && !read(KEYS.desktopSession)?.access_token) {
-    localStorage.setItem(KEYS.desktopSession, JSON.stringify(mobileSession));
+  function reconcileSession() {
+    const sessions = [read(KEYS.mobileSession), read(KEYS.desktopSession)]
+      .filter((session) => session?.access_token)
+      .sort((a, b) => sessionRank(b) - sessionRank(a));
+    const freshest = sessions[0];
+    if (!freshest) return null;
+    const value = JSON.stringify(freshest);
+    localStorage.setItem(KEYS.mobileSession, value);
+    localStorage.setItem(KEYS.desktopSession, value);
+    if (typeof window.siteDeskAdoptCloudSession === "function") {
+      window.siteDeskAdoptCloudSession(freshest);
+    }
+    return freshest;
   }
 
-  window.__BETPRES_IPAD_WEB__ = true;
+  function resumeSync() {
+    reconcileConfig();
+    const session = reconcileSession();
+    if (!session || document.hidden || !navigator.onLine) return;
+    if (typeof window.siteDeskResumeCloudSync === "function") {
+      window.siteDeskResumeCloudSync().catch(() => {});
+    }
+  }
 
   function addIpadControls() {
     document.body.classList.add("ipad-web");
@@ -43,23 +79,35 @@
     const badge = document.createElement("div");
     badge.id = "ipadWebBadge";
     badge.className = "ipad-web-badge";
-    badge.innerHTML = '<span>iPad</span><a href="../" aria-label="Otvoriť jednoduchú mobilnú verziu">Mobil</a>';
+    badge.innerHTML = '<span>iPad · 5.0.85</span><a href="../" aria-label="Otvoriť jednoduchú mobilnú verziu">Mobil</a>';
     document.body.appendChild(badge);
   }
 
   function registerServiceWorker() {
     if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
-      navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(() => {});
+      navigator.serviceWorker.register("sw.js", { scope: "./", updateViaCache: "none" }).then((registration) => {
+        registration.update().catch(() => {});
+      }).catch(() => {});
     }
   }
+
+  reconcileConfig();
+  reconcileSession();
+  window.__BETPRES_IPAD_WEB__ = true;
 
   document.addEventListener("DOMContentLoaded", addIpadControls);
   window.addEventListener("load", () => {
     registerServiceWorker();
-    window.setTimeout(() => {
-      if (typeof window.cloudPull === "function" && read(KEYS.desktopSession)?.access_token) {
-        window.cloudPull({ silent: true }).catch(() => {});
-      }
-    }, 1800);
+    window.setTimeout(resumeSync, 1800);
+    window.setInterval(resumeSync, 30000);
+  });
+  window.addEventListener("online", resumeSync);
+  window.addEventListener("focus", resumeSync);
+  window.addEventListener("pageshow", resumeSync);
+  window.addEventListener("storage", (event) => {
+    if ([KEYS.mobileSession, KEYS.desktopSession, KEYS.mobileConfig, KEYS.desktopConfig].includes(event.key)) resumeSync();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) resumeSync();
   });
 })();

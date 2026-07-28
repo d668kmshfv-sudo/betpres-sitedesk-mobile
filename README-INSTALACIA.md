@@ -1,8 +1,8 @@
-# BETPRES SiteDesk Mobile 1.0.8 – iPhone a iPad
+# BETPRES SiteDesk Mobile 1.0.14 – iPhone, iPad a notebook
 
-Mobilná aplikácia je PWA určená pre iPhone. Po zverejnení na HTTPS adrese sa správa ako bežná aplikácia, má vlastnú ikonu a základné údaje fungujú aj bez signálu.
+Mobilná aplikácia je PWA určená pre iPhone a iPad. Používa rovnaké cloudové údaje ako SiteDesk 5.0.85 na notebookoch, zachováva prihlásenie a po návrate do aplikácie automaticky pokračuje v synchronizácii.
 
-## Inštalácia na iPhone
+## Inštalácia na iPhone alebo iPad
 
 1. Otvorte HTTPS adresu mobilnej aplikácie v Safari.
 2. V spodnej lište stlačte **Zdieľať** (štvorec so šípkou nahor).
@@ -21,7 +21,7 @@ Mobilná aplikácia je PWA určená pre iPhone. Po zverejnení na HTTPS adrese s
 
 - Pasport materiálu s automatickou AI analýzou celého dodacieho listu
 - Doplnenie dodávateľa, dátumu, čísla dokladu, materiálu a ceny; ak cena chýba, viditeľne označený orientačný AI odhad
-- Vady a nedorobky s fotografiami
+- Vady, nedorobky a porušenia BOZP s fotografiami
 - Denný denník zo stavby
 - Stav pracovníkov po firmách
 - Kalendár termínov a úloh
@@ -32,6 +32,8 @@ Mobilná aplikácia je PWA určená pre iPhone. Po zverejnení na HTTPS adrese s
 - Rýchle otvorenie modulov a činností cez vyhľadávanie (na iPade aj skratkou Ctrl/Cmd + K)
 - Režim sústredenia pre stav pracovníkov a koordinačné porady
 - Prehľadné bočné menu a plnohodnotné široké zobrazenie na iPade
+- Automatická synchronizácia každých 30 sekúnd, pri návrate do aplikácie a po obnovení internetu
+- Zjednotená relácia medzi mobilnou a plnou iPad verziou bez opakovaného prihlasovania
 
 Lokálne OCR ostáva ako záložný režim bez cloudu. Pri AI analýze sa vybraná fotografia odošle cez chránenú Supabase Edge Function do OpenAI API. OpenAI API kľúč sa ukladá iba ako Supabase secret a nikdy sa nevkladá do mobilnej aplikácie ani do verejného repozitára.
 
