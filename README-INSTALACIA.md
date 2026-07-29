@@ -1,4 +1,4 @@
-# BETPRES SiteDesk Mobile 1.0.14 – iPhone, iPad a notebook
+# BETPRES SiteDesk Mobile 1.0.15 – iPhone, iPad a notebook
 
 Mobilná aplikácia je PWA určená pre iPhone a iPad. Používa rovnaké cloudové údaje ako SiteDesk 5.0.85 na notebookoch, zachováva prihlásenie a po návrate do aplikácie automaticky pokračuje v synchronizácii.
 

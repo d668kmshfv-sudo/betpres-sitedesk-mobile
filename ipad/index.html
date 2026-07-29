@@ -2,10 +2,10 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk iPad"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk iPad 1.0.2 · SiteDesk 5.0.85</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css"><link rel="stylesheet" href="assets/styles/appearance-settings.css"><link rel="stylesheet" href="assets/styles/ai-assistant.css"><link rel="stylesheet" href="assets/styles/material-samples.css"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.0.2">
+<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk iPad"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk iPad 1.0.3 · SiteDesk 5.0.85</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css"><link rel="stylesheet" href="assets/styles/appearance-settings.css"><link rel="stylesheet" href="assets/styles/ai-assistant.css"><link rel="stylesheet" href="assets/styles/material-samples.css"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.0.3">
 
-<script src="assets/js/ipad-bridge.js?v=1.0.2"></script>
+<script src="assets/js/ipad-bridge.js?v=1.0.3"></script>
 <script src="assets/js/bootstrap/startup-guard.js"></script>
 
 </head>
@@ -589,6 +589,7 @@
    <button class="worker-betpres-action hidden" id="addBetpresEmployee">+ Pridať pracovníka BETPRES</button>
    <button class="worker-thp-action hidden" id="addThpEmployee">+ Pridať pracovníka THP</button>
    <button class="ghost worker-company-hours-action hidden" id="exportCompanyHoursPdf">Exportovať jednu firemnú smenovku</button>
+   <button class="ghost worker-company-hours-action hidden" id="addAllCompanyHourTimesheets">Vytvoriť šablóny pre všetky firmy</button>
    <button class="worker-company-hours-action hidden" id="addCompanyHourTimesheet">+ Pridať firmu na hodiny</button>
   </div>
  </div>
@@ -670,7 +671,7 @@
  </div>
 
  <div id="companyHoursPanel" class="hidden">
-  <div class="worker-note company-hours-note"><strong>Firemné hodinové smenovky:</strong> každá firma má vlastnú hodinovú smenovku a pod ňou mená pracovníkov podobne ako v podsmenovke BETPRES. Nepíše sa profesia/čo robí – iba meno pracovníka a ku každému samostatne hodiny po dňoch. Z hodín a sadzby vieš vytvoriť súpis prác alebo exportovať jednu firemnú smenovku.</div>
+  <div class="worker-note company-hours-note"><strong>Menné smenovky firiem:</strong> každá firma môže mať rovnakú šablónu s menami pracovníkov a hodinami po jednotlivých dňoch. Tlačidlo „Vytvoriť šablóny pre všetky firmy“ ich založí naraz pre všetky firmy priradené k stavbe. PDF má 15 mien na jednej strane, teda 30 mien na jednom obojstranne vytlačenom liste. Hodinovú sadzbu môžeš doplniť iba tam, kde ju potrebuješ pre výpočet a súpis prác.</div>
   <div class="company-hours-summary">
    <article><span>Firiem na hodiny</span><strong id="companyHoursCount">0</strong></article>
    <article><span>Hodiny spolu</span><strong id="companyHoursTotal">0 h</strong></article>
@@ -1084,7 +1085,7 @@
   <label class="span2">Typ záznamu<select id="defectType"><option>Vada / nedorobok</option><option>Porušenie BOZP</option></select></label>
   <label>Firma<select id="defectCompany" required></select></label>
   <label>Číslo záznamu<input id="defectNumber" placeholder="vytvorí sa automaticky"></label>
-  <label class="span2">Miesto<input id="defectLocation" required placeholder="napr. 3. NP – byt B3.12 – obývacia izba"></label>
+  <label class="span2"><span id="defectLocationLabel">Miesto</span><input id="defectLocation" required placeholder="napr. 3. NP – byt B3.12 – obývacia izba"></label>
   <label class="span2">Popis vady alebo porušenia BOZP<textarea id="defectDescription" rows="4" required></textarea></label>
   <label>Termín odstránenia<input id="defectDueDate" type="date"></label>
   <label>Závažnosť<select id="defectSeverity"><option>Bežná</option><option>Dôležitá</option><option>Urgentná</option></select></label>
@@ -1559,6 +1560,9 @@ Marek Kováč"></textarea>
   <button class="close" data-close="betpresEmployeeModal">×</button>
  </div>
  <form id="betpresEmployeeForm" class="form-grid">
+  <label class="span2">Osobné číslo
+   <input id="betpresEmployeePersonalNumber" type="text" inputmode="numeric" maxlength="3" pattern="[0-9]{1,3}" placeholder="napr. 123">
+  </label>
   <label class="span2">Meno a priezvisko
    <input id="betpresEmployeeName" list="betpresEmployeeSuggestions" required placeholder="Vyber existujúce meno alebo napíš nové">
    <datalist id="betpresEmployeeSuggestions"></datalist>

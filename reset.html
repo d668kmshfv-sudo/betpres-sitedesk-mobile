@@ -29,7 +29,7 @@
     }
    }finally{
     const target=new URL("./",location.href);
-    target.searchParams.set("refresh",`1.0.14-${Date.now()}`);
+    target.searchParams.set("refresh",`1.0.15-${Date.now()}`);
     setTimeout(()=>location.replace(target.href),250)
    }
   })()

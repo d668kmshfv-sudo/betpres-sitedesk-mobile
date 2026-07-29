@@ -1,4 +1,4 @@
-# BETPRES SiteDesk Mobile 1.0.14
+# BETPRES SiteDesk Mobile 1.0.15
 
 PWA aplikácia je určená pre iPhone a iPad a používa rovnaký cloudový pracovný priestor ako SiteDesk 5.0.85 na notebookoch. Po zverejnení na HTTPS adrese sa správa ako bežná aplikácia, má vlastnú ikonu a základné údaje fungujú aj bez signálu.
 

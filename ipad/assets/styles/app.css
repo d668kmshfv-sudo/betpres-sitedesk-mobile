@@ -4048,3 +4048,54 @@ table input.table-formula-error{background:#fff0f0!important;color:#a11!importan
  .mobile-diary-page-toolbar>span{padding:2px}.mobile-diary-page-item{grid-template-columns:34px minmax(0,1fr)}
  .mobile-diary-page-toggle{grid-column:2;width:100%}.mobile-diary-page-title{display:grid}
 }
+#companyHoursPanel .company-hour-group{
+  position:relative;
+  display:grid!important;
+  grid-template-columns:28px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  padding:6px 8px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:background-color .15s ease, box-shadow .15s ease;
+}
+#companyHoursPanel .company-hour-group:hover,
+#companyHoursPanel .company-hour-group.is-open{
+  background:rgba(255,255,255,.1);
+}
+#companyHoursPanel .company-hour-toggle-icon{
+  display:grid;
+  place-items:center;
+  width:24px;
+  height:24px;
+  border-radius:999px;
+  background:#fff;
+  color:#0b3d66;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+}
+#companyHoursPanel .company-hour-group-title{min-width:0}
+#companyHoursPanel .company-hour-group:focus-visible{
+  outline:3px solid #fbbf24;
+  outline-offset:2px;
+}
+#betpresTimesheetPanel .employee-personal-number-col{
+  width:54px!important;
+  min-width:54px!important;
+  max-width:54px!important;
+  position:static!important;
+  padding:2px!important;
+  text-align:center!important;
+  font-size:9px!important;
+  font-weight:900!important;
+}
+#betpresTimesheetPanel td.employee-personal-number-col input{
+  width:100%!important;
+  min-width:0!important;
+  height:27px!important;
+  padding:1px!important;
+  text-align:center!important;
+  font-size:10px!important;
+  font-weight:900!important;
+}

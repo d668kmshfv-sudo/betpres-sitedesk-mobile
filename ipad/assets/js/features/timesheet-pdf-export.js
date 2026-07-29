@@ -68,9 +68,9 @@ function splitRows(rows, size) {
   return splitRows(source, size);
  }
 
- function tableHead(month, nameTitle, withAmount) {
+ function tableHead(month, nameTitle, withAmount, withPersonalNumber) {
   var info = monthInfo(month);
-  var top = '<tr><th class="number" rowspan="2">Č.</th><th class="name" rowspan="2">' + html(nameTitle) + "</th>";
+  var top = '<tr><th class="number" rowspan="2">Č.</th>' + (withPersonalNumber ? '<th class="personal-number" rowspan="2">Osobné<br>číslo</th>' : "") + '<th class="name" rowspan="2">' + html(nameTitle) + "</th>";
   var bottom = "<tr>";
   for (var day = 1; day <= info.days; day += 1) {
    var meta = dayMeta(month, day);
@@ -128,7 +128,7 @@ function splitRows(rows, size) {
    ".legend i{display:inline-block;width:3mm;height:3mm;border:1px solid #bdc9d6;vertical-align:middle;margin-right:1mm}.weekend-box{background:#edf2f7}.holiday-box{background:#ffe7e5}",
    "table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:7px;color:#152c48}",
    "th,td{border:1px solid #9eafc1;text-align:center;height:6.5mm;padding:.6mm;overflow:hidden}",
-   "thead tr:first-child th{background:#082f61;color:#fff;font-weight:800}thead tr:nth-child(2) th{background:#174f7f;color:#fff;font-weight:700}.number{width:7mm}.name{width:42mm;text-align:left!important;padding-left:2mm!important}.day{width:6mm}.sum{width:12mm;background:#dcebf7!important;color:#082f61!important;font-weight:800}.amount{width:22mm;background:#dcebf7!important;color:#082f61!important;font-weight:800}",
+   "thead tr:first-child th{background:#082f61;color:#fff;font-weight:800}thead tr:nth-child(2) th{background:#174f7f;color:#fff;font-weight:700}.number{width:7mm}.personal-number{width:11mm;font-weight:800}.name{width:42mm;text-align:left!important;padding-left:2mm!important}.day{width:6mm}.sum{width:12mm;background:#dcebf7!important;color:#082f61!important;font-weight:800}.amount{width:22mm;background:#dcebf7!important;color:#082f61!important;font-weight:800}",
    "tbody tr:nth-child(even) td{background:#f3f7fa}tbody tr:nth-child(odd) td{background:#fff}tbody td.weekend,tfoot td.weekend{background:#e8eff5!important}tbody td.holiday,tfoot td.holiday{background:#ffe8e5!important}",
    "td.name strong{display:block;font-size:7.4px}td.name small{display:block;color:#64768b;font-size:6.3px;margin-top:.5mm}",
    ".company-status-table .number{width:3%}.company-status-table .name{width:19%;padding-left:2.4mm!important;padding-right:1.2mm!important}.company-status-table .day{width:2.35%;padding-left:.2mm!important;padding-right:.2mm!important;font-size:6.4px}.company-status-table .sum{width:5.15%}",
@@ -214,7 +214,7 @@ function splitRows(rows, size) {
   var isThp = kind === "thp";
   var sheet = isThp ? thpTimesheet(month, true) : betpresTimesheet(month, true);
   var rows = sheet.rows || [];
-  var rowsPerPage = 14;
+  var rowsPerPage = isThp ? 14 : 15;
   var chunks = splitRows(rows, rowsPerPage);
   var info = monthInfo(month);
   var title = isThp ? "PODSMENOVKA THP" : "PODSMENOVKA BETPRES";
@@ -229,7 +229,7 @@ function splitRows(rows, size) {
    var body = "";
    pageRows.forEach(function (row, rowIndex) {
     if (!row) {
-     body += '<tr><td class="empty" colspan="' + (info.days + 3) + '">V tejto podsmenovke zatiaľ nie sú pridaní pracovníci.</td></tr>';
+     body += '<tr><td class="empty" colspan="' + (info.days + (isThp ? 3 : 4)) + '">V tejto podsmenovke zatiaľ nie sú pridaní pracovníci.</td></tr>';
      return;
     }
     var total = 0;
@@ -237,7 +237,7 @@ function splitRows(rows, size) {
     row.overtime = row.overtime || {};
     var employeePosition = row.position || "";
     var rewardValue = !isThp && row.rewardPercent !== undefined && row.rewardPercent !== "" ? displayValue(row.rewardPercent) : "";
-    body += '<tr><td>' + (pageIndex * rowsPerPage + rowIndex + 1) + '</td><td class="name"><strong>' + html(row.name || "") + "</strong>" + (employeePosition ? '<small>' + html(employeePosition) + '</small>' : "") + (rewardValue ? '<span class="employee-reward">Odmena <b>' + html(rewardValue) + " %</b></span>" : "") + "</td>";
+    body += '<tr><td>' + (pageIndex * rowsPerPage + rowIndex + 1) + "</td>" + (!isThp ? '<td class="personal-number">' + html(row.personalNumber || "") + "</td>" : "") + '<td class="name"><strong>' + html(row.name || "") + "</strong>" + (employeePosition ? '<small>' + html(employeePosition) + '</small>' : "") + (rewardValue ? '<span class="employee-reward">Odmena <b>' + html(rewardValue) + " %</b></span>" : "") + "</td>";
     for (var day = 1; day <= info.days; day += 1) {
      var value = row.values && row.values[day];
      var overtimeValue = isThp && row.overtime ? row.overtime[day] : "";
@@ -247,7 +247,7 @@ function splitRows(rows, size) {
     }
      body += '<td class="sum">' + (isThp ? combinedHtml(total, overtimeTotal) : html(displayValue(total))) + "</td></tr>";
    });
-   var totals = '<tr><td colspan="2" class="name">Spolu za deň</td>';
+   var totals = '<tr><td colspan="' + (isThp ? 2 : 3) + '" class="name">Spolu za deň</td>';
    var grand = 0;
    var overtimeGrand = 0;
    for (var day = 1; day <= info.days; day += 1) {
@@ -258,7 +258,7 @@ function splitRows(rows, size) {
      if (!isThp) totals += '<td class="' + dayMeta(month, day).className + '">' + html(displayValue(dayTotal || "")) + "</td>";
     }
     if (!isThp) totals += '<td class="sum">' + html(displayValue(grand)) + "</td></tr>";
-    var table = '<table class="employee-timesheet-table ' + (isThp ? "thp-employee-timesheet-table" : "betpres-employee-timesheet-table") + '"><thead>' + tableHead(month, isThp ? "Meno a pozícia" : "Meno, pozícia a odmena", false) + "</thead><tbody>" + body + "</tbody>" + (totals ? "<tfoot>" + totals + "</tfoot>" : "") + "</table>";
+    var table = '<table class="employee-timesheet-table ' + (isThp ? "thp-employee-timesheet-table" : "betpres-employee-timesheet-table") + '"><thead>' + tableHead(month, isThp ? "Meno a pozícia" : "Meno, pozícia a odmena", false, !isThp) + "</thead><tbody>" + body + "</tbody>" + (totals ? "<tfoot>" + totals + "</tfoot>" : "") + "</table>";
     var detail = rows.length + " pracovníkov" + (isThp ? " · hodiny a nadčas pod sebou" : " · bežné hodiny");
     var summary = isThp && !grand && !overtimeGrand ? "" : displayValue(grand) + " h" + (isThp && overtimeGrand ? " · " + displayValue(overtimeGrand) + " h nadčas" : "");
    pages.push(page(title, month, pageIndex + 1, chunks.length, detail, table, summary));
@@ -268,7 +268,8 @@ function splitRows(rows, size) {
 
  function companyHourPages(row, month) {
   var workers = companyHourWorkers(row);
-  var chunks = splitRows(workers, 12);
+  var rowsPerPage = 15;
+  var chunks = splitRows(workers, rowsPerPage);
   var info = monthInfo(month);
   var rate = companyHourRate(row);
   var companyName = companyHourRowName(row);
@@ -282,7 +283,7 @@ function splitRows(rows, size) {
      return;
     }
     var total = 0;
-    body += "<tr><td>" + (pageIndex * 12 + rowIndex + 1) + '</td><td class="name"><strong>' + html(worker.name || "") + "</strong></td>";
+    body += "<tr><td>" + (pageIndex * rowsPerPage + rowIndex + 1) + '</td><td class="name"><strong>' + html(worker.name || "") + "</strong></td>";
     for (var day = 1; day <= info.days; day += 1) {
      var value = worker.values && worker.values[day];
      total += attendanceHours(value);

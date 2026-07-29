@@ -1,4 +1,4 @@
-const CACHE = "betpres-sitedesk-ipad-1.0.2";
+const CACHE = "betpres-sitedesk-ipad-1.0.3";
 const CACHE_PREFIX = "betpres-sitedesk-ipad-";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest",
