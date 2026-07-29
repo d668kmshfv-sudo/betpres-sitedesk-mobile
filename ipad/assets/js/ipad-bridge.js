@@ -79,7 +79,7 @@
     const badge = document.createElement("div");
     badge.id = "ipadWebBadge";
     badge.className = "ipad-web-badge";
-    badge.innerHTML = '<span>iPad · 5.0.85</span><a href="../" aria-label="Otvoriť jednoduchú mobilnú verziu">Mobil</a>';
+badge.innerHTML = '<span>iPad · 5.0.86</span><a href="../" aria-label="Otvoriť jednoduchú mobilnú verziu">Mobil</a>';
     document.body.appendChild(badge);
   }
 

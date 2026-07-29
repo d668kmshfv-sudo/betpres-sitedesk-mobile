@@ -1,7 +1,7 @@
 {
   "name": "BETPRES SiteDesk iPad",
   "short_name": "SiteDesk iPad",
-  "description": "SiteDesk 5.0.85 pre iPad, kompatibilný s iPhonom a notebookmi",
+  "description": "SiteDesk 5.0.86 pre iPad, kompatibilný s iPhonom a notebookmi",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
