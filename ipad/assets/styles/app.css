@@ -4326,6 +4326,7 @@ body.workers-focus-mode #workers #companyTimesheetsPanel .company-hours-table{
 #companyTimesheetsPanel .company-hours-table thead th.weekend{background:#1c587f!important}
 #companyTimesheetsPanel .company-hours-table thead th.holiday{background:#a93434!important}
 #companyTimesheetsPanel .company-hours-table tbody tr:nth-child(even)>td{background:#f3f7fa!important}
+#companyTimesheetsPanel .company-hours-table tbody tr.company-timesheet-page-start>td{border-top:4px solid #f5b900!important}
 #companyTimesheetsPanel .company-hours-table tbody tr:nth-child(even)>.company-timesheet-number-col,
 #companyTimesheetsPanel .company-hours-table tbody tr:nth-child(even)>.company-hour-worker-cell{background:#f3f7fa!important}
 #companyTimesheetsPanel .company-hours-table tbody td.weekend{background:#e8eff5!important}

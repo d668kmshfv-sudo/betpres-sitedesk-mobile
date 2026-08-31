@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.1.1";
+ var APP_VERSION = "5.1.2";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -514,9 +514,9 @@ function splitRows(rows, size) {
   var duplexTestRow = { id: uid("test-company-duplex"), companyId: "", companyName: "Test obojstrannej smenovky", printPageCount: 2, workers: [{ id: uid("test-company-worker"), name: "Testovací pracovník", values: {} }] };
   var duplexPages = companyTimesheetPages(duplexTestRow, month);
   if (duplexPages.length !== 2 || duplexPages[1].indexOf(">30<") === -1) throw new Error("Firemná smenovka nemá dve strany po 15 pracovníkov.");
-  duplexTestRow.printPageCount = 3;
+  duplexTestRow.printPageCount = 6;
   var customPages = companyTimesheetPages(duplexTestRow, month);
-  if (customPages.length !== 3 || customPages[2].indexOf(">45<") === -1) throw new Error("Vlastný počet čistých strán firemnej smenovky sa nepoužil.");
+  if (customPages.length !== 6 || customPages[5].indexOf(">90<") === -1) throw new Error("Vlastný počet šiestich čistých strán firemnej smenovky sa nepoužil.");
   var companyPdfHtml = documentHtml("Smenovka firmy", duplexPages);
   if (companyPdfHtml.indexOf("tbody td.name strong{font-size:12px") === -1 || companyPdfHtml.indexOf(".document-period{font-size:12px") === -1) {
    throw new Error("Firemná smenovka nemá mená pracovníkov a obdobie vo veľkosti 12 px.");

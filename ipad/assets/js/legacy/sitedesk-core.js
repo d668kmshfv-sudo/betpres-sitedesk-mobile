@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.1";
+const SITE_DESK_APP_VERSION="5.1.2";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -2960,7 +2960,14 @@ function companyTimesheetWorkers(row){
   values:worker.values||{},
   nameManual:worker.nameManual===true
  }));
- while(row.workers.length<15)row.workers.push({id:uid("ctw"),name:"",values:{}});
+ const hasData=worker=>String(worker?.name||"").trim()||Object.keys(worker?.values||{}).length;
+ let lastUsedIndex=-1;
+ row.workers.forEach((worker,index)=>{if(hasData(worker))lastUsedIndex=index});
+ const requestedPages=normalizeCompanyTimesheetPrintPages(row.printPageCount),requiredPages=Math.max(1,Math.ceil((lastUsedIndex+1)/15));
+ row.printPageCount=Math.max(requestedPages,requiredPages);
+ const targetRows=row.printPageCount*15;
+ while(row.workers.length<targetRows)row.workers.push({id:uid("ctw"),name:"",values:{},nameManual:false});
+ while(row.workers.length>targetRows&&!hasData(row.workers[row.workers.length-1]))row.workers.pop();
  return row.workers
 }
 function companyTimesheet(month,create=true){
@@ -3495,9 +3502,9 @@ function renderCompanyTimesheets(){
   printPagesInput.value=String(activeRow?normalizeCompanyTimesheetPrintPages(activeRow.printPageCount):2);
   printPagesInput.onchange=()=>{
    if(!activeRow)return;
-   activeRow.printPageCount=normalizeCompanyTimesheetPrintPages(printPagesInput.value);
+   activeRow.printPageCount=normalizeCompanyTimesheetPrintPages(printPagesInput.value);companyTimesheetWorkers(activeRow);
    printPagesInput.value=String(activeRow.printPageCount);
-   commitDirectState();toast(`Smenovka firmy ${companyTimesheetRowName(activeRow)}: ${activeRow.printPageCount} ${activeRow.printPageCount===1?"čistá strana":"čisté strany"}.`)
+   commitDirectState();renderCompanyTimesheets();toast(`Smenovka firmy ${companyTimesheetRowName(activeRow)}: ${activeRow.printPageCount} ${activeRow.printPageCount===1?"čistá strana":"čistých strán"} · ${activeRow.printPageCount*15} riadkov.`)
   }
  }
  let head='<tr><th class="company-timesheet-number-col" rowspan="2">Č.</th><th class="company-hour-worker-cell" rowspan="2">PRACOVNÍK</th>';
@@ -3520,7 +3527,8 @@ function renderCompanyTimesheets(){
   const workers=companyTimesheetWorkers(row);
   workers.forEach((worker,workerIndex)=>{
    let total=0;
-   let cells=`<tr><td class="company-timesheet-number-col">${workerIndex+1}</td><td class="company-hour-worker-cell"><div class="company-hour-worker-inner"><input class="company-hour-worker-name" data-company-timesheet-worker-name="${row.id}:${worker.id}" value="${esc(worker.name||"")}" placeholder="Meno a priezvisko"><button type="button" class="ghost mini danger-mini" data-del-company-timesheet-worker="${row.id}:${worker.id}" title="Vymazať pracovníka">×</button></div></td>`;
+    const pageStart=workerIndex>0&&workerIndex%15===0?" company-timesheet-page-start":"";
+    let cells=`<tr class="${pageStart.trim()}"><td class="company-timesheet-number-col" title="Strana ${Math.floor(workerIndex/15)+1}">${workerIndex+1}</td><td class="company-hour-worker-cell"><div class="company-hour-worker-inner"><input class="company-hour-worker-name" data-company-timesheet-worker-name="${row.id}:${worker.id}" value="${esc(worker.name||"")}" placeholder="Meno a priezvisko"><button type="button" class="ghost mini danger-mini" data-del-company-timesheet-worker="${row.id}:${worker.id}" title="Vymazať pracovníka">×</button></div></td>`;
    for(let day=1;day<=days;day++){
     const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),entry=companyTimesheetDayEntry(worker,day),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
     total+=companyTimesheetDayHours(worker,day);
