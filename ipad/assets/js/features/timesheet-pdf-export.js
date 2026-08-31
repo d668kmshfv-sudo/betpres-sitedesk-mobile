@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.1.4";
+ var APP_VERSION = "5.1.5";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -147,7 +147,7 @@ function splitRows(rows, size) {
    ".employee-timesheet-table tbody tr.hours-row td{border-bottom:1px dashed #8aa2b7}.employee-timesheet-table tbody tr.overtime-row td{height:5.2mm;background:#fff4df!important;color:#754712;border-top:0}.employee-timesheet-table td.sum small{display:block;font-size:5.5px;line-height:1;color:#60778b}.employee-timesheet-table tr.overtime-row td.sum small,.employee-timesheet-table tr.overtime-total td.sum small{color:#9b5c13}.employee-timesheet-table tfoot tr.overtime-total td{background:#ffe7bd!important;color:#6f430f}",
    "tfoot td{background:#d5e6f4;font-weight:800;border-top:1.5px solid #082f61}.empty{height:18mm;text-align:left;padding-left:4mm;color:#6b7c90}",
    "footer{margin-top:auto;min-height:6mm;border-top:1.2px solid #082f61;padding:1.2mm 0 0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:4mm;font-size:7px;color:#45647d}.footer-app{font-weight:850;color:#244d70}footer>strong{color:#082f61;font-size:8px}footer>span:last-child{text-align:right}",
-   "@media print{body{background:#fff}}"
+   "@media print{html{zoom:1!important}body{background:#fff}}"
   ].join("");
   return '<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>' + html(title) + "</title><style>" + styles + "</style></head><body>" + pages.join("") + "</body></html>";
  }

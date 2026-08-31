@@ -20,7 +20,16 @@
   modal.querySelector("[data-pdf-zoom='in']").onclick = function () { setZoom(zoom + 0.1); };
   modal.querySelector("[data-pdf-print]").onclick = function () {
    var frame = document.getElementById("pdfPreviewFrame");
-   if (frame && frame.contentWindow) { frame.contentWindow.focus(); frame.contentWindow.print(); }
+   if (!frame || !frame.contentWindow) return;
+   var root = frame.contentDocument && frame.contentDocument.documentElement;
+   var previewZoom = root ? root.style.zoom : "";
+   var restorePreviewZoom = function () {
+    if (root) root.style.zoom = previewZoom || String(zoom);
+   };
+   if (root) root.style.zoom = "1";
+   frame.contentWindow.addEventListener("afterprint", restorePreviewZoom, { once: true });
+   frame.contentWindow.focus();
+   frame.contentWindow.print();
   };
   modal.querySelector("[data-pdf-save]").onclick = async function () {
    if (!activePayload || !window.betpresDesktop || typeof window.betpresDesktop.exportPdf !== "function") return;
