@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.0";
+const SITE_DESK_APP_VERSION="5.1.1";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -2957,7 +2957,8 @@ function companyTimesheetWorkers(row){
  row.workers=row.workers.map(worker=>({
   id:worker.id||uid("ctw"),
   name:worker.name||"",
-  values:worker.values||{}
+  values:worker.values||{},
+  nameManual:worker.nameManual===true
  }));
  while(row.workers.length<15)row.workers.push({id:uid("ctw"),name:"",values:{}});
  return row.workers
@@ -2977,7 +2978,7 @@ function companyTimesheet(month,create=true){
     companyId:row.companyId||"",
     companyName:row.companyName||"",
     printPageCount:normalizeCompanyTimesheetPrintPages(row.printPageCount),
-    workers:companyTimesheetWorkers(row).map(worker=>({id:uid("ctw"),name:worker.name||"",values:{}}))
+     workers:companyTimesheetWorkers(row).map(worker=>({id:uid("ctw"),name:worker.name||"",values:{},nameManual:false}))
    }))
   };
   state.companyTimesheets.push(sheet);
@@ -3094,8 +3095,7 @@ function syncAssignedCompanyTimesheets(sheet,month){
  return added
 }
 function carryCompanyTimesheetWorkerNames(sheet,month){
- const carryVersion="company-worker-names-v1";
- if(!sheet||sheet.workerNamesCarryVersion===carryVersion)return 0;
+ if(!sheet)return 0;
  const previous=[...state.companyTimesheets]
   .filter(item=>item.projectId===state.selectedProjectId&&item.month<month)
   .sort((a,b)=>b.month.localeCompare(a.month))[0],
@@ -3111,14 +3111,13 @@ function carryCompanyTimesheetWorkerNames(sheet,month){
    const name=String(sourceWorker.name||"").trim();
    if(!name)return;
    while(targetWorkers.length<=index)targetWorkers.push({id:uid("ctw"),name:"",values:{}});
-   if(!String(targetWorkers[index].name||"").trim()){
-    targetWorkers[index].name=name;
-    copied++
-   }
-  })
- });
- sheet.workerNamesCarryVersion=carryVersion;
- commitDirectState();
+    if(!targetWorkers[index].nameManual&&!String(targetWorkers[index].name||"").trim()){
+     targetWorkers[index].name=name;
+     copied++
+    }
+   })
+  });
+ if(copied)commitDirectState();
  return copied
 }
 function companyHourTimesheet(month,create=true){
@@ -3569,7 +3568,7 @@ function renderCompanyTimesheets(){
   input.onfocus=()=>beginDirectUndo("Úprava mena vo firemnej smenovke");
   input.onchange=()=>{
    const [rowId,workerId]=input.dataset.companyTimesheetWorkerName.split(":"),row=sheet.rows.find(item=>item.id===rowId),worker=companyTimesheetWorkers(row).find(item=>item.id===workerId);
-   if(!worker)return;worker.name=input.value.trim();commitDirectState();refreshCompanyTimesheetTotals(sheet,activeRow,worker,input)
+   if(!worker)return;worker.name=input.value.trim();worker.nameManual=true;commitDirectState();refreshCompanyTimesheetTotals(sheet,activeRow,worker,input)
    };
    input.onblur=endDirectUndo
  });
