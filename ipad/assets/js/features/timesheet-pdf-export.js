@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
-var APP_VERSION = "5.0.86";
+ var APP_VERSION = "5.1.0";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -84,7 +84,7 @@ function splitRows(rows, size) {
 
  function exportHeader(title, month, pageNumber, pageCount, detail) {
   return '<header class="document-head"><div class="brand-rail"></div><div class="app-name"><img src="' + html(exportLogoDataUrl()) + '" alt="BETPRES"><span>BETPRES, s.r.o. · stavebná evidencia</span></div><div class="document-title"><span class="document-kicker">MESAČNÝ VÝKAZ STAVBY</span><h1>' +
-   html(title) + '</h1><div class="document-meta"><span><b>Stavba</b>' + html(projectLabel()) + '</span><span><b>Obdobie</b>' + html(monthInfo(month).label) + '</span><span><b>Obsah</b>' + html(detail || "evidencia") +
+   html(title) + '</h1><div class="document-meta"><span><b>Stavba</b>' + html(projectLabel()) + '</span><span class="document-period"><b>Obdobie</b>' + html(monthInfo(month).label) + '</span><span><b>Obsah</b>' + html(detail || "evidencia") +
    '</span></div></div><div class="page-number"><span>STRANA</span><strong>' + pageNumber + " / " + pageCount + '</strong><small>ISO 9001 · 14001 · 45001</small></div></header>';
  }
 
@@ -122,7 +122,7 @@ function splitRows(rows, size) {
    ".document-head{position:relative;display:grid;grid-template-columns:4mm 52mm minmax(0,1fr) 29mm;align-items:center;gap:4mm;min-height:23mm;border:1px solid #b9c9d8;border-radius:2.5mm;overflow:hidden;margin-bottom:2mm;background:linear-gradient(105deg,#fff 0%,#f2f7fb 100%)}",
    ".brand-rail{align-self:stretch;background:#082f61}",
    ".app-name{display:grid;align-content:center;gap:1mm}.app-name img{display:block;width:47mm;height:14mm;object-fit:contain;object-position:left center}.app-name span{font-size:7px;line-height:1.1;color:#536d83;font-weight:700;letter-spacing:.02em}",
-   ".document-title{min-width:0;text-align:left;padding-left:4mm;border-left:1px solid #cad6e1}.document-kicker{display:block;color:#51738f;font-size:6.5px;font-weight:900;letter-spacing:.13em}.document-title h1{font-size:15px;line-height:1;margin:1.2mm 0 1.5mm;color:#082f61}.document-meta{display:grid;grid-template-columns:1.6fr .55fr .8fr;gap:2mm}.document-meta span{min-width:0;color:#314e67;font-size:7.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.document-meta b{display:block;color:#7890a3;font-size:5.8px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4mm}",
+    ".document-title{min-width:0;text-align:left;padding-left:4mm;border-left:1px solid #cad6e1}.document-kicker{display:block;color:#51738f;font-size:6.5px;font-weight:900;letter-spacing:.13em}.document-title h1{font-size:15px;line-height:1;margin:1.2mm 0 1.5mm;color:#082f61}.document-meta{display:grid;grid-template-columns:1.6fr .55fr .8fr;gap:2mm}.document-meta span{min-width:0;color:#314e67;font-size:7.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.document-meta .document-period{font-size:12px;line-height:1}.document-meta b{display:block;color:#7890a3;font-size:5.8px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4mm}",
    ".page-number{align-self:stretch;display:grid;align-content:center;justify-items:center;gap:.7mm;background:#082f61;color:#fff;text-align:center}.page-number span{font-size:5.8px;letter-spacing:.12em;color:#bcd1e3}.page-number strong{font-size:12px}.page-number small{font-size:5.5px;color:#d7e8f5;white-space:nowrap}",
    ".legend{display:flex;gap:5mm;align-items:center;min-height:5mm;padding:1mm 2mm;border:1px solid #cfdae4;border-radius:1.5mm;background:#f6f9fb;font-size:7.2px;color:#53677f;margin-bottom:2mm}",
    ".legend i{display:inline-block;width:3mm;height:3mm;border:1px solid #bdc9d6;vertical-align:middle;margin-right:1mm}.weekend-box{background:#edf2f7}.holiday-box{background:#ffe7e5}",
@@ -130,7 +130,13 @@ function splitRows(rows, size) {
    "th,td{border:1px solid #9eafc1;text-align:center;height:6.5mm;padding:.6mm;overflow:hidden}",
    "thead tr:first-child th{background:#082f61;color:#fff;font-weight:800}thead tr:nth-child(2) th{background:#174f7f;color:#fff;font-weight:700}.number{width:7mm}.personal-number{width:11mm;font-weight:800}.name{width:42mm;text-align:left!important;padding-left:2mm!important}.day{width:6mm}.sum{width:12mm;background:#dcebf7!important;color:#082f61!important;font-weight:800}.amount{width:22mm;background:#dcebf7!important;color:#082f61!important;font-weight:800}",
    "tbody tr:nth-child(even) td{background:#f3f7fa}tbody tr:nth-child(odd) td{background:#fff}tbody td.weekend,tfoot td.weekend{background:#e8eff5!important}tbody td.holiday,tfoot td.holiday{background:#ffe8e5!important}",
-   "td.name strong{display:block;font-size:7.4px}td.name small{display:block;color:#64768b;font-size:6.3px;margin-top:.5mm}",
+ "td.name strong{display:block;font-size:7.4px}td.name small{display:block;color:#64768b;font-size:6.3px;margin-top:.5mm}",
+  ".company-timesheet-pdf-table .company-time-pdf-cell{font-size:5.8px!important;white-space:nowrap;padding:0!important}",
+  ".company-time-pdf-stack{display:grid;grid-template-rows:1fr 1fr;min-height:6.4mm}",
+  ".company-time-pdf-stack span{display:flex;align-items:center;justify-content:center;min-height:3.15mm;line-height:1;border-bottom:1px solid #d6e0e8}",
+  ".company-time-pdf-stack span:last-child{border-bottom:0}.company-time-pdf-stack em{color:#082f61;font-size:6.2px;font-style:normal;font-weight:850}",
+ ".company-timesheet-pdf-table .number{width:7mm}.company-timesheet-pdf-table .name{width:48mm}.company-timesheet-pdf-table .sum{width:10mm}",
+   ".company-timesheet-pdf-table tbody tr{height:8.5mm}.company-timesheet-pdf-table tbody td.name strong{font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
    ".company-status-table .number{width:3%}.company-status-table .name{width:19%;padding-left:2.4mm!important;padding-right:1.2mm!important}.company-status-table .day{width:2.35%;padding-left:.2mm!important;padding-right:.2mm!important;font-size:6.4px}.company-status-table .sum{width:5.15%}",
    ".company-status-table th,.company-status-table td{height:4.4mm;padding-top:.15mm;padding-bottom:.15mm}",
    ".company-status-table tbody td.name strong{font-size:11px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-status-table tbody td:not(.name){font-size:6.8px}.company-status-table tfoot td.name{font-size:8px}",
@@ -195,7 +201,7 @@ function splitRows(rows, size) {
     }
     body += '<td class="sum">' + html(displayValue(total)) + "</td></tr>";
    });
-    var totals = isThp ? "" : '<tr><td colspan="2" class="name">Spolu za deň</td>';
+    var totals = '<tr><td colspan="2" class="name">Spolu za deň</td>';
    var grand = 0;
    for (var day = 1; day <= info.days; day += 1) {
     var dayTotal = allRows.reduce(function (sum, row) { return sum + (Number(row.values && row.values[day]) || 0); }, 0);
@@ -215,7 +221,13 @@ function splitRows(rows, size) {
   var sheet = isThp ? thpTimesheet(month, true) : betpresTimesheet(month, true);
   var rows = sheet.rows || [];
   var rowsPerPage = isThp ? 14 : 15;
-  var chunks = splitRows(rows, rowsPerPage);
+  var printRows = rows.slice();
+  if (!isThp) {
+   while (!printRows.length || printRows.length % rowsPerPage) {
+    printRows.push({ personalNumber: "", name: "", position: "", rewardPercent: "", values: {}, overtime: {}, printBlank: true });
+   }
+  }
+  var chunks = splitRows(isThp ? rows : printRows, rowsPerPage);
   var info = monthInfo(month);
   var title = isThp ? "PODSMENOVKA THP" : "PODSMENOVKA BETPRES";
   var pages = [];
@@ -232,10 +244,11 @@ function splitRows(rows, size) {
      body += '<tr><td class="empty" colspan="' + (info.days + (isThp ? 3 : 4)) + '">V tejto podsmenovke zatiaľ nie sú pridaní pracovníci.</td></tr>';
      return;
     }
-    var total = 0;
-    var overtimeTotal = 0;
-    row.overtime = row.overtime || {};
-    var employeePosition = row.position || "";
+     var total = 0;
+     var overtimeTotal = 0;
+     row.overtime = row.overtime || {};
+     var blankEmployeeRow = !String(row.personalNumber || "").trim() && !String(row.name || "").trim() && !String(row.position || "").trim() && (row.rewardPercent === undefined || row.rewardPercent === "") && !Object.keys(row.values || {}).length && !Object.keys(row.overtime || {}).length;
+     var employeePosition = row.position || "";
     var rewardValue = !isThp && row.rewardPercent !== undefined && row.rewardPercent !== "" ? displayValue(row.rewardPercent) : "";
     body += '<tr><td>' + (pageIndex * rowsPerPage + rowIndex + 1) + "</td>" + (!isThp ? '<td class="personal-number">' + html(row.personalNumber || "") + "</td>" : "") + '<td class="name"><strong>' + html(row.name || "") + "</strong>" + (employeePosition ? '<small>' + html(employeePosition) + '</small>' : "") + (rewardValue ? '<span class="employee-reward">Odmena <b>' + html(rewardValue) + " %</b></span>" : "") + "</td>";
     for (var day = 1; day <= info.days; day += 1) {
@@ -245,9 +258,9 @@ function splitRows(rows, size) {
      overtimeTotal += attendanceHours(overtimeValue);
       body += '<td class="' + dayMeta(month, day).className + '">' + (isThp ? combinedHtml(value, overtimeValue) : html(displayValue(value))) + "</td>";
     }
-     body += '<td class="sum">' + (isThp ? combinedHtml(total, overtimeTotal) : html(displayValue(total))) + "</td></tr>";
+     body += '<td class="sum">' + (blankEmployeeRow ? "" : (isThp ? combinedHtml(total, overtimeTotal) : html(displayValue(total)))) + "</td></tr>";
    });
-   var totals = '<tr><td colspan="' + (isThp ? 2 : 3) + '" class="name">Spolu za deň</td>';
+   var totals = isThp ? "" : '<tr><td colspan="3" class="name">Spolu za deň</td>';
    var grand = 0;
    var overtimeGrand = 0;
    for (var day = 1; day <= info.days; day += 1) {
@@ -259,7 +272,7 @@ function splitRows(rows, size) {
     }
     if (!isThp) totals += '<td class="sum">' + html(displayValue(grand)) + "</td></tr>";
     var table = '<table class="employee-timesheet-table ' + (isThp ? "thp-employee-timesheet-table" : "betpres-employee-timesheet-table") + '"><thead>' + tableHead(month, isThp ? "Meno a pozícia" : "Meno, pozícia a odmena", false, !isThp) + "</thead><tbody>" + body + "</tbody>" + (totals ? "<tfoot>" + totals + "</tfoot>" : "") + "</table>";
-    var detail = rows.length + " pracovníkov" + (isThp ? " · hodiny a nadčas pod sebou" : " · bežné hodiny");
+    var detail = rows.length + " pracovníkov" + (isThp ? " · hodiny a nadčas pod sebou" : " · bežné hodiny · voľné riadky na ručné dopísanie");
     var summary = isThp && !grand && !overtimeGrand ? "" : displayValue(grand) + " h" + (isThp && overtimeGrand ? " · " + displayValue(overtimeGrand) + " h nadčas" : "");
    pages.push(page(title, month, pageIndex + 1, chunks.length, detail, table, summary));
   });
@@ -302,6 +315,49 @@ function splitRows(rows, size) {
   return pages;
  }
 
+ function companyTimesheetPages(row, month) {
+  var workers = companyTimesheetWorkers(row);
+  var rowsPerPage = 15;
+  var lastUsedIndex = -1;
+  workers.forEach(function (worker, index) {
+   if (String(worker.name || "").trim() || Object.keys(worker.values || {}).length) lastUsedIndex = index;
+  });
+  var requiredPageCount = Math.max(1, Math.ceil((lastUsedIndex + 1) / rowsPerPage));
+  var pageCount = Math.max(requiredPageCount, normalizeCompanyTimesheetPrintPages(row.printPageCount));
+  var printableWorkers = workers.slice(0, pageCount * rowsPerPage);
+  while (printableWorkers.length < pageCount * rowsPerPage) printableWorkers.push({ name: "", values: {} });
+  var chunks = splitRows(printableWorkers, rowsPerPage);
+  var info = monthInfo(month);
+  var companyName = companyTimesheetRowName(row);
+  var allHours = companyTimesheetRowHours(row);
+  var pages = [];
+  chunks.forEach(function (pageRows, pageIndex) {
+   var body = "";
+   pageRows.forEach(function (worker, rowIndex) {
+    if (!worker) {
+     body += '<tr><td class="empty" colspan="' + (info.days + 3) + '">V smenovke zatiaľ nie sú pridaní pracovníci.</td></tr>';
+     return;
+    }
+    var total = 0;
+    body += "<tr><td>" + (pageIndex * rowsPerPage + rowIndex + 1) + '</td><td class="name"><strong>' + html(worker.name || "") + "</strong></td>";
+    for (var day = 1; day <= info.days; day += 1) {
+     var entry = companyTimesheetDayEntry(worker, day);
+     total += companyTimesheetDayHours(worker, day);
+     body += '<td class="' + dayMeta(month, day).className + ' company-time-pdf-cell"><span class="company-time-pdf-stack"><span><em>' + html(entry.arrival || "") + '</em></span><span><em>' + html(entry.departure || "") + "</em></span></span></td>";
+    }
+    body += '<td class="sum">' + html(displayValue(total || "")) + "</td></tr>";
+   });
+   var totals = '<tr><td colspan="2" class="name">Spolu za deň</td>';
+   for (var day = 1; day <= info.days; day += 1) {
+    totals += '<td class="' + dayMeta(month, day).className + '">' + html(displayValue(companyTimesheetDayTotal(row, day) || "")) + "</td>";
+   }
+   totals += '<td class="sum">' + html(displayValue(allHours || "")) + "</td></tr>";
+   var table = '<table class="company-timesheet-pdf-table"><thead>' + tableHead(month, "Pracovník", false) + "</thead><tbody>" + body + "</tbody><tfoot>" + totals + "</tfoot></table>";
+   pages.push(page("SMENOVKA FIRMY – " + companyName, month, pageIndex + 1, chunks.length, "15 pracovníkov na stranu · príchod – odchod", table, displayValue(allHours) + " h"));
+  });
+  return pages;
+ }
+
  async function exportWorkerStatusPdf() {
   var month = currentMonth();
   return savePdf("Stav pracovníkov", "Stav pracovníkov " + fmtDateISO(todayISO()) + ".pdf", companyStatusPages(month));
@@ -324,11 +380,40 @@ function splitRows(rows, size) {
   return savePdf("Hodinová smenovka", "hodinova-smenovka-" + safePart(companyHourRowName(row)) + "-" + month + ".pdf", companyHourPages(row, month));
  }
 
+ async function exportCompanyTimesheetPdf(rowId) {
+  var month = currentMonth();
+  var sheet = companyTimesheet(month, false);
+  var row = sheet && sheet.rows ? sheet.rows.find(function (item) { return item.id === rowId; }) : null;
+  if (!row) {
+   alert("Smenovka firmy sa nenašla.");
+   return { ok: false, reason: "missing-row" };
+  }
+  return savePdf("Smenovka firmy", "smenovka-firmy-" + safePart(companyTimesheetRowName(row)) + "-" + month + ".pdf", companyTimesheetPages(row, month));
+ }
+
+ function assignedCompanyTimesheetRows(month) {
+  var sheet = companyTimesheet(month, false);
+  return currentCompanyTimesheetRows(sheet, month);
+ }
+
+ async function exportAssignedCompanyTimesheetsPdf() {
+  var month = currentMonth();
+  var rows = assignedCompanyTimesheetRows(month);
+  if (!rows.length) {
+   alert("V časti Firmy na stavbe zatiaľ nie je označená žiadna firma so smenovkou.");
+   return { ok: false, reason: "missing-assigned-company-timesheets" };
+  }
+  var pages = [];
+  rows.forEach(function (row) { pages = pages.concat(companyTimesheetPages(row, month)); });
+  return savePdf("Smenovky firiem", "smenovky-firiem-" + safePart(projectLabel()) + "-" + month + ".pdf", pages);
+ }
+
  async function exportAllPdf() {
   var month = currentMonth();
   var pages = companyStatusPages(month).concat(employeePages(month, "betpres"), employeePages(month, "thp"));
   var hourSheet = companyHourTimesheet(month, false);
   if (hourSheet && hourSheet.rows) hourSheet.rows.forEach(function (row) { pages = pages.concat(companyHourPages(row, month)); });
+  assignedCompanyTimesheetRows(month).forEach(function (row) { pages = pages.concat(companyTimesheetPages(row, month)); });
   return savePdf("Všetky smenovky", "vsetky-smenovky-" + safePart(projectLabel()) + "-" + month + ".pdf", pages);
  }
 
@@ -339,19 +424,38 @@ function splitRows(rows, size) {
    alert("Najprv pridaj firmu na hodiny.");
    return;
   }
-  if (sheet.rows.length === 1) {
-   exportCompanyHourPdf(sheet.rows[0].id);
+  var selectedId = (el("companyHourRowSelect") && el("companyHourRowSelect").value) || selectedCompanyHourRowId || "";
+  var selected = sheet.rows.find(function (row) { return row.id === selectedId; }) || (sheet.rows.length === 1 ? sheet.rows[0] : null);
+  if (!selected) {
+   alert("Najprv vyber firmu v záložke Firmy na hodiny.");
    return;
   }
-  var list = sheet.rows.map(function (row, index) { return (index + 1) + ". " + companyHourRowName(row); }).join("\n");
-  var answer = prompt("Ktorú firemnú smenovku chceš exportovať?\n\n" + list + "\n\nZadaj číslo firmy:");
-  if (answer == null) return;
-  var index = Number(String(answer).trim()) - 1;
-  if (!Number.isInteger(index) || !sheet.rows[index]) {
-   alert("Neplatné číslo firmy.");
+  return exportCompanyHourPdf(selected.id);
+ }
+
+ function chooseCompanyTimesheetPdf() {
+  var month = currentMonth();
+  var rows = assignedCompanyTimesheetRows(month);
+  if (!rows.length) {
+   alert("Najprv označ firmy v časti Firmy na stavbe.");
    return;
   }
-  exportCompanyHourPdf(sheet.rows[index].id);
+  if (selectedCompanyTimesheetRowId) {
+   var selected = rows.find(function (row) { return row.id === selectedCompanyTimesheetRowId; });
+   if (selected) {
+    return exportCompanyTimesheetPdf(selected.id);
+   }
+  }
+  if (rows.length === 1) {
+   return exportCompanyTimesheetPdf(rows[0].id);
+  }
+  var selectedId = (el("companyTimesheetCompany") && el("companyTimesheetCompany").value) || selectedCompanyTimesheetRowId || "";
+  var selected = rows.find(function (row) { return row.id === selectedId; });
+  if (!selected) {
+   alert("Najprv vyber firmu v záložke Smenovky firiem.");
+   return;
+  }
+  return exportCompanyTimesheetPdf(selected.id);
  }
 
  function bind(id, handler) {
@@ -359,7 +463,11 @@ function splitRows(rows, size) {
   if (!button) return;
   button.onclick = function () {
    button.disabled = true;
-   Promise.resolve(handler()).finally(function () { button.disabled = false; });
+   return Promise.resolve().then(handler).catch(function (error) {
+    console.error("Export PDF zlyhal:", error);
+    alert("PDF sa nepodarilo vytvoriť. Skús export zopakovať.");
+    return { ok: false, reason: "export-error", error: String(error && error.message || error) };
+   }).finally(function () { button.disabled = false; });
   };
  }
 
@@ -368,9 +476,13 @@ function splitRows(rows, size) {
  bind("exportBetpresTimesheetPdf", function () { return exportEmployeePdf("betpres"); });
  bind("exportThpTimesheetPdf", function () { return exportEmployeePdf("thp"); });
  bind("exportCompanyHoursPdf", chooseCompanyHourPdf);
+ bind("printCompanyTimesheet", chooseCompanyTimesheetPdf);
+ bind("exportAssignedCompanyTimesheets", exportAssignedCompanyTimesheetsPdf);
 
  window.exportCompanyHourTimesheetPdf = exportCompanyHourPdf;
  window.chooseCompanyHourTimesheetForExport = chooseCompanyHourPdf;
+ window.exportCompanyTimesheetPdf = exportCompanyTimesheetPdf;
+ window.chooseCompanyTimesheetForExport = chooseCompanyTimesheetPdf;
 
  window.__BETPRES_RUN_EXPORT_TESTS__ = async function () {
   var month = todayMonthValue();
@@ -386,11 +498,28 @@ function splitRows(rows, size) {
   if (betpresSheet.rows.length && (betpresSheet.rows[0].rewardPercent === undefined || betpresSheet.rows[0].rewardPercent === "")) betpresSheet.rows[0].rewardPercent = 12.5;
   var rewardExportHtml = employeePages(month, "betpres").join("");
   if (rewardExportHtml.indexOf('class="employee-reward"') === -1 || rewardExportHtml.indexOf("Odmena") === -1) throw new Error("V PDF podsmenovky BETPRES chýba percento odmeny.");
+  var betpresBodyMatch = rewardExportHtml.match(/<tbody>([\s\S]*?)<\/tbody>/);
+  var betpresPrintRows = betpresBodyMatch ? (betpresBodyMatch[1].match(/<tr>/g) || []).length : 0;
+  if (betpresPrintRows !== 15 || rewardExportHtml.indexOf("voľné riadky na ručné dopísanie") === -1 || rewardExportHtml.indexOf('class="sum">0</td>') !== -1) throw new Error("PDF podsmenovky BETPRES nemá 15 úplne prázdnych riadkov na ručné dopísanie.");
   var thpSheet = thpTimesheet(month, true);
   if (!thpSheet.rows.length) thpSheet.rows.push({ id: uid("test-thp"), name: "Testovací technik", position: "THP", values: { 1: 8, 2: 9 }, overtime: {} });
   var hourSheet = companyHourTimesheet(month, true);
   if (!hourSheet.rows.length) {
    hourSheet.rows.push({ id: uid("test-hours"), companyId: "", companyName: "Testovacia hodinová firma", hourlyRate: "25", description: "Test exportu", workersText: "Testovací pracovník", workers: [{ id: uid("test-worker"), name: "Testovací pracovník", values: { 1: 8, 2: 7.5 } }], values: {}, statementItemId: "" });
+  }
+  if (hourSheet.rows.length === 1) {
+   hourSheet.rows.push({ id: uid("test-hours-choice"), companyId: "", companyName: "Druhá testovacia hodinová firma", hourlyRate: "24", description: "Test výberu exportu", workersText: "Druhý pracovník", workers: [{ id: uid("test-worker-choice"), name: "Druhý pracovník", values: { 1: 8 } }], values: {}, statementItemId: "" });
+  }
+  selectedCompanyHourRowId = hourSheet.rows[1].id;
+  var duplexTestRow = { id: uid("test-company-duplex"), companyId: "", companyName: "Test obojstrannej smenovky", printPageCount: 2, workers: [{ id: uid("test-company-worker"), name: "Testovací pracovník", values: {} }] };
+  var duplexPages = companyTimesheetPages(duplexTestRow, month);
+  if (duplexPages.length !== 2 || duplexPages[1].indexOf(">30<") === -1) throw new Error("Firemná smenovka nemá dve strany po 15 pracovníkov.");
+  duplexTestRow.printPageCount = 3;
+  var customPages = companyTimesheetPages(duplexTestRow, month);
+  if (customPages.length !== 3 || customPages[2].indexOf(">45<") === -1) throw new Error("Vlastný počet čistých strán firemnej smenovky sa nepoužil.");
+  var companyPdfHtml = documentHtml("Smenovka firmy", duplexPages);
+  if (companyPdfHtml.indexOf("tbody td.name strong{font-size:12px") === -1 || companyPdfHtml.indexOf(".document-period{font-size:12px") === -1) {
+   throw new Error("Firemná smenovka nemá mená pracovníkov a obdobie vo veľkosti 12 px.");
   }
   var firstAssignment = activeAssignments()[0];
   if (firstAssignment) {
@@ -431,6 +560,7 @@ function splitRows(rows, size) {
    ["podsmenovka-betpres", function () { return exportEmployeePdf("betpres"); }],
    ["podsmenovka-thp", function () { return exportEmployeePdf("thp"); }],
    ["hodinova-smenovka", function () { return exportCompanyHourPdf(hourSheet.rows[0].id); }],
+   ["hodinova-smenovka-vybrana", chooseCompanyHourPdf],
    ["vsetky-smenovky", exportAllPdf],
    ["supis-prac-pdf", function () {
     var button = el("exportWorkPdf");

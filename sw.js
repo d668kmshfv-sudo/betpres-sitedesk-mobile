@@ -1,14 +1,11 @@
-const CACHE="betpres-sitedesk-mobile-1.0.15";
-const CACHE_PREFIX="betpres-sitedesk-mobile-";
+const CACHE="betpres-sitedesk-online-1.1.0-redirect";
+const CACHE_PREFIX="betpres-sitedesk-online-";
 const SHELL=[
  "./",
  "./index.html",
- "./styles.css?v=1.0.15",
- "./app.js?v=1.0.15",
  "./manifest.webmanifest",
- "./assets/betpres-logo.png",
- "./assets/app-icon.png",
- "./assets/app-icon.svg"
+ "./ipad/",
+ "./ipad/index.html"
 ];
 
 self.addEventListener("install",event=>{

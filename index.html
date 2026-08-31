@@ -2,6 +2,14 @@
 <html lang="sk">
 <head>
  <meta charset="utf-8">
+ <script>
+  (() => {
+   const target = new URL("./ipad/", location.href);
+   target.search = location.search;
+   target.hash = location.hash;
+   location.replace(target.href);
+  })();
+ </script>
  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
  <meta name="theme-color" content="#f4f8fb">
  <meta name="apple-mobile-web-app-capable" content="yes">
@@ -9,7 +17,7 @@
  <meta name="apple-mobile-web-app-title" content="SiteDesk">
  <meta name="format-detection" content="telephone=no">
  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
- <title>BETPRES SiteDesk Mobile</title>
+ <title>BETPRES SiteDesk Online</title>
  <link rel="manifest" href="manifest.webmanifest">
  <link rel="apple-touch-icon" href="assets/app-icon.png">
  <link rel="icon" href="assets/app-icon.svg">

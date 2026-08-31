@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.0.86";
+const SITE_DESK_APP_VERSION="5.1.0";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -52,7 +52,7 @@ const normalizeStateList=key=>{
 };
 [
  "projects","companies","assignments","billings","materials","purchases","machinePassport",
- "handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","acceptanceProtocols","siteMeetings","controlDays",
+ "handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays",
  "documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"
 ].forEach(normalizeStateList);
 if(!Array.isArray(state.defects))state.defects=[];
@@ -288,7 +288,7 @@ try{
 }catch(migrationError){
  console.error("Betpres – chyba migrácie starších údajov:",migrationError)
 }
-let purchasePage=1;const PURCHASE_PAGE_SIZE=150;let zoom=.76;let selectedWorkerMonth=todayMonthValue();let selectedWorkerMode="companies";const workerRenderSignatures=new Map();let lastCompaniesViewSignature="";let selectedCompanyHourRowId="";let selectedDefectIds=new Set();let editingDefectId="";let pendingDefectPhotos=[];const defectPhotoUrlCache=new Map();let selectedControlDayDate=nextTuesdayISO(todayISO());let selectedCoordinationKind="coordination";let selectedCalendarMonth=todayMonthValue();let selectedWorkCompanyId="";let selectedWorkPeriod=todayMonthValue();let selectedWorkDocFilter="manual:zod";let selectedWorkItemId="";let selectedWorkItemIds=new Set();let lastWorkSelectionIndex=-1;let workSummaryTimer=null;let workSummaryPendingStatement=null;let workPreviousIndexCache=new WeakMap();let handoverDraft=null;let handoverDraftKey="";let editingHandoverId="";const $=id=>document.getElementById(id);const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));const eur=new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR"});const monthNames=["Jan","Feb","Mar","Apr","Máj","Jún","Júl","Aug","Sep","Okt","Nov","Dec"];
+let purchasePage=1;const PURCHASE_PAGE_SIZE=150;let zoom=.76;let selectedWorkerMonth=todayMonthValue();let selectedWorkerMode="companies";const workerRenderSignatures=new Map();let lastCompaniesViewSignature="";let selectedCompanyHourRowId="";let selectedCompanyTimesheetRowId="";let selectedDefectIds=new Set();let editingDefectId="";let pendingDefectPhotos=[];const defectPhotoUrlCache=new Map();let selectedControlDayDate=nextTuesdayISO(todayISO());let selectedCoordinationKind="coordination";let selectedCalendarMonth=todayMonthValue();let selectedWorkCompanyId="";let selectedWorkPeriod=todayMonthValue();let selectedWorkDocFilter="manual:zod";let selectedWorkItemId="";let selectedWorkItemIds=new Set();let lastWorkSelectionIndex=-1;let workSummaryTimer=null;let workSummaryPendingStatement=null;let workPreviousIndexCache=new WeakMap();let handoverDraft=null;let handoverDraftKey="";let editingHandoverId="";const $=id=>document.getElementById(id);const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));const eur=new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR"});const monthNames=["Jan","Feb","Mar","Apr","Máj","Jún","Júl","Aug","Sep","Okt","Nov","Dec"];
 function todayMonthValue(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function updateUndoButton(){const b=$("undoBtn");if(!b)return;b.disabled=!undoStack.length;b.title=undoStack.length?`Vrátiť: ${undoStack.at(-1).label||"poslednú zmenu"} (Ctrl + Z)`:"Nie je čo vrátiť"}
 function rememberPreviousState(label="Posledná zmena",serialized=""){const current=serialized||JSON.stringify(state);if(lastCommittedState!==current){undoStack.push({data:lastCommittedState,label});if(undoStack.length>30)undoStack.shift()}}
@@ -389,6 +389,7 @@ function scheduleSiteDeskViewRender(id){
  }else run()
 }
 function showView(id){
+ if(id==="purchases"||id==="concrete")id="dashboard";
  const requestedView=id;
  if(id==="controlDays"){selectedCoordinationKind="controlDay";id="siteMeetings"}
  else if(id==="siteMeetings")selectedCoordinationKind="coordination";
@@ -604,7 +605,6 @@ function applySiteDesk3UI(){
 
 const CLOUD_CONFIG_KEY=KEY+"-cloud-config";
 const CLOUD_SESSION_KEY=KEY+"-cloud-session";
-const CLOUD_DIRTY_KEY=KEY+"-cloud-dirty";
 const CLOUD_PRE_PULL_BACKUP_KEY=KEY+"-pre-cloud-pull";
 const CLOUD_PRE_PUSH_BACKUP_KEY=KEY+"-pre-cloud-push";
 const SITE_DESK_MOBILE_URL="https://d668kmshfv-sudo.github.io/betpres-sitedesk-mobile/";
@@ -616,8 +616,7 @@ let cloudPushRunning=false;
 let cloudLastPushBackupAt=0;
 let cloudRemoteCheckRunning=false;
 let cloudLastLocalChangeAt=0;
-let cloudLocalDirty=localStorage.getItem(CLOUD_DIRTY_KEY)==="1";
-let cloudRefreshPromise=null;
+let cloudLocalDirty=false;
 let cloudPendingDescription="Synchronizácia údajov";
 let cloudTeamMembers=[];
 let cloudTeamActivity=[];
@@ -642,44 +641,17 @@ function loadCloudConfig(){
 }
 function saveCloudConfig(){
  localStorage.setItem(KEY+"-device-id",cloudConfig.deviceId);
- localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(cloudConfig));
- const mobileConfig=(()=>{try{return JSON.parse(localStorage.getItem("betpres-mobile-cloud-v1")||"{}")}catch{return{}}})();
- localStorage.setItem("betpres-mobile-cloud-v1",JSON.stringify({...mobileConfig,url:cloudConfig.url||mobileConfig.url||"",key:cloudConfig.key||mobileConfig.key||"",workspaceName:cloudConfig.workspaceName||mobileConfig.workspaceName||"Medická – pilot",version:Number(cloudConfig.lastCloudVersion||mobileConfig.version||0),workspaceId:cloudConfig.lastCloudId||mobileConfig.workspaceId||"",role:cloudConfig.currentRole||mobileConfig.role||"none",email:cloudConfig.lastEmail||mobileConfig.email||""}))
+ localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(cloudConfig))
 }
 function loadCloudSession(){
  try{return JSON.parse(localStorage.getItem(CLOUD_SESSION_KEY)||"null")}catch{return null}
 }
 function saveCloudSession(session){
- cloudSession=session?{...session,_savedAt:Date.now()}:null;
- if(cloudSession){
-  const value=JSON.stringify(cloudSession);
-  localStorage.setItem(CLOUD_SESSION_KEY,value);
-  localStorage.setItem("betpres-mobile-session-v1",value)
- }else{
-  localStorage.removeItem(CLOUD_SESSION_KEY);
-  localStorage.removeItem("betpres-mobile-session-v1")
- }
+ cloudSession=session||null;
+ if(cloudSession)localStorage.setItem(CLOUD_SESSION_KEY,JSON.stringify(cloudSession));
+ else localStorage.removeItem(CLOUD_SESSION_KEY);
  renderCloudPanel()
 }
-function setCloudLocalDirty(value){
- cloudLocalDirty=Boolean(value);
- if(cloudLocalDirty)localStorage.setItem(CLOUD_DIRTY_KEY,"1");
- else localStorage.removeItem(CLOUD_DIRTY_KEY)
-}
-window.siteDeskAdoptCloudSession=session=>{
- if(!session?.access_token)return;
- cloudSession=session;
- saveCloudSession(session)
-};
-window.siteDeskResumeCloudSync=async()=>{
- if(document.hidden||!navigator.onLine||!cloudSession?.access_token||cloudPushRunning)return;
- if(cloudLocalDirty){await cloudPush({silent:true});return}
- try{
-  const remote=await cloudGetWorkspace();
-  if(remote&&Number(remote.data_version||0)>Number(cloudConfig.lastCloudVersion||0))await cloudPull({silent:true});
-  else await cloudRefreshWorkspaceStatus()
- }catch{}
-};
 function normalizeCloudUrl(value){
  return String(value||"").trim().replace(/\/+$/,"")
 }
@@ -716,21 +688,16 @@ async function cloudFetch(path,options={},requireAuth=true){
 async function cloudEnsureSession(){
  if(!cloudSession?.access_token)throw new Error("Nie si prihlásený.");
  const expiresAt=Number(cloudSession.expires_at||0);
- if(expiresAt&&expiresAt-Date.now()/1000>180)return cloudSession;
+ if(expiresAt&&expiresAt-Date.now()/1000>90)return cloudSession;
  if(!cloudSession.refresh_token)throw new Error("Prihlásenie vypršalo. Prihlás sa znova.");
- if(cloudRefreshPromise)return cloudRefreshPromise;
- const previous=cloudSession;
- cloudRefreshPromise=(async()=>{
-  const data=await cloudFetch("/auth/v1/token?grant_type=refresh_token",{
-   method:"POST",
-   body:JSON.stringify({refresh_token:previous.refresh_token})
-  },false);
-  if(!data?.access_token)throw new Error("Prihlásenie sa nepodarilo obnoviť.");
-  data.expires_at=Math.floor(Date.now()/1000)+Number(data.expires_in||3600);
-  saveCloudSession({...previous,...data,user:data.user||previous.user});
-  return cloudSession
- })();
- try{return await cloudRefreshPromise}finally{cloudRefreshPromise=null}
+ const data=await cloudFetch("/auth/v1/token?grant_type=refresh_token",{
+  method:"POST",
+  body:JSON.stringify({refresh_token:cloudSession.refresh_token})
+ },false);
+ if(!data?.access_token)throw new Error("Prihlásenie sa nepodarilo obnoviť.");
+ data.expires_at=Math.floor(Date.now()/1000)+Number(data.expires_in||3600);
+ saveCloudSession(data);
+ return data
 }
 async function cloudSignIn(){
  const email=$("cloudEmail").value.trim(),
@@ -1071,7 +1038,7 @@ async function cloudPush({force=false,silent=false}={}){
   cloudConfig.lastCloudUpdatedAt=saveResult.updated_at||now;
   cloudConfig.lastCloudId=remote.id;
   cloudPendingDescription="Synchronizácia údajov";
-  setCloudLocalDirty(false);
+  cloudLocalDirty=false;
   saveCloudConfig();
   cloudSetQuickStatus("connected",`Cloud v${cloudConfig.lastCloudVersion}`);
   setCloudMessage("cloudSyncMessage",`Dáta boli uložené. Cloudová verzia ${cloudConfig.lastCloudVersion}.`,"success");
@@ -1096,7 +1063,7 @@ async function cloudPull({silent=false}={}){
   const imported=remote.data;
   if(!Array.isArray(imported.projects)||!Array.isArray(imported.companies))throw new Error("Cloudový záznam nemá platný formát SiteDesk.");
   state=imported;
-  ["projects","companies","assignments","billings","materials","purchases","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"].forEach(key=>{
+  ["projects","companies","assignments","billings","materials","purchases","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"].forEach(key=>{
    if(!Array.isArray(state[key]))state[key]=[]
   });
   const serialized=JSON.stringify(state);
@@ -1105,7 +1072,7 @@ async function cloudPull({silent=false}={}){
   cloudConfig.lastCloudVersion=Number(remote.data_version||0);
   cloudConfig.lastCloudUpdatedAt=remote.updated_at||"";
   cloudConfig.lastCloudId=remote.id||"";
-  setCloudLocalDirty(false);
+  cloudLocalDirty=false;
   saveCloudConfig();
   await cloudLoadTeamContext(remote);
   renderAll();
@@ -1145,7 +1112,7 @@ async function cloudRefreshWorkspaceStatus(){
 }
 function queueCloudPush(description=""){
  cloudLastLocalChangeAt=Date.now();
- setCloudLocalDirty(true);
+ cloudLocalDirty=true;
  if(description)cloudPendingDescription=description;
  if(!cloudConfig.autoSync||!cloudSession?.access_token)return;
  if(!["owner","editor"].includes(cloudConfig.currentRole))return;
@@ -1507,7 +1474,9 @@ function updateDefectTypeFields(){
  const isBozp=$("defectType").value==="Porušenie BOZP";
  $("defectLocationLabel").textContent=isBozp?"Aké porušenie BOZP":"Miesto";
  $("defectLocation").placeholder=isBozp?"napr. práca bez prilby alebo nezabezpečený otvor":"napr. 3. NP – byt B3.12 – obývacia izba";
- $("defectDescription").placeholder=isBozp?"Popíš okolnosti porušenia a požadovanú nápravu.":"Popíš vadu alebo nedorobok."
+ $("defectDescription").placeholder=isBozp?"Nepovinné: okolnosti porušenia a požadovaná náprava.":"Nepovinné: popíš vadu alebo nedorobok.";
+ $("defectDescription").required=false;
+ $("defectSeverityField")?.classList.toggle("hidden",isBozp)
 }
 function renderDefectPhotoEditor(){
  $("defectPhotoEditor").innerHTML=pendingDefectPhotos.map((photo,index)=>{
@@ -1591,7 +1560,7 @@ async function exportDefectsPdf(){
     ${entries.map(entry=>{const item=entry.item,photoCount=entry.photos.length,photoColumns=photoCount<=1?1:photoCount<=4?2:photoCount<=6?3:4,totalPhotos=(item.photos||[]).length;return`<article class="defect-print-item ${photoCount?"has-photos":""}">
      <div class="defect-print-number">${entry.itemNumber}</div>
      <div class="defect-print-content">
-      <div class="defect-print-meta"><strong>${esc(item.number||"")}</strong><span>Typ: ${esc(item.type||"Vada / nedorobok")}</span><span>Termín: ${esc(item.dueDate?fmtDateISO(item.dueDate):"—")}</span><span>Závažnosť: ${esc(item.severity||"")}</span><span>Zodpovedná osoba: ${esc(defectResponsibleName(item))}</span></div>
+       <div class="defect-print-meta"><strong>${esc(item.number||"")}</strong><span>Typ: ${esc(item.type||"Vada / nedorobok")}</span><span>Termín: ${esc(item.dueDate?fmtDateISO(item.dueDate):"—")}</span>${item.type==="Porušenie BOZP"?"":`<span>Závažnosť: ${esc(item.severity||"")}</span>`}<span>Zodpovedná osoba: ${esc(defectResponsibleName(item))}</span></div>
       <h2>${esc(item.location||"")}</h2>
       <p>${esc(item.description||"")}</p>
       ${entry.photoStart?`<div class="defect-photo-continuation">Pokračovanie fotodokumentácie · fotografie ${entry.photoStart+1}–${entry.photoStart+photoCount} z ${totalPhotos}</div>`:""}
@@ -1682,7 +1651,7 @@ function renderProjectSelectors(){if(!project(state.selectedProjectId))state.sel
 function renderDashboard(){const p=activeProject();if(!p)return;$('dashTitle').textContent=p.name;const bs=state.billings.filter(b=>b.projectId===p.id),hs=state.handovers.filter(h=>h.projectId===p.id),ps=state.purchases.filter(x=>x.projectId===p.id),assignmentRows=state.assignments.filter(a=>a.projectId===p.id),protocols=state.acceptanceProtocols.filter(x=>x.projectId===p.id);const today=todayISO(),month=today.slice(0,7),day=Number(today.slice(8,10)),todaySheet=syncBetpresWorkerRow(month,workerSheet(month,true))&&workerSheet(month,true),workersToday=(todaySheet?.rows||[]).reduce((sum,r)=>sum+(Number(r.values?.[day])||0),0);$('metricWorkersToday').textContent=workersToday;$('metricWorkersDate').textContent=workersToday?`${fmtDateISO(today)} · spolu na stavbe`:`${fmtDateISO(today)} · dnešný stav zatiaľ nevyplnený`;$('metricBilling').textContent=eur.format(bs.reduce((s,x)=>s+Number(x.amount||0),0));$('metricHandovers').textContent=hs.length;if($('metricPurchases'))$('metricPurchases').textContent=ps.length;const missingAcceptance=Math.max(0,assignmentRows.length-new Set(protocols.map(x=>x.companyId)).size);if($('metricAcceptance'))$('metricAcceptance').textContent=protocols.length;if($('metricAcceptanceText'))$('metricAcceptanceText').textContent=`${missingAcceptance} firiem bez protokolu`;
 const recent=[...ps].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);if($('recentPurchases'))$('recentPurchases').innerHTML='';const monthly={};bs.forEach(b=>monthly[b.month]=(monthly[b.month]||0)+Number(b.amount||0));const keys=Object.keys(monthly).sort().slice(-12);const max=Math.max(1,...keys.map(k=>monthly[k]));$('billingChart').innerHTML=keys.length?keys.map(k=>{const m=Number(k.slice(5));return `<div class="bar-group"><div class="bar ${k===keys.at(-1)?'current':''}" style="height:${Math.max(3,monthly[k]/max*90)}%" data-value="${esc(eur.format(monthly[k]))}"></div><small>${monthNames[m-1]}</small></div>`}).join(''):`<div style="align-self:center;color:#789">Zatiaľ bez fakturácie</div>`;const byCompany={};bs.forEach(b=>byCompany[b.companyId]=(byCompany[b.companyId]||0)+Number(b.amount||0));$('topCompanies').innerHTML=Object.entries(byCompany).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v],i)=>`<div class="rank-row"><b>${i+1}.</b><div><strong>${esc(company(id)?.name||'')}</strong><small>${esc(company(id)?.scope||'')}</small></div><span>${eur.format(v)}</span></div>`).join('')||`<p style="color:#789">Zatiaľ bez údajov.</p>`;$('projectCards').innerHTML=state.projects.slice(0,5).map(x=>`<div class="mini-row"><div><strong>${esc(x.name)}</strong><small>${esc(x.address||'')}</small></div><span class="status">${x.id===state.selectedProjectId?'Aktívna':'Stavba'}</span></div>`).join('')}
 function renderProjects(){$("projectsGrid").innerHTML=state.projects.map(p=>`<article class="panel project-card"><h3>${esc(p.name)}</h3><p>${esc(p.address||"Bez adresy")}</p><div class="project-meta"><span class="chip">${state.assignments.filter(a=>a.projectId===p.id).length} firiem</span><span class="chip">${state.handovers.filter(h=>h.projectId===p.id).length} zápisníc</span><span class="chip">${esc(p.region||"Kraj neuvedený")}</span></div><div class="project-card-actions"><button class="ghost" data-activate-project="${p.id}">${p.id===state.selectedProjectId?"Aktívna stavba":"Nastaviť ako aktívnu"}</button><button class="delete-project" data-delete-project="${p.id}">Vymazať stavbu</button></div></article>`).join("");document.querySelectorAll("[data-activate-project]").forEach(b=>b.onclick=()=>{state.selectedProjectId=b.dataset.activateProject;localStorage.setItem(KEY,JSON.stringify(state));renderAll();toast("Aktívna stavba bola zmenená.")});document.querySelectorAll("[data-delete-project]").forEach(b=>b.onclick=()=>deleteProject(b.dataset.deleteProject))}
-function deleteProject(id){const p=project(id);if(!p)return;if(state.projects.length===1){alert("Poslednú stavbu nie je možné vymazať. Najprv vytvor inú stavbu.");return}const typed=prompt(`Vymazanie je trvalé. Pre potvrdenie napíš presný názov stavby:\n\n${p.name}`);if(typed!==p.name){if(typed!==null)alert("Názov sa nezhoduje. Stavba nebola vymazaná.");return}state.projects=state.projects.filter(x=>x.id!==id);state.assignments=state.assignments.filter(x=>x.projectId!==id);state.billings=state.billings.filter(x=>x.projectId!==id);state.materials=state.materials.filter(x=>x.projectId!==id);state.purchases=state.purchases.filter(x=>x.projectId!==id);state.handovers=state.handovers.filter(x=>x.projectId!==id);state.workerSheets=state.workerSheets.filter(x=>x.projectId!==id);state.betpresTimesheets=state.betpresTimesheets.filter(x=>x.projectId!==id);state.thpTimesheets=state.thpTimesheets.filter(x=>x.projectId!==id);state.companyHourTimesheets=state.companyHourTimesheets.filter(x=>x.projectId!==id);state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.projectId!==id);state.siteMeetings=state.siteMeetings.filter(x=>x.projectId!==id);state.controlDays=state.controlDays.filter(x=>x.projectId!==id);state.documentVersions=state.documentVersions.filter(x=>x.projectId!==id);state.calendarEvents=state.calendarEvents.filter(x=>x.projectId!==id);state.workStatements=state.workStatements.filter(x=>x.projectId!==id);state.workBudgets=state.workBudgets.filter(x=>x.projectId!==id);state.materialSamples=state.materialSamples.filter(x=>x.projectId!==id);if(state.selectedProjectId===id)state.selectedProjectId=state.projects[0]?.id||"";save("Stavba a jej naviazané údaje boli vymazané. Firmy zostali v databáze.")}
+function deleteProject(id){const p=project(id);if(!p)return;if(state.projects.length===1){alert("Poslednú stavbu nie je možné vymazať. Najprv vytvor inú stavbu.");return}const typed=prompt(`Vymazanie je trvalé. Pre potvrdenie napíš presný názov stavby:\n\n${p.name}`);if(typed!==p.name){if(typed!==null)alert("Názov sa nezhoduje. Stavba nebola vymazaná.");return}state.projects=state.projects.filter(x=>x.id!==id);state.assignments=state.assignments.filter(x=>x.projectId!==id);state.billings=state.billings.filter(x=>x.projectId!==id);state.materials=state.materials.filter(x=>x.projectId!==id);state.purchases=state.purchases.filter(x=>x.projectId!==id);state.handovers=state.handovers.filter(x=>x.projectId!==id);state.workerSheets=state.workerSheets.filter(x=>x.projectId!==id);state.betpresTimesheets=state.betpresTimesheets.filter(x=>x.projectId!==id);state.thpTimesheets=state.thpTimesheets.filter(x=>x.projectId!==id);state.companyHourTimesheets=state.companyHourTimesheets.filter(x=>x.projectId!==id);state.companyTimesheets=state.companyTimesheets.filter(x=>x.projectId!==id);state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.projectId!==id);state.siteMeetings=state.siteMeetings.filter(x=>x.projectId!==id);state.controlDays=state.controlDays.filter(x=>x.projectId!==id);state.documentVersions=state.documentVersions.filter(x=>x.projectId!==id);state.calendarEvents=state.calendarEvents.filter(x=>x.projectId!==id);state.workStatements=state.workStatements.filter(x=>x.projectId!==id);state.workBudgets=state.workBudgets.filter(x=>x.projectId!==id);state.materialSamples=state.materialSamples.filter(x=>x.projectId!==id);if(state.selectedProjectId===id)state.selectedProjectId=state.projects[0]?.id||"";save("Stavba a jej naviazané údaje boli vymazané. Firmy zostali v databáze.")}
 $("addProjectBtn").onclick=()=>$("projectModal").classList.remove("hidden");$("projectForm").onsubmit=e=>{e.preventDefault();const id=uid("p");state.projects.push({id,name:$("projectName").value,address:$("projectAddress").value,city:$("projectCity").value,documentCity:$("projectDocumentCity").value||$("projectCity").value,cadastre:$("projectCadastre").value,region:$("projectRegion").value,manager:$("projectManager").value,managerPhone:$("projectManagerPhone").value,constructionPermit:$("projectPermit").value||"áno",constructionLine:$("projectConstructionLine").value,surveyPoints:$("projectSurvey").value||"geodetickým vytýčením",mechanisms:$("projectMechanisms").value,electricity:$("projectElectricity").value||"Zo staveniskového rozvádzača",water:$("projectWater").value||"Staveniskové rozvody",networks:$("projectNetworks").value,documentation:$("projectDocumentation").value||"Bola odovzdaná projektová dokumentácia"});state.selectedProjectId=id;e.target.reset();$("projectPermit").value="áno";$("projectSurvey").value="geodetickým vytýčením";$("projectElectricity").value="Zo staveniskového rozvádzača";$("projectWater").value="Staveniskové rozvody";$("projectDocumentation").value="Bola odovzdaná projektová dokumentácia";$("projectModal").classList.add("hidden");save("Stavba bola pridaná a je pripravená aj pre odovzdanie pracoviska.")};
 function activeAssignments(){return state.assignments.filter(a=>a.projectId===state.selectedProjectId)}function masterContact(c,key){return c?.[key]||"—"}
 function companiesViewSignature(){
@@ -2360,7 +2329,7 @@ function renderWorkers(){
   }
  })
 }
-$("workerMonth").onchange=()=>{selectedWorkerMonth=$("workerMonth").value;workerSheet(selectedWorkerMonth,true);betpresTimesheet(selectedWorkerMonth,true);thpTimesheet(selectedWorkerMonth,true);companyHourTimesheet(selectedWorkerMonth,true);renderWorkers();renderBetpresTimesheet();renderThpTimesheet();renderCompanyHoursTimesheet()};$("workerPrevMonth").onclick=()=>{$("workerMonth").value=shiftMonth($("workerMonth").value||todayMonthValue(),-1);$("workerMonth").dispatchEvent(new Event("change"))};$("workerNextMonth").onclick=()=>{$("workerMonth").value=shiftMonth($("workerMonth").value||todayMonthValue(),1);$("workerMonth").dispatchEvent(new Event("change"))};$("workerCurrentMonth").onclick=()=>{$("workerMonth").value=todayMonthValue();$("workerMonth").dispatchEvent(new Event("change"));setTimeout(scrollWorkerCurrentDay,0)};
+$("workerMonth").onchange=()=>{selectedWorkerMonth=$("workerMonth").value;workerSheet(selectedWorkerMonth,true);betpresTimesheet(selectedWorkerMonth,true);thpTimesheet(selectedWorkerMonth,true);companyHourTimesheet(selectedWorkerMonth,true);companyTimesheet(selectedWorkerMonth,true);renderWorkers();renderBetpresTimesheet();renderThpTimesheet();renderCompanyHoursTimesheet();renderCompanyTimesheets()};$("workerPrevMonth").onclick=()=>{$("workerMonth").value=shiftMonth($("workerMonth").value||todayMonthValue(),-1);$("workerMonth").dispatchEvent(new Event("change"))};$("workerNextMonth").onclick=()=>{$("workerMonth").value=shiftMonth($("workerMonth").value||todayMonthValue(),1);$("workerMonth").dispatchEvent(new Event("change"))};$("workerCurrentMonth").onclick=()=>{$("workerMonth").value=todayMonthValue();$("workerMonth").dispatchEvent(new Event("change"));setTimeout(scrollWorkerCurrentDay,0)};
 function carryWorkerCompaniesFromPreviousMonth(){
  const month=$("workerMonth").value||selectedWorkerMonth||todayMonthValue(),previousMonth=shiftMonth(month,-1),previous=workerSheet(previousMonth,false);
  if(!previous){alert(`Pre mesiac ${previousMonth.split("-").reverse().join("/")} nie je uložený stav pracovníkov.`);return}
@@ -2413,17 +2382,52 @@ $("workerCompanyForm").onsubmit=e=>{
 };
 
 
+function betpresEmployeeCarryKey(row){
+ const personalNumber=String(row?.personalNumber||"").replace(/\D/g,"").slice(0,3);
+ if(personalNumber)return`number:${personalNumber}`;
+ const name=String(row?.name||"").trim().toLocaleLowerCase("sk").replace(/\s+/g," ");
+ return name?`name:${name}`:""
+}
+function carryBetpresEmployees(sheet,month){
+ if(!sheet||sheet.workerCarryVersion==="betpres-workers-v1")return;
+ const previous=[...state.betpresTimesheets]
+  .filter(item=>item!==sheet&&item.projectId===state.selectedProjectId&&item.month<month&&Array.isArray(item.rows)&&item.rows.some(row=>betpresEmployeeCarryKey(row)))
+  .sort((a,b)=>b.month.localeCompare(a.month))[0];
+ if(!previous)return;
+ const keys=new Set((sheet.rows||[]).map(betpresEmployeeCarryKey).filter(Boolean));
+ let added=0;
+ (previous?.rows||[]).forEach((row,index)=>{
+  const key=betpresEmployeeCarryKey(row);
+  if(!key||keys.has(key))return;
+  sheet.rows.push({
+   id:uid("bte"),
+   personalNumber:String(row.personalNumber||"").replace(/\D/g,"").slice(0,3),
+   name:row.name||"",
+   position:row.position||"",
+   rewardPercent:row.rewardPercent??"",
+   sortOrder:Number.isFinite(Number(row.sortOrder))?Number(row.sortOrder):index,
+   values:{},
+   overtime:{}
+  });
+  keys.add(key);
+  added+=1
+ });
+ sheet.workerCarryVersion="betpres-workers-v1";
+ if(added)sortBetpresEmployees(sheet);
+ commitDirectState()
+}
 function betpresTimesheet(month,create=true){
  let sheet=state.betpresTimesheets.find(x=>x.projectId===state.selectedProjectId&&x.month===month);
  if(!sheet&&create){
   const previous=[...state.betpresTimesheets]
-   .filter(x=>x.projectId===state.selectedProjectId&&x.month<month)
+   .filter(x=>x.projectId===state.selectedProjectId&&x.month<month&&Array.isArray(x.rows)&&x.rows.some(row=>betpresEmployeeCarryKey(row)))
    .sort((a,b)=>b.month.localeCompare(a.month))[0];
   sheet={
-   id:uid("bts"),
-   projectId:state.selectedProjectId,
-   month,
-   rows:(previous?.rows||[]).map((row,index)=>({
+    id:uid("bts"),
+    projectId:state.selectedProjectId,
+    month,
+    workerCarryVersion:previous?"betpres-workers-v1":"",
+    rows:(previous?.rows||[]).filter(row=>betpresEmployeeCarryKey(row)).map((row,index)=>({
     id:uid("bte"),
     personalNumber:String(row.personalNumber||"").replace(/\D/g,"").slice(0,3),
     name:row.name||"",
@@ -2440,7 +2444,8 @@ function betpresTimesheet(month,create=true){
  }
  if(sheet){
   sheet.rows=Array.isArray(sheet.rows)?sheet.rows:[];
-  sheet.rows.forEach(row=>{row.values=row.values||{};row.overtime=row.overtime||{}})
+  sheet.rows.forEach(row=>{row.values=row.values||{};row.overtime=row.overtime||{}});
+  carryBetpresEmployees(sheet,month)
  }
  return sheet
 }
@@ -2585,19 +2590,22 @@ function workerRenderSignature(){
   ?betpresTimesheet(selectedWorkerMonth,true)
   :selectedWorkerMode==="thp"
    ?thpTimesheet(selectedWorkerMonth,true)
-   :selectedWorkerMode==="companyHours"
-    ?companyHourTimesheet(selectedWorkerMonth,true)
-    :workerSheet(selectedWorkerMonth,true),assignments=activeAssignments();
+    :selectedWorkerMode==="companyHours"
+     ?companyHourTimesheet(selectedWorkerMonth,true)
+     :selectedWorkerMode==="companyTimesheets"
+      ?companyTimesheet(selectedWorkerMonth,true)
+      :workerSheet(selectedWorkerMonth,true),assignments=activeAssignments();
  return JSON.stringify([state.selectedProjectId,selectedWorkerMonth,selectedWorkerMode,sheet?.rows||[],assignments.map(item=>[item.id,item.companyId,item.scope]),state.companies.map(item=>[item.id,item.name])])
 }
 function setWorkerMode(mode,renderMode=true){
- selectedWorkerMode=["betpres","thp","companyHours"].includes(mode)?mode:"companies";
+ selectedWorkerMode=["betpres","thp","companyHours","companyTimesheets"].includes(mode)?mode:"companies";
  const currentSignature=workerRenderSignature();
  if(renderMode&&currentSignature===workerRenderSignatures.get(selectedWorkerMode))renderMode=false;
  if(renderMode){
   if(selectedWorkerMode==="betpres")renderBetpresTimesheet();
   else if(selectedWorkerMode==="thp")renderThpTimesheet();
   else if(selectedWorkerMode==="companyHours")renderCompanyHoursTimesheet();
+  else if(selectedWorkerMode==="companyTimesheets")renderCompanyTimesheets();
   else renderWorkers();
  }
  document.querySelectorAll("[data-worker-mode]").forEach(button=>{
@@ -2610,24 +2618,30 @@ function setWorkerMode(mode,renderMode=true){
  $("betpresTimesheetPanel").classList.toggle("hidden",selectedWorkerMode!=="betpres");
  $("thpTimesheetPanel").classList.toggle("hidden",selectedWorkerMode!=="thp");
  if($("companyHoursPanel"))$("companyHoursPanel").classList.toggle("hidden",selectedWorkerMode!=="companyHours");
+ if($("companyTimesheetsPanel"))$("companyTimesheetsPanel").classList.toggle("hidden",selectedWorkerMode!=="companyTimesheets");
  document.querySelectorAll(".worker-company-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="companies"));
  document.querySelectorAll(".worker-betpres-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="betpres"));
  document.querySelectorAll(".worker-thp-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="thp"));
  document.querySelectorAll(".worker-company-hours-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="companyHours"));
+ document.querySelectorAll(".worker-company-timesheets-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="companyTimesheets"));
  const sheet=selectedWorkerMode==="betpres"
   ?betpresTimesheet(selectedWorkerMonth,true)
   :selectedWorkerMode==="thp"
    ?thpTimesheet(selectedWorkerMonth,true)
-   :selectedWorkerMode==="companyHours"
-    ?companyHourTimesheet(selectedWorkerMonth,true)
-    :workerSheet(selectedWorkerMonth,true);
+    :selectedWorkerMode==="companyHours"
+     ?companyHourTimesheet(selectedWorkerMonth,true)
+     :selectedWorkerMode==="companyTimesheets"
+      ?companyTimesheet(selectedWorkerMonth,true)
+      :workerSheet(selectedWorkerMonth,true);
  $("workerSheetStatus").textContent=selectedWorkerMode==="betpres"
   ?`${sheet?.rows?.length||0} pracovníkov BETPRES · bežné hodiny + nadčas alebo P / N / D`
   :selectedWorkerMode==="thp"
    ?`${sheet?.rows?.length||0} THP pracovníkov · hodiny + nadčas`
-   :selectedWorkerMode==="companyHours"
-    ?`${sheet?.rows?.length||0} firiem na hodiny · z hodín vytvoríš súpis prác`
-    :`${sheet?.rows?.length||0} názvov · zapisuje sa počet pracovníkov`;
+    :selectedWorkerMode==="companyHours"
+     ?`${sheet?.rows?.length||0} firiem na hodiny · z hodín vytvoríš súpis prác`
+     :selectedWorkerMode==="companyTimesheets"
+      ?`${currentCompanyTimesheetRows(sheet,selectedWorkerMonth).length} firemných smenoviek · mená, dochádzka a tlač`
+      :`${sheet?.rows?.length||0} názvov · zapisuje sa počet pracovníkov`;
  if(renderMode)workerRenderSignatures.set(selectedWorkerMode,workerRenderSignature())
 }
 let workerModeSwitchToken=0;
@@ -2641,7 +2655,7 @@ document.querySelectorAll("[data-worker-mode]").forEach(button=>{
  }
 });
 
-const WORKER_GRID_INPUT_SELECTOR="input[data-worker-row][data-worker-day],input[data-betpres-cell][data-day],input[data-thp-cell][data-day],input[data-thp-overtime][data-day],input[data-company-hour-worker][data-company-hour-day]";
+const WORKER_GRID_INPUT_SELECTOR="input[data-worker-row][data-worker-day],input[data-betpres-cell][data-day],input[data-thp-cell][data-day],input[data-thp-overtime][data-day],input[data-company-hour-worker][data-company-hour-day],input[data-company-timesheet-worker][data-company-timesheet-day]";
 function workerGridInputLocator(input){
  const escape=value=>CSS.escape(String(value??""));
  if(input.dataset.workerRow)return`[data-worker-row="${escape(input.dataset.workerRow)}"][data-worker-day="${escape(input.dataset.workerDay)}"]`;
@@ -2649,6 +2663,7 @@ function workerGridInputLocator(input){
  if(input.dataset.thpCell)return`[data-thp-cell="${escape(input.dataset.thpCell)}"][data-day="${escape(input.dataset.day)}"]`;
  if(input.dataset.thpOvertime)return`[data-thp-overtime="${escape(input.dataset.thpOvertime)}"][data-day="${escape(input.dataset.day)}"]`;
  if(input.dataset.companyHourWorker)return`[data-company-hour-worker="${escape(input.dataset.companyHourWorker)}"][data-company-hour-day="${escape(input.dataset.companyHourDay)}"]`;
+ if(input.dataset.companyTimesheetWorker)return`[data-company-timesheet-worker="${escape(input.dataset.companyTimesheetWorker)}"][data-company-timesheet-day="${escape(input.dataset.companyTimesheetDay)}"][data-company-timesheet-kind="${escape(input.dataset.companyTimesheetKind)}"]`;
  return""
 }
 function focusWorkerGridInput(input){
@@ -2684,7 +2699,13 @@ function moveWorkerGridFocus(input,rowStep,columnStep){
 }
 function scrollWorkerCurrentDay(){
  const todayCell=document.querySelector("#workers .today-col input"),wrap=todayCell?.closest(".worker-table-wrap");
- if(todayCell&&wrap)todayCell.scrollIntoView({block:"nearest",inline:"center",behavior:"auto"})
+ if(!todayCell||!wrap)return;
+ const cell=todayCell.closest("td,th");
+ if(!cell)return;
+ const pinnedWidth=selectedWorkerMode==="betpres"?254:selectedWorkerMode==="thp"?200:selectedWorkerMode==="companyTimesheets"?328:300,
+       available=Math.max(0,wrap.clientWidth-pinnedWidth-cell.offsetWidth),
+       target=Math.max(0,cell.offsetLeft-pinnedWidth-available/2);
+ wrap.scrollLeft=target
 }
 function setupWorkerTableControls(){
  const tabList=document.querySelector(".worker-mode-tabs"),tabs=[...document.querySelectorAll("[data-worker-mode]")];
@@ -2729,7 +2750,7 @@ document.addEventListener("focusout",event=>{
 });
 document.addEventListener("keydown",event=>{
  if(activeViewId()!=="workers")return;
- if(event.altKey&&!event.ctrlKey&&!event.metaKey&&/^[1-4]$/.test(event.key)){
+ if(event.altKey&&!event.ctrlKey&&!event.metaKey&&/^[1-5]$/.test(event.key)){
   event.preventDefault();document.querySelectorAll("[data-worker-mode]")[Number(event.key)-1]?.click();return
  }
  const input=event.target.closest?.(WORKER_GRID_INPUT_SELECTOR);
@@ -2776,7 +2797,7 @@ function renderSimpleEmployeeTimesheet(config){
  let head=`<tr>${config.key==="betpres"?'<th class="employee-personal-number-col">Osobné<br>číslo</th>':""}<th class="employee-col">Meno a pozícia</th>`;
  for(let day=1;day<=days;day++){
   const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
-  head+=`<th class="${cls}" title="${esc(holiday||"")}"><span class="worker-day-name">${dayNames[date.getDay()]}</span>${day}${holiday?`<span class="worker-holiday-name">${esc(holiday)}</span>`:""}</th>`
+  head+=`<th class="${cls}" title="${esc(holiday||"")}"><span class="worker-day-name">${dayNames[date.getDay()]}</span>${day}<span class="company-timesheet-day-hint">P / O</span>${holiday?`<span class="worker-holiday-name">${esc(holiday)}</span>`:""}</th>`
  }
  head+=`<th class="monthly-total-col">Spolu</th></tr>`;
  headEl.innerHTML=head;
@@ -2908,7 +2929,14 @@ function openEmployeeModal(kind){
 }
 if($("addBetpresEmployee"))$("addBetpresEmployee").onclick=()=>openEmployeeModal("betpres");
 if($("addBetpresEmployeeInline"))$("addBetpresEmployeeInline").onclick=()=>openEmployeeModal("betpres");
-if($("betpresEmployeeForm"))$("betpresEmployeeForm").onsubmit=e=>{e.preventDefault();const sheet=betpresTimesheet(selectedWorkerMonth,true),rewardRaw=$("betpresEmployeeReward").value.trim().replace(",","."),reward=rewardRaw===""?"":Math.max(0,Math.min(100,Number(rewardRaw)));sheet.rows.push({id:uid("bte"),personalNumber:$("betpresEmployeePersonalNumber").value.replace(/\D/g,"").slice(0,3),name:$("betpresEmployeeName").value.trim(),position:$("betpresEmployeePosition").value.trim(),rewardPercent:Number.isFinite(reward)?reward:"",values:{},overtime:{}});sortBetpresEmployees(sheet);$("betpresEmployeeModal").classList.add("hidden");save("Pracovník BETPRES bol pridaný.")};
+function addBlankBetpresEmployee(){
+ const sheet=betpresTimesheet(selectedWorkerMonth,true);
+ sheet.rows.push({id:uid("bte"),personalNumber:"",name:"",position:"",rewardPercent:"",values:{},overtime:{}});
+ sortBetpresEmployees(sheet);
+ save("Prázdny riadok pracovníka BETPRES bol pridaný.")
+}
+if($("addBlankBetpresEmployeeInline"))$("addBlankBetpresEmployeeInline").onclick=addBlankBetpresEmployee;
+if($("betpresEmployeeForm"))$("betpresEmployeeForm").onsubmit=e=>{e.preventDefault();const sheet=betpresTimesheet(selectedWorkerMonth,true),rewardRaw=$("betpresEmployeeReward").value.trim().replace(",","."),reward=rewardRaw===""?"":Math.max(0,Math.min(100,Number(rewardRaw))),name=$("betpresEmployeeName").value.trim();sheet.rows.push({id:uid("bte"),personalNumber:$("betpresEmployeePersonalNumber").value.replace(/\D/g,"").slice(0,3),name,position:$("betpresEmployeePosition").value.trim(),rewardPercent:Number.isFinite(reward)?reward:"",values:{},overtime:{}});sortBetpresEmployees(sheet);$("betpresEmployeeModal").classList.add("hidden");save(name?"Pracovník BETPRES bol pridaný.":"Prázdny riadok pracovníka BETPRES bol pridaný.")};
 if($("addThpEmployee"))$("addThpEmployee").onclick=()=>openEmployeeModal("thp");
 if($("addThpEmployeeInline"))$("addThpEmployeeInline").onclick=()=>openEmployeeModal("thp");
 if($("thpEmployeeForm"))$("thpEmployeeForm").onsubmit=e=>{e.preventDefault();const sheet=thpTimesheet(selectedWorkerMonth,true);sheet.rows.push({id:uid("thpe"),name:$("thpEmployeeName").value.trim(),position:$("thpEmployeePosition").value.trim(),values:{},overtime:{}});sortThpEmployees(sheet);$("thpEmployeeModal").classList.add("hidden");save("THP pracovník bol pridaný.")};
@@ -2918,6 +2946,180 @@ if($("exportThpTimesheetPdf"))$("exportThpTimesheetPdf").onclick=()=>window.prin
 
 function companyHourWorkerNames(row){
  return companyHourWorkers(row).map(worker=>String(worker.name||"").trim()).filter(Boolean)
+}
+function normalizeCompanyTimesheetPrintPages(value){
+ const pages=Math.trunc(Number(value));
+ return Number.isFinite(pages)?Math.max(1,Math.min(20,pages)):2
+}
+function companyTimesheetWorkers(row){
+ if(!row)return[];
+ if(!Array.isArray(row.workers))row.workers=[];
+ row.workers=row.workers.map(worker=>({
+  id:worker.id||uid("ctw"),
+  name:worker.name||"",
+  values:worker.values||{}
+ }));
+ while(row.workers.length<15)row.workers.push({id:uid("ctw"),name:"",values:{}});
+ return row.workers
+}
+function companyTimesheet(month,create=true){
+ let sheet=state.companyTimesheets.find(item=>item.projectId===state.selectedProjectId&&item.month===month);
+ if(!sheet&&create){
+  const previous=[...state.companyTimesheets]
+   .filter(item=>item.projectId===state.selectedProjectId&&item.month<month)
+   .sort((a,b)=>b.month.localeCompare(a.month))[0];
+  sheet={
+   id:uid("cts"),
+   projectId:state.selectedProjectId,
+   month,
+   rows:(previous?.rows||[]).map(row=>({
+    id:uid("ctr"),
+    companyId:row.companyId||"",
+    companyName:row.companyName||"",
+    printPageCount:normalizeCompanyTimesheetPrintPages(row.printPageCount),
+    workers:companyTimesheetWorkers(row).map(worker=>({id:uid("ctw"),name:worker.name||"",values:{}}))
+   }))
+  };
+  state.companyTimesheets.push(sheet);
+  commitDirectState()
+ }
+ if(sheet){
+  sheet.rows=Array.isArray(sheet.rows)?sheet.rows:[];
+  sheet.rows.forEach(row=>{row.printPageCount=normalizeCompanyTimesheetPrintPages(row.printPageCount);companyTimesheetWorkers(row)})
+ }
+ return sheet
+}
+function companyTimesheetRowName(row){return String(company(row?.companyId)?.name||row?.companyName||"Bez názvu").trim()}
+function companyTimesheetSourceKey(companyId,name){
+ const id=String(companyId||"").trim();
+ if(id)return`company:${id}`;
+ const label=workerCompanyMatchKey(name);
+ return label?`name:${label}`:""
+}
+function currentCompanyTimesheetSources(month){
+ const statusSheet=workerSheet(month,false)||workerSheet(month,true),seen=new Set(),sources=[];
+ (statusSheet?.rows||[]).filter(row=>!isBetpresWorkerRow(row)).forEach(row=>{
+  const companyId=String(row.companyId||"").trim(),
+        companyName=String(companyId?(company(companyId)?.name||workerRowActualLabel(row)||workerRowLabel(row)):workerRowLabel(row)).trim(),
+        key=companyTimesheetSourceKey(companyId,companyName);
+  if(!key||seen.has(key))return;
+  seen.add(key);sources.push({key,companyId,companyName})
+ });
+ return sources
+}
+function currentCompanyTimesheetRows(sheet,month){
+ const keys=new Set(currentCompanyTimesheetSources(month).map(item=>item.key));
+ return (sheet?.rows||[]).filter(row=>keys.has(companyTimesheetSourceKey(row.companyId,row.companyName)))
+}
+function normalizeCompanyTimesheetTime(value){
+ const clean=String(value??"").trim().replace(".",":");
+ if(!clean)return"";
+ const match=clean.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+ if(!match)return null;
+ const hour=Number(match[1]),minute=Number(match[2]||0);
+ if(hour<0||hour>24||minute<0||minute>59||(hour===24&&minute!==0))return null;
+ return`${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`
+}
+function companyTimesheetDayEntry(worker,day){
+ const value=worker?.values?.[day];
+ if(value&&typeof value==="object")return{arrival:value.arrival||"",departure:value.departure||""};
+ return{arrival:"",departure:""}
+}
+function companyTimesheetClockMinutes(value){
+ const normalized=normalizeCompanyTimesheetTime(value);
+ if(!normalized)return null;
+ const [hour,minute]=normalized.split(":").map(Number);
+ return hour*60+minute
+}
+function companyTimesheetDayHours(worker,day){
+ const entry=companyTimesheetDayEntry(worker,day),arrival=companyTimesheetClockMinutes(entry.arrival),departure=companyTimesheetClockMinutes(entry.departure);
+ if(arrival===null||departure===null)return 0;
+ let minutes=departure-arrival;
+ if(minutes<0)minutes+=24*60;
+ return minutes/60
+}
+function companyTimesheetDayLabel(worker,day){
+ const entry=companyTimesheetDayEntry(worker,day);
+ return entry.arrival&&entry.departure?`${entry.arrival}–${entry.departure}`:entry.arrival?`${entry.arrival}–`:entry.departure?`–${entry.departure}`:""
+}
+function companyTimesheetWorkerHours(worker){return Object.keys(worker?.values||{}).reduce((sum,day)=>sum+companyTimesheetDayHours(worker,day),0)}
+function companyTimesheetRowHours(row){return companyTimesheetWorkers(row).reduce((sum,worker)=>sum+companyTimesheetWorkerHours(worker),0)}
+function companyTimesheetDayTotal(row,day){return companyTimesheetWorkers(row).reduce((sum,worker)=>sum+companyTimesheetDayHours(worker,day),0)}
+function refreshCompanyTimesheetTotals(sheet,activeRow,worker,input){
+ if(worker&&input){
+  const rowTotal=input.closest("tr")?.querySelector(".company-hour-sum");
+  if(rowTotal)rowTotal.textContent=formatWorkHoursCell(companyTimesheetWorkerHours(worker))
+ }
+ if(activeRow&&$("companyTimesheetsFoot")){
+  const cells=$("companyTimesheetsFoot").querySelectorAll("td");
+  const days=daysInMonth($("workerMonth").value||selectedWorkerMonth||todayMonthValue());
+  for(let day=1;day<=days;day++)if(cells[day])cells[day].textContent=formatWorkHoursCell(companyTimesheetDayTotal(activeRow,day));
+  if(cells[days+1])cells[days+1].textContent=formatWorkHoursCell(companyTimesheetRowHours(activeRow))
+ }
+ const visibleRows=currentCompanyTimesheetRows(sheet,$("workerMonth").value||selectedWorkerMonth||todayMonthValue()),
+       grandHours=visibleRows.reduce((sum,row)=>sum+companyTimesheetRowHours(row),0),
+       workerCount=visibleRows.reduce((sum,row)=>sum+companyTimesheetWorkers(row).filter(item=>String(item.name||"").trim()).length,0);
+ if($("companyTimesheetsHours"))$("companyTimesheetsHours").textContent=`${formatWorkHours(grandHours)} h`;
+ if($("companyTimesheetsWorkers"))$("companyTimesheetsWorkers").textContent=workerCount;
+ if($("companyTimesheetsCount"))$("companyTimesheetsCount").textContent=visibleRows.length;
+ if(selectedWorkerMode==="companyTimesheets"&&$("workerSheetStatus"))$("workerSheetStatus").textContent=`${visibleRows.length} firemných smenoviek · ${workerCount} pracovníkov · ${formatWorkHours(grandHours)} h`
+}
+function createAllAssignedCompanyTimesheets(){
+ const month=$("workerMonth").value||selectedWorkerMonth||todayMonthValue(),sheet=companyTimesheet(month,true),added=syncAssignedCompanyTimesheets(sheet,month);
+ if(!added){toast("Všetky firmy z mesačného stavu pracovníkov už majú vytvorenú smenovku.");return}
+ save(`Vytvorené smenovky pre ${added} ${added===1?"firmu":added<5?"firmy":"firiem"}.`)
+}
+if($("createAllCompanyTimesheets"))$("createAllCompanyTimesheets").onclick=createAllAssignedCompanyTimesheets;
+function syncAssignedCompanyTimesheets(sheet,month){
+ if(!sheet)return 0;
+ const existingKeys=new Set(sheet.rows.map(row=>companyTimesheetSourceKey(row.companyId,row.companyName)).filter(Boolean));
+ const sources=currentCompanyTimesheetSources(month);
+ const hourlySheet=companyHourTimesheet(month,false);
+ let added=0;
+ sources.forEach(item=>{
+  if(existingKeys.has(item.key))return;
+  const hourlyRow=hourlySheet?.rows?.find(row=>companyTimesheetSourceKey(row.companyId,row.companyName)===item.key);
+  const names=hourlyRow?companyHourWorkers(hourlyRow).map(worker=>String(worker.name||"").trim()).filter(Boolean):[];
+  sheet.rows.push({
+   id:uid("ctr"),
+   companyId:item.companyId,
+   companyName:item.companyName,
+   printPageCount:2,
+   workers:(names.length?names:[""]).map(name=>({id:uid("ctw"),name,values:{}}))
+  });
+  existingKeys.add(item.key);
+  added++
+ });
+ if(added)commitDirectState();
+ return added
+}
+function carryCompanyTimesheetWorkerNames(sheet,month){
+ const carryVersion="company-worker-names-v1";
+ if(!sheet||sheet.workerNamesCarryVersion===carryVersion)return 0;
+ const previous=[...state.companyTimesheets]
+  .filter(item=>item.projectId===state.selectedProjectId&&item.month<month)
+  .sort((a,b)=>b.month.localeCompare(a.month))[0],
+       previousRows=new Map((previous?.rows||[]).map(row=>[companyTimesheetSourceKey(row.companyId,row.companyName),row])),
+       currentRows=currentCompanyTimesheetRows(sheet,month);
+ let copied=0;
+ currentRows.forEach(row=>{
+  const source=previousRows.get(companyTimesheetSourceKey(row.companyId,row.companyName));
+  if(!source)return;
+  if(!row.printPageCount)row.printPageCount=normalizeCompanyTimesheetPrintPages(source.printPageCount);
+  const sourceWorkers=companyTimesheetWorkers(source),targetWorkers=companyTimesheetWorkers(row);
+  sourceWorkers.forEach((sourceWorker,index)=>{
+   const name=String(sourceWorker.name||"").trim();
+   if(!name)return;
+   while(targetWorkers.length<=index)targetWorkers.push({id:uid("ctw"),name:"",values:{}});
+   if(!String(targetWorkers[index].name||"").trim()){
+    targetWorkers[index].name=name;
+    copied++
+   }
+  })
+ });
+ sheet.workerNamesCarryVersion=carryVersion;
+ commitDirectState();
+ return copied
 }
 function companyHourTimesheet(month,create=true){
  let sheet=state.companyHourTimesheets.find(x=>x.projectId===state.selectedProjectId&&x.month===month);
@@ -2970,16 +3172,30 @@ function setActiveCompanyHourRow(rowId){
  selectedCompanyHourRowId=rowId||"";
  document.querySelectorAll("[data-company-hour-group]").forEach(group=>group.classList.toggle("is-active",group.dataset.companyHourGroup===selectedCompanyHourRowId));
 }
+function focusTimesheetWorkerName(attribute,rowId,workerId){
+ const selector=`[${attribute}="${rowId}:${workerId}"]`;
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  const input=document.querySelector(selector);
+  if(!input)return;
+  input.scrollIntoView({block:"center",inline:"nearest"});
+  input.focus({preventScroll:true});
+  input.select()
+ }))
+}
 function addEmptyCompanyHourWorker(rowId,render=true){
  const month=$("workerMonth").value||selectedWorkerMonth||todayMonthValue(),sheet=companyHourTimesheet(month,true);
  const row=sheet.rows.find(item=>item.id===rowId);
  if(!row)return false;
  const workers=companyHourWorkers(row);
  const onlyEmpty=workers.length===1&&!String(workers[0].name||"").trim()&&!Object.keys(workers[0].values||{}).length;
- if(!onlyEmpty)row.workers.push({id:uid("chw"),name:"",values:{}});
+ const worker=onlyEmpty?workers[0]:{id:uid("chw"),name:"",values:{}};
+ if(!onlyEmpty)row.workers.push(worker);
  row.workersText=companyHourWorkerNames(row).join(", ");
  selectedCompanyHourRowId=row.id;
- if(render)save("Prázdny riadok pracovníka bol pridaný do firemnej hodinovej smenovky.");
+ if(render){
+  save("Prázdny riadok pracovníka bol pridaný do firemnej hodinovej smenovky.");
+  focusTimesheetWorkerName("data-company-hour-worker-name",row.id,worker.id)
+ }
  return true
 }
 function chooseCompanyHourRowForWorker(){
@@ -3078,20 +3294,44 @@ function renderCompanyHoursTimesheet(){
  if(!$("companyHoursHead"))return;
  const month=$("workerMonth").value||selectedWorkerMonth||todayMonthValue(),sheet=companyHourTimesheet(month,true),[year,mon]=month.split("-").map(Number),days=daysInMonth(month),today=todayISO(),dayNames=["Ne","Po","Ut","St","Št","Pi","So"];
  sheet.rows.sort((a,b)=>companyHourRowName(a).localeCompare(companyHourRowName(b),"sk",{sensitivity:"base"}));
+ if(!sheet.rows.some(row=>row.id===selectedCompanyHourRowId))selectedCompanyHourRowId=sheet.rows[0]?.id||"";
+ const activeRow=sheet.rows.find(row=>row.id===selectedCompanyHourRowId)||null,companySelect=$("companyHourRowSelect"),table=$("companyHoursHead").closest("table"),tableWidth=280+days*42+72+105;
+ if(companySelect){
+  companySelect.innerHTML=sheet.rows.length?sheet.rows.map(row=>`<option value="${esc(row.id)}">${esc(companyHourRowName(row))}</option>`).join(""):'<option value="">Najprv pridaj firmu na hodiny</option>';
+  companySelect.value=activeRow?.id||"";
+  companySelect.disabled=!activeRow;
+  companySelect.onchange=()=>{selectedCompanyHourRowId=companySelect.value;renderCompanyHoursTimesheet()}
+ }
+ if($("companyHoursCols"))$("companyHoursCols").innerHTML=`<col style="width:280px">${Array.from({length:days},()=>'<col style="width:42px">').join("")}<col style="width:72px"><col style="width:105px">`;
+ if(table){
+  table.style.setProperty("width",`${tableWidth}px`,"important");
+  table.style.setProperty("min-width",`${tableWidth}px`,"important");
+  table.style.setProperty("table-layout","fixed","important")
+ }
+ const rateInput=$("companyHourActiveRate");
+ if(rateInput){
+  rateInput.dataset.companyHourRate=activeRow?.id||"";
+  rateInput.value=activeRow?formatWorkHoursCell(companyHourRate(activeRow)):"";
+  rateInput.disabled=!activeRow
+ }
+ if($("companyHourActiveAdd")){$("companyHourActiveAdd").disabled=!activeRow;$("companyHourActiveAdd").onclick=()=>activeRow&&addEmptyCompanyHourWorker(activeRow.id,true)}
+ if($("companyHourActivePdf")){$("companyHourActivePdf").disabled=!activeRow;$("companyHourActivePdf").onclick=()=>activeRow&&exportCompanyHourTimesheetPdf(activeRow.id)}
+ if($("companyHourActiveStatement")){$("companyHourActiveStatement").disabled=!activeRow;$("companyHourActiveStatement").onclick=()=>activeRow&&createWorkStatementFromCompanyHours(activeRow.id)}
+ if($("companyHourActiveDelete")){$("companyHourActiveDelete").disabled=!activeRow;$("companyHourActiveDelete").onclick=()=>{
+  if(!activeRow||!confirm(`Odstrániť firmu „${companyHourRowName(activeRow)}“ zo smenovky za ${month}? Údaje tejto firemnej smenovky sa vymažú.`))return;
+  sheet.rows=sheet.rows.filter(row=>row.id!==activeRow.id);selectedCompanyHourRowId=sheet.rows[0]?.id||"";save("Firma bola odstránená zo smenovky.")
+ }}
  let head=`<tr><th class="company-hour-worker-cell">MENO PRACOVNÍKA</th>`;
  for(let day=1;day<=days;day++){
   const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
   head+=`<th class="${cls}" title="${esc(holiday||"")}"><span class="worker-day-name">${dayNames[date.getDay()]}</span>${day}${holiday?`<span class="worker-holiday-name">${esc(holiday)}</span>`:""}</th>`
  }
-  head+=`<th class="company-hour-total-col">Spolu<br>hodín</th><th class="company-hour-amount-col">Suma<br>bez DPH</th><th class="company-hour-actions-col">Akcie</th></tr>`;
+  head+=`<th class="company-hour-total-col">Spolu<br>hodín</th><th class="company-hour-amount-col">Suma<br>bez DPH</th></tr>`;
  $("companyHoursHead").innerHTML=head;
- let grandHours=0,grandAmount=0;
+ const grandHours=sheet.rows.reduce((sum,row)=>sum+companyHourRowHours(row),0),grandAmount=sheet.rows.reduce((sum,row)=>sum+companyHourRowAmount(row),0);
  const rowsHtml=[];
- sheet.rows.forEach(row=>{
-  const name=companyHourRowName(row),rate=companyHourRate(row),workers=companyHourWorkers(row),rowHours=companyHourRowHours(row),rowAmount=companyHourRowAmount(row),isOpen=selectedCompanyHourRowId===row.id;
-  grandHours+=rowHours;grandAmount+=rowAmount;
-  rowsHtml.push(`<tr class="company-hour-group-row"><td colspan="${days+4}"><div class="company-hour-group ${isOpen?"is-active is-open":""}" data-company-hour-group="${row.id}" role="button" tabindex="0" aria-expanded="${isOpen}"><span class="company-hour-toggle-icon" aria-hidden="true">${isOpen?"▾":"▸"}</span><div class="company-hour-group-title"><div class="company-hour-title-line"><strong>FIRMA: ${esc(name)}</strong><span class="company-hour-title-actions"><button type="button" class="ghost mini" data-add-company-hour-worker-empty="${row.id}">+ Dopísať meno</button><button type="button" class="ghost mini" data-company-hour-pdf="${row.id}">Export PDF</button><button type="button" class="company-hour-statement-fast" data-company-hour-statement="${row.id}" title="Vytvoriť alebo aktualizovať súpis prác pre túto firmu">Vytvoriť súpis</button><button type="button" class="company-hour-firm-x" data-del-company-hour="${row.id}" title="Odstrániť firmu zo smenovky">×</button></span></div><div class="company-hour-company-meta"><small>${esc(row.description||"Hodinové práce podľa smenovky")} · ${workers.length} pracovníkov · ${formatWorkHours(rowHours)} h</small><label>Hodinová sadzba firmy <span class="company-hour-rate-field"><input type="text" inputmode="decimal" data-company-hour-rate="${row.id}" value="${esc(formatWorkHoursCell(rate))}" aria-label="Hodinová sadzba firmy ${esc(name)}"><b>€/h</b></span></label></div></div></div></td></tr>`);
-  if(!isOpen)return;
+ if(activeRow){
+  const row=activeRow,rate=companyHourRate(row),workers=companyHourWorkers(row);
   workers.forEach(worker=>{
    let total=0;
    let cells=`<tr><td class="company-hour-worker-cell"><div class="company-hour-worker-inner"><input class="company-hour-worker-name" data-company-hour-worker-name="${row.id}:${worker.id}" value="${esc(worker.name||"")}" placeholder="Meno a priezvisko"><button type="button" class="ghost mini danger-mini" data-del-company-hour-worker="${row.id}:${worker.id}">×</button></div></td>`;
@@ -3101,42 +3341,22 @@ function renderCompanyHoursTimesheet(){
     cells+=`<td class="${cls}"><input type="text" maxlength="5" inputmode="decimal" spellcheck="false" data-company-hour-worker="${row.id}:${worker.id}" data-company-hour-day="${day}" value="${esc(formatWorkHoursCell(value))}"></td>`
    }
    const amount=workRound(total*rate,2);
-   cells+=`<td class="company-hour-sum">${formatWorkHoursCell(total)}</td><td class="company-hour-amount">${eur.format(amount)}</td><td></td></tr>`;
+   cells+=`<td class="company-hour-sum">${formatWorkHoursCell(total)}</td><td class="company-hour-amount">${eur.format(amount)}</td></tr>`;
    rowsHtml.push(cells)
   });
-  let totalRow=`<tr class="company-hour-total-row"><td class="company-hour-worker-cell">Spolu ${esc(name)}</td>`;
-  for(let day=1;day<=days;day++){
-   const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
-   totalRow+=`<td class="${cls}">${formatWorkHoursCell(companyHourDayTotal(row,day))}</td>`
-  }
-  totalRow+=`<td class="company-hour-sum">${formatWorkHoursCell(rowHours)}</td><td class="company-hour-amount">${eur.format(rowAmount)}</td><td></td></tr>`;
-  // SiteDesk 5.0.31: riadok "Spolu za firmu" sa nezobrazuje, zostáva iba spodný riadok Spolu za deň.
- });
- $("companyHoursBody").innerHTML=rowsHtml.join("")||`<tr><td class="company-hour-company-col" colspan="${days+4}" style="padding:20px;color:#789;text-align:left">Pridaj firmu na hodiny. Potom pridáš pracovníkov, vyplníš hodiny po dňoch a z nich vytvoríš súpis prác.</td></tr>`;
+ }
+ $("companyHoursBody").innerHTML=rowsHtml.join("")||`<tr><td class="company-hour-company-col" colspan="${days+3}" style="padding:20px;color:#789;text-align:left">Pridaj firmu na hodiny. Potom pridáš pracovníkov, vyplníš hodiny po dňoch a z nich vytvoríš súpis prác.</td></tr>`;
  let foot=`<tr><td class="company-hour-worker-cell">Spolu za deň</td>`;
  for(let day=1;day<=days;day++){
-  const total=sheet.rows.reduce((sum,row)=>sum+companyHourDayTotal(row,day),0),date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
+  const total=activeRow?companyHourDayTotal(activeRow,day):0,date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
   foot+=`<td class="${cls}">${formatWorkHoursCell(total)}</td>`
  }
- foot+=`<td class="company-hour-sum" id="companyHourGrandHours">${formatWorkHoursCell(grandHours)}</td><td class="company-hour-amount" id="companyHourGrandAmount">${eur.format(grandAmount)}</td><td></td></tr>`;
+ foot+=`<td class="company-hour-sum">${formatWorkHoursCell(activeRow?companyHourRowHours(activeRow):0)}</td><td class="company-hour-amount">${eur.format(activeRow?companyHourRowAmount(activeRow):0)}</td></tr>`;
  $("companyHoursFoot").innerHTML=foot;
  $("companyHoursCount").textContent=sheet.rows.length;
  $("companyHoursTotal").textContent=`${formatWorkHours(grandHours)} h`;
  $("companyHoursAmount").textContent=eur.format(grandAmount);
  if(selectedWorkerMode==="companyHours")$("workerSheetStatus").textContent=`${sheet.rows.length} firiem na hodiny · ${formatWorkHours(grandHours)} h · ${eur.format(grandAmount)} bez DPH`;
- if(selectedCompanyHourRowId&&!sheet.rows.some(row=>row.id===selectedCompanyHourRowId))selectedCompanyHourRowId=sheet.rows[0]?.id||"";
- document.querySelectorAll("[data-company-hour-group]").forEach(group=>{
-  group.onclick=event=>{
-   if(event.target.closest("button,input,label"))return;
-   selectedCompanyHourRowId=selectedCompanyHourRowId===group.dataset.companyHourGroup?"":group.dataset.companyHourGroup;
-   renderCompanyHoursTimesheet()
-  };
-  group.onkeydown=event=>{
-   if(!["Enter"," "].includes(event.key)||event.target.closest("button,input"))return;
-   event.preventDefault();
-   group.click()
-  }
- });
  document.querySelectorAll("[data-company-hour-worker-name]").forEach(input=>{
   input.onfocus=()=>{
    const [rowId]=input.dataset.companyHourWorkerName.split(":");
@@ -3245,6 +3465,152 @@ function renderCompanyHoursTimesheet(){
     sheet.rows=sheet.rows.filter(item=>item.id!==button.dataset.delCompanyHour);
     save("Firma bola odstránená zo smenovky.")
    }
+  }
+ })
+}
+function renderCompanyTimesheets(){
+ if(!$("companyTimesheetsHead"))return;
+ const month=$("workerMonth").value||selectedWorkerMonth||todayMonthValue(),sheet=companyTimesheet(month,true),[year,mon]=month.split("-").map(Number),days=daysInMonth(month),today=todayISO(),dayNames=["Ne","Po","Ut","St","Št","Pi","So"];
+ syncAssignedCompanyTimesheets(sheet,month);
+ carryCompanyTimesheetWorkerNames(sheet,month);
+ const companyTimesheetTable=$("companyTimesheetsHead").closest("table"),companyTimesheetTableWidth=48+280+days*52+72;
+ if($("companyTimesheetsCols"))$("companyTimesheetsCols").innerHTML=`<col style="width:48px"><col style="width:280px">${Array.from({length:days},()=>'<col style="width:52px">').join("")}<col style="width:72px">`;
+ if(companyTimesheetTable){
+  companyTimesheetTable.style.setProperty("width",`${companyTimesheetTableWidth}px`,"important");
+  companyTimesheetTable.style.setProperty("min-width",`${companyTimesheetTableWidth}px`,"important");
+  companyTimesheetTable.style.setProperty("table-layout","fixed","important")
+ }
+ sheet.rows.sort((a,b)=>companyTimesheetRowName(a).localeCompare(companyTimesheetRowName(b),"sk",{sensitivity:"base"}));
+ const visibleRows=currentCompanyTimesheetRows(sheet,month);
+ if(!visibleRows.some(row=>row.id===selectedCompanyTimesheetRowId))selectedCompanyTimesheetRowId=visibleRows[0]?.id||"";
+ const activeRow=visibleRows.find(row=>row.id===selectedCompanyTimesheetRowId)||null,companySelect=$("companyTimesheetCompany");
+ if(companySelect){
+  companySelect.innerHTML=visibleRows.length?visibleRows.map(row=>`<option value="${esc(row.id)}">${esc(companyTimesheetRowName(row))}</option>`).join(""):'<option value="">Najprv označ firmy v časti Firmy na stavbe</option>';
+  companySelect.value=activeRow?.id||"";
+  companySelect.disabled=!visibleRows.length;
+  companySelect.onchange=()=>{selectedCompanyTimesheetRowId=companySelect.value;renderCompanyTimesheets()}
+ }
+ const printPagesInput=$("companyTimesheetPrintPages");
+ if(printPagesInput){
+  printPagesInput.disabled=!activeRow;
+  printPagesInput.value=String(activeRow?normalizeCompanyTimesheetPrintPages(activeRow.printPageCount):2);
+  printPagesInput.onchange=()=>{
+   if(!activeRow)return;
+   activeRow.printPageCount=normalizeCompanyTimesheetPrintPages(printPagesInput.value);
+   printPagesInput.value=String(activeRow.printPageCount);
+   commitDirectState();toast(`Smenovka firmy ${companyTimesheetRowName(activeRow)}: ${activeRow.printPageCount} ${activeRow.printPageCount===1?"čistá strana":"čisté strany"}.`)
+  }
+ }
+ let head='<tr><th class="company-timesheet-number-col" rowspan="2">Č.</th><th class="company-hour-worker-cell" rowspan="2">PRACOVNÍK</th>';
+ for(let day=1;day<=days;day++){
+  const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
+  head+=`<th class="${cls}" title="${esc(holiday||"")}">${day}</th>`
+ }
+ head+='<th class="company-hour-total-col" rowspan="2">Spolu</th></tr><tr>';
+ for(let day=1;day<=days;day++){
+  const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
+  head+=`<th class="${cls}" title="${esc(holiday||"")}">${dayNames[date.getDay()]}</th>`
+ }
+ head+="</tr>";
+ $("companyTimesheetsHead").innerHTML=head;
+ const grandHours=visibleRows.reduce((sum,row)=>sum+companyTimesheetRowHours(row),0);
+ const workerCount=visibleRows.reduce((sum,row)=>sum+companyTimesheetWorkers(row).filter(worker=>String(worker.name||"").trim()).length,0);
+ const rowsHtml=[];
+ visibleRows.forEach(row=>{
+  if(row.id!==selectedCompanyTimesheetRowId)return;
+  const workers=companyTimesheetWorkers(row);
+  workers.forEach((worker,workerIndex)=>{
+   let total=0;
+   let cells=`<tr><td class="company-timesheet-number-col">${workerIndex+1}</td><td class="company-hour-worker-cell"><div class="company-hour-worker-inner"><input class="company-hour-worker-name" data-company-timesheet-worker-name="${row.id}:${worker.id}" value="${esc(worker.name||"")}" placeholder="Meno a priezvisko"><button type="button" class="ghost mini danger-mini" data-del-company-timesheet-worker="${row.id}:${worker.id}" title="Vymazať pracovníka">×</button></div></td>`;
+   for(let day=1;day<=days;day++){
+    const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),entry=companyTimesheetDayEntry(worker,day),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
+    total+=companyTimesheetDayHours(worker,day);
+    cells+=`<td class="${cls}"><div class="company-timesheet-time-cell"><label><input type="text" maxlength="5" inputmode="numeric" spellcheck="false" aria-label="Príchod ${day}. deň" data-company-timesheet-worker="${row.id}:${worker.id}" data-company-timesheet-day="${day}" data-company-timesheet-kind="arrival" value="${esc(entry.arrival)}"></label><label><input type="text" maxlength="5" inputmode="numeric" spellcheck="false" aria-label="Odchod ${day}. deň" data-company-timesheet-worker="${row.id}:${worker.id}" data-company-timesheet-day="${day}" data-company-timesheet-kind="departure" value="${esc(entry.departure)}"></label></div></td>`
+   }
+   cells+=`<td class="company-hour-sum">${formatWorkHoursCell(total)}</td></tr>`;
+   rowsHtml.push(cells)
+  })
+ });
+ $("companyTimesheetsBody").innerHTML=rowsHtml.join("")||`<tr><td colspan="${days+3}" style="padding:20px;color:#789;text-align:left">Klikni na „Vytvoriť smenovky pre všetky firmy“. Každú firmu potom otvoríš samostatne.</td></tr>`;
+ let foot='<tr><td class="company-timesheet-footer-label" colspan="2">Spolu za deň</td>';
+ for(let day=1;day<=days;day++){
+  const total=activeRow?companyTimesheetDayTotal(activeRow,day):0,date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
+  foot+=`<td class="${cls}">${formatWorkHoursCell(total)}</td>`
+ }
+ foot+=`<td class="company-hour-sum">${formatWorkHoursCell(activeRow?companyTimesheetRowHours(activeRow):0)}</td></tr>`;
+ $("companyTimesheetsFoot").innerHTML=foot;
+ $("companyTimesheetsCount").textContent=visibleRows.length;
+ $("companyTimesheetsHours").textContent=`${formatWorkHours(grandHours)} h`;
+ $("companyTimesheetsWorkers").textContent=workerCount;
+ if(selectedWorkerMode==="companyTimesheets")$("workerSheetStatus").textContent=`${visibleRows.length} firemných smenoviek · ${workerCount} pracovníkov · ${formatWorkHours(grandHours)} h`;
+ if(selectedCompanyTimesheetRowId&&!visibleRows.some(row=>row.id===selectedCompanyTimesheetRowId))selectedCompanyTimesheetRowId="";
+ if($("addCompanyTimesheetWorkerTop"))$("addCompanyTimesheetWorkerTop").onclick=()=>{
+  if(!activeRow){alert("Najprv vytvor smenovky pre priradené firmy.");return}
+  const workers=companyTimesheetWorkers(activeRow),blank=workers.find(worker=>!String(worker.name||"").trim()&&!Object.keys(worker.values||{}).length);
+  if(blank){
+   focusTimesheetWorkerName("data-company-timesheet-worker-name",activeRow.id,blank.id);
+   return
+  }
+  const worker={id:uid("ctw"),name:"",values:{}};
+  workers.push(worker);
+  save("Prázdny riadok pracovníka bol pridaný.");
+  focusTimesheetWorkerName("data-company-timesheet-worker-name",activeRow.id,worker.id)
+ };
+ if($("exportCompanyTimesheetCurrent"))$("exportCompanyTimesheetCurrent").onclick=()=>{
+  if(!activeRow){alert("Najprv vytvor smenovky pre priradené firmy.");return}
+  window.exportCompanyTimesheetPdf?.(activeRow.id)
+ };
+ if($("deleteCompanyTimesheetCurrent"))$("deleteCompanyTimesheetCurrent").onclick=()=>{
+  if(!activeRow)return;
+  if(!confirm(`Odstrániť smenovku firmy „${companyTimesheetRowName(activeRow)}“ za ${month}?`))return;
+  sheet.rows=sheet.rows.filter(item=>item.id!==activeRow.id);selectedCompanyTimesheetRowId=sheet.rows[0]?.id||"";save("Smenovka firmy bola odstránená.")
+ };
+ document.querySelectorAll("[data-company-timesheet-worker-name]").forEach(input=>{
+  input.onfocus=()=>beginDirectUndo("Úprava mena vo firemnej smenovke");
+  input.onchange=()=>{
+   const [rowId,workerId]=input.dataset.companyTimesheetWorkerName.split(":"),row=sheet.rows.find(item=>item.id===rowId),worker=companyTimesheetWorkers(row).find(item=>item.id===workerId);
+   if(!worker)return;worker.name=input.value.trim();commitDirectState();refreshCompanyTimesheetTotals(sheet,activeRow,worker,input)
+   };
+   input.onblur=endDirectUndo
+ });
+ document.querySelectorAll("[data-company-timesheet-worker]").forEach(input=>{
+  input.onfocus=()=>beginDirectUndo("Úprava firemnej smenovky");
+  input.onchange=()=>{
+   const [rowId,workerId]=input.dataset.companyTimesheetWorker.split(":"),row=sheet.rows.find(item=>item.id===rowId),worker=companyTimesheetWorkers(row).find(item=>item.id===workerId),day=input.dataset.companyTimesheetDay,kind=input.dataset.companyTimesheetKind;
+   if(!worker)return;
+   const value=normalizeCompanyTimesheetTime(input.value),entry=companyTimesheetDayEntry(worker,day);
+   if(value===null){alert("Zadaj čas napríklad 7:00 alebo 15:30.");input.value=entry[kind]||"";return}
+   entry[kind]=value;
+   if(!entry.arrival&&!entry.departure)delete worker.values[day];else worker.values[day]=entry;
+   input.value=value;commitDirectState();refreshCompanyTimesheetTotals(sheet,activeRow,worker,input)
+   };
+   input.onblur=endDirectUndo
+ });
+ document.querySelectorAll("[data-add-company-timesheet-worker]").forEach(button=>{
+  button.onclick=()=>{
+   const row=sheet.rows.find(item=>item.id===button.dataset.addCompanyTimesheetWorker);if(!row)return;
+   const workers=companyTimesheetWorkers(row),onlyEmpty=workers.length===1&&!String(workers[0].name||"").trim()&&!Object.keys(workers[0].values||{}).length;
+   const worker=onlyEmpty?workers[0]:{id:uid("ctw"),name:"",values:{}};
+   if(!onlyEmpty)workers.push(worker);
+   selectedCompanyTimesheetRowId=row.id;save("Prázdny riadok pracovníka bol pridaný.");
+   focusTimesheetWorkerName("data-company-timesheet-worker-name",row.id,worker.id)
+  }
+ });
+ document.querySelectorAll("[data-del-company-timesheet-worker]").forEach(button=>{
+  button.onclick=()=>{
+   const [rowId,workerId]=button.dataset.delCompanyTimesheetWorker.split(":"),row=sheet.rows.find(item=>item.id===rowId),worker=companyTimesheetWorkers(row).find(item=>item.id===workerId);
+   if(!row||!confirm(`Vymazať pracovníka „${worker?.name||"bez mena"}“ zo smenovky firmy ${companyTimesheetRowName(row)}?`))return;
+   row.workers=companyTimesheetWorkers(row).filter(item=>item.id!==workerId);
+   if(!row.workers.length)row.workers.push({id:uid("ctw"),name:"",values:{}});
+   save("Pracovník bol vymazaný z firemnej smenovky.")
+  }
+ });
+ document.querySelectorAll("[data-company-timesheet-pdf]").forEach(button=>{button.onclick=()=>window.exportCompanyTimesheetPdf?.(button.dataset.companyTimesheetPdf)});
+ document.querySelectorAll("[data-del-company-timesheet]").forEach(button=>{
+  button.onclick=()=>{
+   const row=sheet.rows.find(item=>item.id===button.dataset.delCompanyTimesheet);
+   if(!row||!confirm(`Odstrániť smenovku firmy „${companyTimesheetRowName(row)}“ za ${month}?`))return;
+   sheet.rows=sheet.rows.filter(item=>item.id!==row.id);selectedCompanyTimesheetRowId="";save("Smenovka firmy bola odstránená.")
   }
  })
 }
@@ -4792,9 +5158,9 @@ $("executeExcelImport").onclick=()=>{
  if(!excelImportRows.length)return;
  let added=0,skipped=0,next=Number(deliveryNoteNextSequence());
  excelImportRows.forEach(row=>{
-  const date=parseExcelDate(headerValue(row,["Dátum","Datum","Dátum dodania"])),supplier=headerValue(row,["Dodávateľ","Dodavatel","Firma"]),documentNo=headerValue(row,["Číslo dokladu","Číslo dodacieho listu","Dodací list"]),invoiceNo=headerValue(row,["Faktúra číslo","Číslo faktúry","Faktúra"]),material=headerValue(row,["Názov materiálu","Materiál","Material"]),quantity=headerValue(row,["Množstvo","Množstvo materiálu","Objem"]),unit=headerValue(row,["MJ","Merná jednotka","Jednotka"]),estimatedPrice=headerValue(row,["Orientačná cena","Cena","Suma"]),sequence=headerValue(row,["P. č.","PČ","Č."])||String(next++);
+  const date=parseExcelDate(headerValue(row,["Dátum","Datum","Dátum dodania"])),supplier=headerValue(row,["Dodávateľ","Dodavatel","Firma"]),documentNo=headerValue(row,["Číslo dokladu","Číslo dodacieho listu","Dodací list"]),invoiceNo=headerValue(row,["Faktúra číslo","Číslo faktúry","Faktúra"]),material=headerValue(row,["Názov materiálu","Materiál","Material"]),quantity=headerValue(row,["Množstvo","Množstvo materiálu","Objem"]),unit=headerValue(row,["MJ","Merná jednotka","Jednotka"]),sequence=headerValue(row,["P. č.","PČ","Č."])||String(next++);
   if(!date&&!supplier&&!documentNo&&!material){skipped++;return}
-  state.purchases.push({id:uid("pd"),projectId:state.selectedProjectId,date:date||todayISO(),supplier,documentNo,invoiceNo,material,quantity,unit,estimatedPrice,sequence,source:"Import Excel",createdAt:new Date().toISOString()});added++
+  state.purchases.push({id:uid("pd"),projectId:state.selectedProjectId,date:date||todayISO(),supplier,documentNo,invoiceNo,material,quantity,unit,sequence,source:"Import Excel",createdAt:new Date().toISOString()});added++
  });
  save(`Import pasportu dokončený: ${added} dodacích listov pridaných, ${skipped} preskočených.`);$("excelImportStatus").className="import-status success";$("excelImportStatus").textContent=`Pasport skladu: pridané ${added}, preskočené ${skipped}.`
 };
@@ -4930,12 +5296,12 @@ function creditNumber(v){const m=String(v||"").replace(/\s/g,"").replace("€","
 function purchaseMonths(){return [...new Set(state.purchases.filter(x=>x.projectId===state.selectedProjectId).map(x=>x.date.slice(0,7)))].sort().reverse()}
 function excelDate(v){if(!v)return"";const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return v;return `${Number(m[3])}.${Number(m[2])}.${String(m[1]).slice(2)}`}
 function parseExcelDate(v){const x=String(v||"").trim();if(!x)return"";if(/^\d{4}-\d{2}-\d{2}$/.test(x))return x;const m=x.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2}|\d{4})$/);if(!m)return x;let y=Number(m[3]);if(y<100)y+=2000;return `${y}-${String(Number(m[2])).padStart(2,"0")}-${String(Number(m[1])).padStart(2,"0")}`}
-function purchaseColumns(){return [["date","A"],["supplier","B"],["documentNo","C"],["invoiceNo","D"],["material","E"],["quantity","F"],["unit","G"],["estimatedPrice","H"],["sequence","I"]]}
+function purchaseColumns(){return [["date","A"],["supplier","B"],["documentNo","C"],["invoiceNo","D"],["material","E"],["quantity","F"],["unit","G"],["sequence","H"]]}
 function purchaseMonths(){return [...new Set(state.purchases.map(x=>String(x.date||"").slice(0,7)).filter(x=>/^\d{4}-\d{2}$/.test(x)))].sort().reverse()}
 function purchaseRows(){
  const q=$("purchaseSearch")?.value.trim().toLowerCase()||"",month=$("purchaseMonthFilter")?.value||"",
        supplier=$("purchaseSupplierFilter")?.value||"",material=$("purchaseMaterialSearch")?.value.trim().toLowerCase()||"";
- return state.purchases.filter(x=>x.projectId===state.selectedProjectId&&(!month||String(x.date).startsWith(month))&&(!supplier||String(x.supplier||"")===supplier)&&(!material||`${x.material||""} ${x.materialCategory||""} ${x.quantity||""} ${x.unit||""} ${x.quantitySummary||""}`.toLowerCase().includes(material))&&`${x.date} ${x.supplier} ${x.documentNo} ${x.invoiceNo} ${x.material} ${x.materialCategory||""} ${x.quantity||""} ${x.unit||""} ${x.quantitySummary||""} ${x.estimatedPrice||x.credit||""} ${x.sequence}`.toLowerCase().includes(q)).sort((a,b)=>Number(a.sequence||0)-Number(b.sequence||0))
+ return state.purchases.filter(x=>x.projectId===state.selectedProjectId&&(!month||String(x.date).startsWith(month))&&(!supplier||String(x.supplier||"")===supplier)&&(!material||`${x.material||""} ${x.materialCategory||""} ${x.quantity||""} ${x.unit||""} ${x.quantitySummary||""}`.toLowerCase().includes(material))&&`${x.date} ${x.supplier} ${x.documentNo} ${x.invoiceNo} ${x.material} ${x.materialCategory||""} ${x.quantity||""} ${x.unit||""} ${x.quantitySummary||""} ${x.sequence}`.toLowerCase().includes(q)).sort((a,b)=>Number(a.sequence||0)-Number(b.sequence||0))
 }
 
 function ensureWorkBudgetState(){
@@ -5265,7 +5631,7 @@ function evalWorkFormula(value){
 function isNumericTableFormulaInput(input){
  if(!input||input.tagName!=="INPUT"||!input.closest("table"))return false;
  if(input.matches('[inputmode="decimal"],[inputmode="numeric"],[type="number"]'))return true;
- if(input.matches('[data-field="estimatedPrice"],[data-field="sequence"]'))return true;
+ if(input.matches('[data-field="sequence"]'))return true;
  if(input.matches('[data-worker-day],[data-betpres-company-day],[data-company-hour-day],[data-company-hour-rate],[data-day]'))return true;
  return ["contractQty","unitPrice","contractTotal","currentQty"].includes(input.dataset.workField||"")
 }
@@ -6367,18 +6733,6 @@ function renderConcretePassport(){
  $("concreteTable").innerHTML=rows.map(row=>`<tr data-concrete-row="${row.id}"><td>${esc(excelDate(row.date))}</td><td>${esc(row.supplier||"")}</td><td>${esc(row.documentNo||"")}</td><td class="purchase-invoice-cell ${String(row.invoiceNo||"").trim()?"is-invoiced":"is-uninvoiced"}"><input data-concrete-edit data-field="invoiceNo" data-id="${row.id}" value="${esc(row.invoiceNo||"")}" placeholder="Bez faktúry"></td><td><input data-concrete-edit data-field="material" data-id="${row.id}" value="${esc(row.material||"")}"></td><td class="concrete-strength">${esc(purchaseConcreteClass(row))}</td><td><div class="concrete-quantity-cell"><input inputmode="decimal" data-concrete-edit data-field="quantity" data-id="${row.id}" value="${esc(row.quantity||purchaseQuantitySummaryParts(row.quantitySummary).quantity||"")}"><span>m³</span></div></td><td><span class="concrete-status ${String(row.invoiceNo||"").trim()?"is-invoiced":"is-pending"}">${String(row.invoiceNo||"").trim()?"Odfakturované":"Čaká na faktúru"}</span></td><td class="concrete-sequence">${esc(row.sequence||"")}</td></tr>`).join("")||`<tr><td colspan="9" class="concrete-empty">V Pasporte skladu zatiaľ nie je žiadny betón v m³.</td></tr>`;
  document.querySelectorAll("#concreteTable [data-concrete-edit]").forEach(input=>{input.onfocus=()=>beginDirectUndo("Úprava evidencie betónu");input.onchange=()=>{savePurchaseCell(input);renderConcretePassport();$("concreteSaveStatus").textContent=`Uložené ${new Date().toLocaleTimeString("sk-SK",{hour:"2-digit",minute:"2-digit"})}`};input.onblur=endDirectUndo});
 }
-function renderPurchaseFinancialSummary(rows=purchaseRows()){
- const invoiced=rows.filter(row=>String(row.invoiceNo||"").trim()),uninvoiced=rows.filter(row=>!String(row.invoiceNo||"").trim()),
-       amount=row=>purchasePriceNumber(row.estimatedPrice||row.credit||""),
-       invoicedTotal=invoiced.reduce((sum,row)=>sum+amount(row),0),uninvoicedTotal=uninvoiced.reduce((sum,row)=>sum+amount(row),0),
-       missingPrice=rows.filter(row=>!amount(row)).length;
- if($("purchaseAmountTotal"))$("purchaseAmountTotal").textContent=eur.format(invoicedTotal+uninvoicedTotal);
- if($("purchaseAmountInvoiced"))$("purchaseAmountInvoiced").textContent=eur.format(invoicedTotal);
- if($("purchaseAmountUninvoiced"))$("purchaseAmountUninvoiced").textContent=eur.format(uninvoicedTotal);
- if($("purchaseCountInvoiced"))$("purchaseCountInvoiced").textContent=`${invoiced.length} ${invoiced.length===1?"dodací list":"dodacích listov"} s faktúrou`;
- if($("purchaseCountUninvoiced"))$("purchaseCountUninvoiced").textContent=`${uninvoiced.length} ${uninvoiced.length===1?"dodací list":"dodacích listov"} bez faktúry`;
- if($("purchaseCountMissingPrice"))$("purchaseCountMissingPrice").textContent=String(missingPrice)
-}
 function renderPurchases(){
  if(!$("purchaseTable"))return;
  const months=purchaseMonths(),current=$("purchaseMonthFilter").value,projectRows=state.purchases.filter(x=>x.projectId===state.selectedProjectId),selectedSupplier=$("purchaseSupplierFilter")?.value||"",
@@ -6390,7 +6744,6 @@ function renderPurchases(){
  filterPanel?.classList.toggle("has-active-filters",filtersActive);
 
  const allRows=purchaseRows(),pages=Math.max(1,Math.ceil(allRows.length/PURCHASE_PAGE_SIZE));
- renderPurchaseFinancialSummary(allRows);
  renderConcreteMaterialSummary(projectRows);
  purchasePage=Math.min(Math.max(1,purchasePage),pages);
  const start=(purchasePage-1)*PURCHASE_PAGE_SIZE,
@@ -6405,7 +6758,7 @@ function renderPurchases(){
  $("purchasePrevPage").disabled=purchasePage<=1;
  $("purchaseNextPage").disabled=purchasePage>=pages;
 
- $("supplierList").innerHTML=[...new Set([...state.purchases.map(x=>x.supplier),...state.companies.map(x=>x.name)].filter(Boolean))]
+ $("supplierList").innerHTML=[...new Set(state.purchases.map(x=>String(x.supplier||"").trim()).filter(Boolean))]
   .sort((a,b)=>a.localeCompare(b,"sk"))
   .map(x=>`<option value="${esc(x)}"></option>`).join("");
 
@@ -6421,10 +6774,9 @@ function renderPurchases(){
    <td class="excel-cell"><div style="display:flex;align-items:center"><input data-field="material" data-id="${x.id}" data-col="E" value="${esc(x.material||"")}">${source}</div></td>
    <td class="excel-cell"><input inputmode="decimal" data-field="quantity" data-id="${x.id}" data-col="F" value="${esc(x.quantity||purchaseQuantitySummaryParts(x.quantitySummary).quantity||"")}"></td>
    <td class="excel-cell"><select data-field="unit" data-id="${x.id}" data-col="G">${["","m³","m²","bm","t","kg","ks","l"].map(unit=>`<option value="${unit}" ${unit===purchaseUnitValue(x)?"selected":""}>${unit||"—"}</option>`).join("")}</select></td>
-   <td class="excel-cell"><input data-field="estimatedPrice" data-id="${x.id}" data-col="H" value="${esc(x.estimatedPrice||x.credit||"")}"></td>
-   <td class="excel-cell"><div style="display:grid;grid-template-columns:1fr 26px"><input data-field="sequence" data-id="${x.id}" data-col="I" value="${esc(x.sequence||"")}"><button class="excel-delete" title="Vymazať riadok" data-del-purchase="${x.id}">×</button></div></td>
+   <td class="excel-cell"><div style="display:grid;grid-template-columns:1fr 26px"><input data-field="sequence" data-id="${x.id}" data-col="H" value="${esc(x.sequence||"")}"><button class="excel-delete" title="Vymazať riadok" data-del-purchase="${x.id}">×</button></div></td>
   </tr>`
- }).join("")||`<tr><td class="excel-row-number">1</td><td colspan="9" style="padding:18px;color:#789">Odfotografuj dodací list alebo klikni na „Pridať riadok“.</td></tr>`;
+ }).join("")||`<tr><td class="excel-row-number">1</td><td colspan="8" style="padding:18px;color:#789">Odfotografuj dodací list alebo klikni na „Pridať riadok“.</td></tr>`;
 
  document.querySelectorAll("#purchaseTable input[data-field],#purchaseTable select[data-field]").forEach(inp=>{
   inp.onfocus=()=>{
@@ -6455,19 +6807,9 @@ function renderPurchases(){
   }
  })
 }
-function savePurchaseCell(inp){const x=state.purchases.find(v=>v.id===inp.dataset.id);if(!x)return;let value=inp.value.trim();if(["quantity","estimatedPrice","sequence"].includes(inp.dataset.field)&&isWorkFormula(value)){const result=evalWorkFormula(value);if(!result.ok){inp.classList.add("table-formula-error");toast(`Vzorec sa nedá vypočítať: ${result.error}.`);return}value=String(Math.round((result.value+Number.EPSILON)*1000000)/1000000).replace(".",",");inp.value=value;inp.classList.remove("table-formula-error")}if(inp.dataset.field==="date"){value=parseExcelDate(value);inp.value=excelDate(value)}x[inp.dataset.field]=value;if(inp.dataset.field==="material"&&!String(x.unit||"").trim()&&purchaseIsConcrete(x)){x.unit="m³";const unitInput=document.querySelector(`[data-id="${x.id}"][data-field="unit"]`);if(unitInput)unitInput.value="m³"}commitDirectState();$("excelStatus").textContent=`Uložené ${new Date().toLocaleTimeString("sk-SK",{hour:"2-digit",minute:"2-digit"})}`;if(inp.dataset.field==="invoiceNo"){const cell=inp.closest(".purchase-invoice-cell");cell?.classList.toggle("is-invoiced",Boolean(value));cell?.classList.toggle("is-uninvoiced",!value)}renderPurchaseFinancialSummary(purchaseRows());renderConcreteMaterialSummary(state.purchases.filter(row=>row.projectId===state.selectedProjectId));renderDashboard()}
+function savePurchaseCell(inp){const x=state.purchases.find(v=>v.id===inp.dataset.id);if(!x)return;let value=inp.value.trim();if(["quantity","sequence"].includes(inp.dataset.field)&&isWorkFormula(value)){const result=evalWorkFormula(value);if(!result.ok){inp.classList.add("table-formula-error");toast(`Vzorec sa nedá vypočítať: ${result.error}.`);return}value=String(Math.round((result.value+Number.EPSILON)*1000000)/1000000).replace(".",",");inp.value=value;inp.classList.remove("table-formula-error")}if(inp.dataset.field==="date"){value=parseExcelDate(value);inp.value=excelDate(value)}x[inp.dataset.field]=value;if(inp.dataset.field==="material"&&!String(x.unit||"").trim()&&purchaseIsConcrete(x)){x.unit="m³";const unitInput=document.querySelector(`[data-id="${x.id}"][data-field="unit"]`);if(unitInput)unitInput.value="m³"}commitDirectState();$("excelStatus").textContent=`Uložené ${new Date().toLocaleTimeString("sk-SK",{hour:"2-digit",minute:"2-digit"})}`;if(inp.dataset.field==="invoiceNo"){const cell=inp.closest(".purchase-invoice-cell");cell?.classList.toggle("is-invoiced",Boolean(value));cell?.classList.toggle("is-uninvoiced",!value)}renderConcreteMaterialSummary(state.purchases.filter(row=>row.projectId===state.selectedProjectId));renderDashboard()}
 function deliveryNoteNextSequence(){return String(Math.max(0,...state.purchases.filter(x=>x.projectId===state.selectedProjectId).map(x=>Number(x.sequence)||0))+1)}
 function deliveryOcrNormalize(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim()}
-function deliveryOcrPrice(text){
- const values=[];
- String(text||"").split(/\r?\n/).forEach(line=>{
-  if(!/(?:€|eur|celkom|spolu|suma)/i.test(line))return;
-  const matches=line.match(/\d{1,3}(?:[ .]\d{3})*(?:[,.]\d{2})|\d+[,.]\d{2}/g)||[];
-  matches.forEach(raw=>{const n=Number(raw.replace(/[ .](?=\d{3}(?:\D|$))/g,"").replace(",","."));if(Number.isFinite(n)&&n>0&&n<10000000)values.push(n)})
- });
- const value=values.length?Math.max(...values):0;
- return value?value.toLocaleString("sk-SK",{minimumFractionDigits:2,maximumFractionDigits:2})+" €":""
-}
 function deliveryOcrMaterial(text){
  const value=deliveryOcrNormalize(text),categories=[];
  const add=(pattern,label)=>{if(pattern.test(value)&&!categories.includes(label))categories.push(label)};
@@ -6537,43 +6879,38 @@ function deliveryOcrSupplier(text){
  const best=candidates.sort((a,b)=>b.score-a.score)[0];
  return best?.score>0?best.value:""
 }
-function parseDeliveryOcr(text){return{date:deliveryOcrDate(text),supplier:deliveryOcrSupplier(text),documentNo:deliveryOcrDocumentNumber(text),invoiceNo:"",material:deliveryOcrMaterial(text),estimatedPrice:deliveryOcrPrice(text),sequence:deliveryNoteNextSequence()}}
+function parseDeliveryOcr(text){return{date:deliveryOcrDate(text),supplier:deliveryOcrSupplier(text),documentNo:deliveryOcrDocumentNumber(text),invoiceNo:"",material:deliveryOcrMaterial(text),sequence:deliveryNoteNextSequence()}}
 function deliveryImageDataUrl(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{try{const max=2400,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);resolve(canvas.toDataURL("image/jpeg",.9))}catch(error){URL.revokeObjectURL(url);reject(error)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Fotografiu sa nepodarilo načítať."))};img.src=url})}
 let currentDeliveryImageDataUrl="",currentDeliveryAiAnalysis=null;
 function deliveryAiMoney(value){const number=Number(value)||0;return number?number.toLocaleString("sk-SK",{minimumFractionDigits:2,maximumFractionDigits:2})+" €":""}
 function deliveryAiCategoryLabel(value){const labels={"Tepelne izolacie":"Tepelné izolácie","Hydroizolacie":"Hydroizolácie","Beton a kamenivo":"Betón a kamenivo","Murivo":"Murivo","Sucha vystavba":"Suchá výstavba","Ocel a vystuz":"Oceľ a výstuž","Stresne materialy":"Strešné materiály","Fasada":"Fasáda","Stavebna chemia":"Stavebná chémia","Drevo a dosky":"Drevo a dosky","Elektro":"Elektro","TZB a instalacie":"TZB a inštalácie","Spojovaci material":"Spojovací materiál","Naradie a spotrebny material":"Náradie a spotrebný materiál","Ostatne":"Ostatné"};return labels[String(value||"")]||String(value||"")}
 function fillDeliveryOcrForm(data){
- $("deliveryOcrDate").value=data.date||todayISO();$("deliveryOcrSupplier").value=data.supplier||"";$("deliveryOcrDocumentNo").value=data.documentNo||"";$("deliveryOcrInvoiceNo").value=data.invoiceNo||"";$("deliveryOcrMaterial").value=data.material||"Materiál podľa dodacieho listu";$("deliveryOcrCategory").value=data.category||"";$("deliveryOcrQuantity").value=data.quantity||"";$("deliveryOcrPrice").value=data.estimatedPrice||"";$("deliveryOcrSequence").value=data.sequence||deliveryNoteNextSequence()
+ $("deliveryOcrDate").value=data.date||todayISO();$("deliveryOcrSupplier").value=data.supplier||"";$("deliveryOcrDocumentNo").value=data.documentNo||"";$("deliveryOcrInvoiceNo").value=data.invoiceNo||"";$("deliveryOcrMaterial").value=data.material||"Materiál podľa dodacieho listu";$("deliveryOcrCategory").value=data.category||"";$("deliveryOcrQuantity").value=data.quantity||"";$("deliveryOcrSequence").value=data.sequence||deliveryNoteNextSequence()
 }
 function resetDeliveryAiReview(){
  currentDeliveryAiAnalysis=null;
  $("deliveryAiConfidence").textContent="Čakám na AI vyhodnotenie.";
- $("deliveryAiMaterialLines").textContent="Po rozpoznaní tu uvidíš materiály, množstvá, prepočet ceny a použité zdroje.";
- $("deliveryAiPriceBasis").textContent=""
+ $("deliveryAiMaterialLines").textContent="Po rozpoznaní tu uvidíš materiály a množstvá."
 }
 function renderDeliveryAiReview(result){
  const materials=Array.isArray(result?.materials)?result.materials:[];
- $("deliveryAiConfidence").textContent=`Firma ${Math.round(Number(result?.supplier_confidence)||0)} % · cena ${Math.round(Number(result?.price_confidence)||0)} %`;
+ $("deliveryAiConfidence").textContent=`Rozpoznanie dodávateľa ${Math.round(Number(result?.supplier_confidence)||0)} %`;
  $("deliveryAiMaterialLines").innerHTML=materials.length?materials.map(item=>{
-  const quantity=[Number(item.quantity)>0?`${Number(item.quantity).toLocaleString("sk-SK")} ${item.unit||""}`:"",Number(item.pieces)>0?`${Number(item.pieces).toLocaleString("sk-SK")} ks`:"",item.package_description||""].filter(Boolean).join(" · "),
-        amount=deliveryAiMoney(item.estimated_total_eur),source=item.source_url?`<a href="${esc(item.source_url)}" target="_blank" rel="noreferrer">${esc(item.source_title||"Zdroj orientačnej ceny")}</a>`:"<small>Bez spoľahlivého online zdroja</small>";
-  return`<div class="delivery-ai-line"><strong>${esc(item.normalized_name||item.raw_name||"Neurčený materiál")}</strong><span class="delivery-ai-amount">${esc(amount||"cena neurčená")}</span><small>${esc([deliveryAiCategoryLabel(item.category),quantity,item.product_code?`kód ${item.product_code}`:""].filter(Boolean).join(" · "))}</small>${source}</div>`
- }).join(""):`<div class="delivery-ai-line"><strong>Materiál sa nepodarilo spoľahlivo rozlíšiť.</strong><span></span><small>Skontroluj fotografiu alebo doplň údaje ručne.</small></div>`;
- const range=result?.total_estimate_eur?`Odhad spolu ${deliveryAiMoney(result.total_estimate_eur)} · rozsah ${deliveryAiMoney(result.total_low_eur)} – ${deliveryAiMoney(result.total_high_eur)}.`:"Cena nebola určená.";
- const warnings=(result?.warnings||[]).map(value=>`<div class="delivery-ai-warning">⚠ ${esc(value)}</div>`).join("");
- $("deliveryAiPriceBasis").innerHTML=`<strong>${esc(range)}</strong> ${esc(result?.price_basis||"")}${warnings}`
+  const quantity=[Number(item.quantity)>0?`${Number(item.quantity).toLocaleString("sk-SK")} ${item.unit||""}`:"",Number(item.pieces)>0?`${Number(item.pieces).toLocaleString("sk-SK")} ks`:"",item.package_description||""].filter(Boolean).join(" · ");
+  return`<div class="delivery-ai-line"><strong>${esc(item.normalized_name||item.raw_name||"Neurčený materiál")}</strong><span></span><small>${esc([deliveryAiCategoryLabel(item.category),quantity,item.product_code?`kód ${item.product_code}`:""].filter(Boolean).join(" · "))}</small></div>`
+ }).join(""):`<div class="delivery-ai-line"><strong>Materiál sa nepodarilo spoľahlivo rozlíšiť.</strong><span></span><small>Skontroluj fotografiu alebo doplň údaje ručne.</small></div>`
 }
-function knownDeliverySuppliers(){return[...new Set([...state.companies.map(x=>x.name),...state.purchases.map(x=>x.supplier)].map(value=>String(value||"").trim()).filter(Boolean))]}
+function knownDeliverySuppliers(){return[...new Set(state.purchases.map(x=>String(x.supplier||"").trim()).filter(Boolean))]}
 async function analyzeCurrentDeliveryNote(){
  if(!window.betpresDesktop?.analyzeDeliveryNote)throw new Error("Codex AI analýza nie je v tejto verzii dostupná.");
  if(!currentDeliveryImageDataUrl&&!$("deliveryOcrRawText").value.trim())throw new Error("Najprv vyber fotografiu dodacieho listu.");
- $("deliveryOcrStatus").textContent="Codex rozlišuje firmu a materiály a overuje orientačné ceny…";
+ $("deliveryOcrStatus").textContent="Codex rozlišuje dodávateľa, materiály a množstvá…";
  const result=await window.betpresDesktop.analyzeDeliveryNote({dataUrl:currentDeliveryImageDataUrl,ocrText:$("deliveryOcrRawText").value,knownSuppliers:knownDeliverySuppliers(),projectName:activeProject()?.name||""});
  currentDeliveryAiAnalysis=result;
- const current={date:$("deliveryOcrDate").value,supplier:$("deliveryOcrSupplier").value,documentNo:$("deliveryOcrDocumentNo").value,invoiceNo:$("deliveryOcrInvoiceNo").value,material:$("deliveryOcrMaterial").value,category:$("deliveryOcrCategory").value,quantity:$("deliveryOcrQuantity").value,estimatedPrice:$("deliveryOcrPrice").value,sequence:$("deliveryOcrSequence").value};
- fillDeliveryOcrForm({date:result.date||current.date,supplier:result.supplier||current.supplier,documentNo:result.delivery_note_number||current.documentNo,invoiceNo:result.invoice_number||current.invoiceNo,material:result.material_summary||current.material,category:deliveryAiCategoryLabel(result.primary_category)||current.category,quantity:result.quantity_summary||current.quantity,estimatedPrice:deliveryAiMoney(result.total_estimate_eur)||current.estimatedPrice,sequence:current.sequence});
+ const current={date:$("deliveryOcrDate").value,supplier:$("deliveryOcrSupplier").value,documentNo:$("deliveryOcrDocumentNo").value,invoiceNo:$("deliveryOcrInvoiceNo").value,material:$("deliveryOcrMaterial").value,category:$("deliveryOcrCategory").value,quantity:$("deliveryOcrQuantity").value,sequence:$("deliveryOcrSequence").value};
+ fillDeliveryOcrForm({date:result.date||current.date,supplier:result.supplier||current.supplier,documentNo:result.delivery_note_number||current.documentNo,invoiceNo:result.invoice_number||current.invoiceNo,material:result.material_summary||current.material,category:deliveryAiCategoryLabel(result.primary_category)||current.category,quantity:result.quantity_summary||current.quantity,sequence:current.sequence});
  renderDeliveryAiReview(result);
- $("deliveryOcrStatus").textContent=`AI vyhodnotenie dokončené · firma ${Math.round(Number(result.supplier_confidence)||0)} % · cena ${Math.round(Number(result.price_confidence)||0)} % · pred uložením údaje skontroluj.`;
+ $("deliveryOcrStatus").textContent=`AI vyhodnotenie dokončené · dodávateľ ${Math.round(Number(result.supplier_confidence)||0)} % · pred uložením údaje skontroluj.`;
  return result
 }
 if($("scanDeliveryNote"))$("scanDeliveryNote").onclick=()=>$("deliveryNoteImageInput").click();
@@ -6594,11 +6931,11 @@ if($("deliveryNoteOcrForm"))$("deliveryNoteOcrForm").onsubmit=event=>{
  event.preventDefault();const documentNo=$("deliveryOcrDocumentNo").value.trim();
  const duplicate=state.purchases.find(x=>x.projectId===state.selectedProjectId&&documentNo&&String(x.documentNo||"").trim().toLowerCase()===documentNo.toLowerCase());
  if(duplicate&&!confirm(`Dodací list ${documentNo} už v pasporte existuje pod P. č. ${duplicate.sequence}. Uložiť ho aj tak?`))return;
- const quantitySummary=$("deliveryOcrQuantity").value.trim(),quantityParts=purchaseQuantitySummaryParts(quantitySummary),item={id:uid("pd"),projectId:state.selectedProjectId,date:$("deliveryOcrDate").value||todayISO(),supplier:$("deliveryOcrSupplier").value.trim(),documentNo,invoiceNo:$("deliveryOcrInvoiceNo").value.trim(),material:$("deliveryOcrMaterial").value.trim(),materialCategory:$("deliveryOcrCategory").value.trim(),quantitySummary,quantity:quantityParts.quantity,unit:quantityParts.unit,estimatedPrice:$("deliveryOcrPrice").value.trim(),sequence:$("deliveryOcrSequence").value||deliveryNoteNextSequence(),source:currentDeliveryAiAnalysis?"Codex AI + OCR":"OCR dodací list",ocrText:$("deliveryOcrRawText").value,aiAnalysis:currentDeliveryAiAnalysis,createdAt:new Date().toISOString()};
+ const quantitySummary=$("deliveryOcrQuantity").value.trim(),quantityParts=purchaseQuantitySummaryParts(quantitySummary),item={id:uid("pd"),projectId:state.selectedProjectId,date:$("deliveryOcrDate").value||todayISO(),supplier:$("deliveryOcrSupplier").value.trim(),documentNo,invoiceNo:$("deliveryOcrInvoiceNo").value.trim(),material:$("deliveryOcrMaterial").value.trim(),materialCategory:$("deliveryOcrCategory").value.trim(),quantitySummary,quantity:quantityParts.quantity,unit:quantityParts.unit,sequence:$("deliveryOcrSequence").value||deliveryNoteNextSequence(),source:currentDeliveryAiAnalysis?"Codex AI + OCR":"OCR dodací list",ocrText:$("deliveryOcrRawText").value,aiAnalysis:currentDeliveryAiAnalysis,createdAt:new Date().toISOString()};
  if(!item.unit&&purchaseIsConcrete(item))item.unit="m³";
  state.purchases.push(item);$("deliveryNoteOcrModal").classList.add("hidden");$("purchaseSearch").value="";$("purchaseMaterialSearch").value="";$("purchaseSupplierFilter").value="";$("purchaseMonthFilter").value="";purchasePage=Math.max(1,Math.ceil(purchaseRows().length/PURCHASE_PAGE_SIZE));save(`Dodací list ${documentNo||item.sequence} bol zapísaný do pasportu.`)
 };
-function addPurchaseRow(){const max=Math.max(0,...state.purchases.filter(x=>x.projectId===state.selectedProjectId).map(x=>Number(x.sequence)||0));const item={id:uid("pd"),projectId:state.selectedProjectId,date:todayISO(),supplier:"",documentNo:"",invoiceNo:"",material:"",quantity:"",unit:"",estimatedPrice:"",sequence:String(max+1),note:""};state.purchases.push(item);localStorage.setItem(KEY,JSON.stringify(state));$("purchaseSearch").value="";$("purchaseMaterialSearch").value="";$("purchaseSupplierFilter").value="";$("purchaseMonthFilter").value="";purchasePage=Math.max(1,Math.ceil(purchaseRows().length/PURCHASE_PAGE_SIZE));renderPurchases();setTimeout(()=>document.querySelector(`[data-id="${item.id}"][data-field="date"]`)?.focus(),30)}
+function addPurchaseRow(){const max=Math.max(0,...state.purchases.filter(x=>x.projectId===state.selectedProjectId).map(x=>Number(x.sequence)||0));const item={id:uid("pd"),projectId:state.selectedProjectId,date:todayISO(),supplier:"",documentNo:"",invoiceNo:"",material:"",quantity:"",unit:"",sequence:String(max+1),note:""};state.purchases.push(item);localStorage.setItem(KEY,JSON.stringify(state));$("purchaseSearch").value="";$("purchaseMaterialSearch").value="";$("purchaseSupplierFilter").value="";$("purchaseMonthFilter").value="";purchasePage=Math.max(1,Math.ceil(purchaseRows().length/PURCHASE_PAGE_SIZE));renderPurchases();setTimeout(()=>document.querySelector(`[data-id="${item.id}"][data-field="date"]`)?.focus(),30)}
 $("addPurchaseRow").onclick=addPurchaseRow;
 [$("purchaseSearch"),$("purchaseMaterialSearch")].forEach(input=>input.oninput=()=>{purchasePage=1;renderPurchases()});
 [$("purchaseMonthFilter"),$("purchaseSupplierFilter")].forEach(select=>select.onchange=()=>{purchasePage=1;renderPurchases()});
@@ -6639,7 +6976,6 @@ $("exportPurchasesPdf").onclick=()=>{
    <td class="material">${cell(x.material||"")}</td>
    <td class="value">${cell(x.quantity||purchaseQuantitySummaryParts(x.quantitySummary).quantity||"")}</td>
    <td class="pc">${cell(purchaseUnitValue(x))}</td>
-   <td class="value">${cell(x.estimatedPrice||x.credit||"")}</td>
    <td class="pc">${cell(x.sequence||pageIndex*perPage+i+1)}</td>
   </tr>`).join("");
 
@@ -6659,15 +6995,14 @@ $("exportPurchasesPdf").onclick=()=>{
 
    <table class="passport-table">
     <colgroup>
-     <col style="width:9%">
-     <col style="width:15%">
+     <col style="width:10%">
+     <col style="width:17%">
+     <col style="width:14%">
      <col style="width:13%">
-     <col style="width:12%">
-     <col style="width:24%">
+     <col style="width:28%">
      <col style="width:8%">
      <col style="width:5%">
-     <col style="width:10%">
-     <col style="width:4%">
+     <col style="width:5%">
     </colgroup>
     <thead><tr>
      <th>Dátum</th>
@@ -6677,7 +7012,6 @@ $("exportPurchasesPdf").onclick=()=>{
      <th>Názov materiálu</th>
      <th>Množstvo</th>
      <th>MJ</th>
-     <th>Orientačná<br>cena</th>
      <th>P. č.</th>
     </tr></thead>
     <tbody>${body}</tbody>
@@ -6753,7 +7087,7 @@ $("exportPurchasesPdf").onclick=()=>{
  </body></html>`);
  w.document.close()
 };
-$("exportPurchasesCsv").onclick=()=>{const rows=purchaseRows(),escCsv=v=>`"${String(v??"").replace(/"/g,'""')}"`;const data="\uFEFF"+[["Dátum","Dodávateľ","Číslo dodacieho listu","Faktúra číslo","Názov materiálu","Množstvo","MJ","Orientačná cena","P. č."],...rows.map(x=>[excelDate(x.date),x.supplier,x.documentNo,x.invoiceNo,x.material,x.quantity||purchaseQuantitySummaryParts(x.quantitySummary).quantity||"",purchaseUnitValue(x),x.estimatedPrice||x.credit||"",x.sequence])].map(r=>r.map(escCsv).join(";")).join("\n");const blob=new Blob([data],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`pasport-skladu-${todayISO()}.csv`;a.click();URL.revokeObjectURL(url)};
+$("exportPurchasesCsv").onclick=()=>{const rows=purchaseRows(),escCsv=v=>`"${String(v??"").replace(/"/g,'""')}"`;const data="\uFEFF"+[["Dátum","Dodávateľ","Číslo dodacieho listu","Faktúra číslo","Názov materiálu","Množstvo","MJ","P. č."],...rows.map(x=>[excelDate(x.date),x.supplier,x.documentNo,x.invoiceNo,x.material,x.quantity||purchaseQuantitySummaryParts(x.quantitySummary).quantity||"",purchaseUnitValue(x),x.sequence])].map(r=>r.map(escCsv).join(";")).join("\n");const blob=new Blob([data],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`pasport-skladu-${todayISO()}.csv`;a.click();URL.revokeObjectURL(url)};
 
 $("workerMonth").value=selectedWorkerMonth;
 $("undoBtn").onclick=undoLast;
@@ -6877,7 +7211,7 @@ $("defectForm").onsubmit=event=>{
         location:$("defectLocation").value.trim(),
         description:$("defectDescription").value.trim(),
         dueDate:$("defectDueDate").value,
-        severity:$("defectSeverity").value,
+         severity:$("defectType").value==="Porušenie BOZP"?"":$("defectSeverity").value,
         status:$("defectStatus").value,
         responsible:$("defectResponsible").value.trim()||defectCompanyResponsible($("defectCompany").value),
         photos:clone(pendingDefectPhotos),

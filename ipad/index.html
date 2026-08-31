@@ -2,11 +2,11 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk iPad"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk iPad 1.0.3 · SiteDesk 5.0.86</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css"><link rel="stylesheet" href="assets/styles/appearance-settings.css"><link rel="stylesheet" href="assets/styles/ai-assistant.css"><link rel="stylesheet" href="assets/styles/material-samples.css"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.0.3">
+ <meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk Online 5.1.0</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0">
 
-<script src="assets/js/ipad-bridge.js?v=1.0.3"></script>
-<script src="assets/js/bootstrap/startup-guard.js"></script>
+<script src="assets/js/bootstrap/startup-guard.js?v=5.1.0"></script>
+<script src="assets/js/ipad-bridge.js?v=1.1.0"></script>
 
 </head>
 <body>
@@ -14,7 +14,7 @@
 <aside class="sidebar site-sidebar" id="sidebar">
  <div class="brand site-brand">
   <img src="assets/images/navigation-logo.png" alt="Betpres">
-<div><strong>BETPRES</strong><small>SiteDesk 5.0.86</small></div>
+    <div><strong>BETPRES</strong><small>SiteDesk Online 5.1.0</small></div>
  </div>
 
  <nav class="site-nav">
@@ -38,8 +38,6 @@
    <div class="nav-group-label">FINANCIE A SÚPISY</div>
    <button class="nav-btn" data-view="billing"><span class="nav-icon">€</span><span>Fakturácia</span></button>
    <button class="nav-btn" data-view="workStatements"><span class="nav-icon">▤</span><span>Súpis prác</span></button>
-   <button class="nav-btn" data-view="purchases"><span class="nav-icon">▥</span><span>Pasport skladu</span></button>
-   <button class="nav-btn" data-view="concrete"><span class="nav-icon">◆</span><span>Betóny</span></button>
    <button class="nav-btn" data-view="machines"><span class="nav-icon">⚙</span><span>Pasport strojov</span></button>
   </div>
 
@@ -68,7 +66,7 @@
 
  <div class="site-sidebar-footer">
   <div class="site-version-dot"></div>
-<div><strong>SiteDesk 5.0.86</strong><small>Pasporty · súpisy · smenovky</small></div>
+      <div><strong>SiteDesk Online 5.1.0</strong><small>Pasporty · súpisy · smenovky</small></div>
  </div>
 </aside>
 <main class="main">
@@ -467,18 +465,12 @@
    <button id="addPurchaseRow">+ Pridať riadok</button>
   </div>
  </div>
- <div class="excel-help material-passport-help"><div><strong id="materialPassportSummary">Pasport skladu je pripravený.</strong></div><div>Fotografiu aplikácia spracuje lokálne. Pred uložením vždy skontroluj rozpoznané číslo dokladu a cenu.</div></div>
- <div class="material-finance-summary">
-  <article class="material-finance-card is-total"><span>Materiál celkom</span><strong id="purchaseAmountTotal">0,00 €</strong><small>podľa aktuálneho filtra</small></article>
-  <article class="material-finance-card is-invoiced"><span>Odfakturované</span><strong id="purchaseAmountInvoiced">0,00 €</strong><small id="purchaseCountInvoiced">0 dodacích listov s faktúrou</small></article>
-  <article class="material-finance-card is-uninvoiced"><span>Neodfakturované</span><strong id="purchaseAmountUninvoiced">0,00 €</strong><small id="purchaseCountUninvoiced">0 dodacích listov bez faktúry</small></article>
- <article class="material-finance-card is-missing-price"><span>Bez zadanej ceny</span><strong id="purchaseCountMissingPrice">0</strong><small>riadkov nemožno započítať do sumy</small></article>
- </div>
+ <div class="excel-help material-passport-help"><div><strong id="materialPassportSummary">Pasport skladu je pripravený.</strong></div><div>Fotografiu aplikácia spracuje lokálne. Pred uložením vždy skontroluj rozpoznané číslo dokladu a materiál.</div></div>
  <div class="purchase-filter-panel">
   <label><span>Konkrétny materiál</span><input id="purchaseMaterialSearch" list="materialList" placeholder="napr. vata, EPS, obrubníky"></label>
-  <label><span>Dodávateľ / firma</span><select id="purchaseSupplierFilter"><option value="">Všetci dodávatelia</option></select></label>
+   <label><span>Dodávateľ</span><select id="purchaseSupplierFilter"><option value="">Všetci dodávatelia</option></select></label>
   <label><span>Mesiac dodania</span><select id="purchaseMonthFilter"><option value="">Všetky mesiace</option></select></label>
-  <label><span>Hľadať vo všetkých stĺpcoch</span><input id="purchaseSearch" placeholder="Číslo dokladu, faktúra, cena…"></label>
+   <label><span>Hľadať vo všetkých stĺpcoch</span><input id="purchaseSearch" placeholder="Číslo dokladu, faktúra, materiál…"></label>
   <button type="button" class="ghost" id="resetPurchaseFilters">Zrušiť filtre</button>
  </div>
  <article class="excel-panel">
@@ -493,10 +485,10 @@
   <div class="excel-sheet-wrap">
    <table class="excel-sheet">
     <colgroup>
-     <col class="row-number-col"><col class="col-a"><col class="col-b"><col class="col-c"><col class="col-d"><col class="col-e"><col class="col-f"><col class="col-g"><col class="col-h"><col class="col-i">
+     <col class="row-number-col"><col class="col-a"><col class="col-b"><col class="col-c"><col class="col-d"><col class="col-e"><col class="col-f"><col class="col-g"><col class="col-h">
     </colgroup>
     <thead>
-     <tr class="excel-letters"><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th></tr>
+     <tr class="excel-letters"><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th></tr>
      <tr class="excel-headers">
       <th class="corner-filter">⌄</th>
       <th>Dátum <span>⌄</span></th>
@@ -506,7 +498,6 @@
       <th>Názov materiálu <span>⌄</span></th>
       <th>Množstvo <span>⌄</span></th>
       <th>MJ <span>⌄</span></th>
-      <th>Orientačná cena <span>⌄</span></th>
       <th>P. č. <span>⌄</span></th>
      </tr>
     </thead>
@@ -589,8 +580,9 @@
    <button class="worker-betpres-action hidden" id="addBetpresEmployee">+ Pridať pracovníka BETPRES</button>
    <button class="worker-thp-action hidden" id="addThpEmployee">+ Pridať pracovníka THP</button>
    <button class="ghost worker-company-hours-action hidden" id="exportCompanyHoursPdf">Exportovať jednu firemnú smenovku</button>
-   <button class="ghost worker-company-hours-action hidden" id="addAllCompanyHourTimesheets">Vytvoriť šablóny pre všetky firmy</button>
    <button class="worker-company-hours-action hidden" id="addCompanyHourTimesheet">+ Pridať firmu na hodiny</button>
+   <button class="ghost worker-company-timesheets-action hidden" id="printCompanyTimesheet">Vytlačiť smenovku firmy</button>
+   <button class="worker-company-timesheets-action hidden" id="exportAssignedCompanyTimesheets">Exportovať smenovky firiem</button>
   </div>
  </div>
 
@@ -606,6 +598,9 @@
   </button>
   <button data-worker-mode="companyHours">
    <span>€</span><div><strong>Firmy na hodiny</strong><small>Hodinová smenovka + súpis prác</small></div>
+  </button>
+  <button data-worker-mode="companyTimesheets">
+   <span>▦</span><div><strong>Smenovky firiem</strong><small>Mená, dochádzka a tlač všetkých firiem</small></div>
   </button>
  </div>
 
@@ -628,7 +623,7 @@
 
 <div id="betpresTimesheetPanel" class="hidden">
   <div class="worker-note betpres-timesheet-note"><strong>Podsmenovka pracovníkov BETPRES:</strong> do každého dňa zapíš bežný pracovný čas alebo kód <strong>P, N alebo D</strong>. Každý deň má iba jedno políčko.</div>
-  <div class="worker-inline-actions"><button type="button" id="addBetpresEmployeeInline">+ Vybrať / pridať pracovníka BETPRES</button></div>
+  <div class="worker-inline-actions"><button type="button" id="addBetpresEmployeeInline">+ Vybrať / pridať pracovníka BETPRES</button><button type="button" class="ghost" id="addBlankBetpresEmployeeInline">+ Pridať prázdny riadok</button></div>
 
   <div class="betpres-timesheet-summary">
    <article><span>Pracovníkov</span><strong id="betpresEmployeeCount">0</strong></article>
@@ -671,7 +666,21 @@
  </div>
 
  <div id="companyHoursPanel" class="hidden">
-  <div class="worker-note company-hours-note"><strong>Menné smenovky firiem:</strong> každá firma môže mať rovnakú šablónu s menami pracovníkov a hodinami po jednotlivých dňoch. Tlačidlo „Vytvoriť šablóny pre všetky firmy“ ich založí naraz pre všetky firmy priradené k stavbe. PDF má 15 mien na jednej strane, teda 30 mien na jednom obojstranne vytlačenom liste. Hodinovú sadzbu môžeš doplniť iba tam, kde ju potrebuješ pre výpočet a súpis prác.</div>
+  <div class="worker-note company-hours-note"><strong>Menné smenovky firiem na hodiny:</strong> každá hodinová firma môže mať mená pracovníkov a hodiny po jednotlivých dňoch. PDF má 15 mien na strane, teda 30 mien na obojstranne vytlačenom liste.</div>
+  <article class="panel company-hour-switcher">
+   <label class="company-hour-switcher-company">Firma
+    <select id="companyHourRowSelect"></select>
+   </label>
+   <label class="company-hour-switcher-rate">Hodinová sadzba
+    <span><input id="companyHourActiveRate" type="text" inputmode="decimal" placeholder="0"><b>€/h</b></span>
+   </label>
+   <div class="company-hour-switcher-actions">
+    <button type="button" class="ghost" id="companyHourActiveAdd">+ Dopísať meno</button>
+    <button type="button" class="ghost" id="companyHourActivePdf">Export PDF</button>
+    <button type="button" id="companyHourActiveStatement">Vytvoriť súpis</button>
+    <button type="button" class="ghost company-timesheet-delete-current" id="companyHourActiveDelete">Odstrániť firmu</button>
+   </div>
+  </article>
   <div class="company-hours-summary">
    <article><span>Firiem na hodiny</span><strong id="companyHoursCount">0</strong></article>
    <article><span>Hodiny spolu</span><strong id="companyHoursTotal">0 h</strong></article>
@@ -679,10 +688,43 @@
   </div>
   <article class="worker-panel">
    <div class="worker-table-wrap company-hours-wrap">
-    <table class="worker-table company-hours-table">
-     <thead id="companyHoursHead"></thead>
+     <table class="worker-table company-hours-table">
+      <colgroup id="companyHoursCols"></colgroup>
+      <thead id="companyHoursHead"></thead>
      <tbody id="companyHoursBody"></tbody>
      <tfoot id="companyHoursFoot"></tfoot>
+    </table>
+   </div>
+  </article>
+ </div>
+
+ <div id="companyTimesheetsPanel" class="hidden">
+   <div class="worker-note company-hours-note"><strong>Smenovky všetkých firiem:</strong> vytvor ich naraz pre firmy priradené k stavbe. Vyber firmu, doplň mená, príchody a odchody a nastav jej počet čistých strán PDF. Ak je pracovníkov viac, export automaticky pridá potrebné strany.</div>
+  <article class="panel company-timesheet-switcher">
+   <label>Firma
+   <select id="companyTimesheetCompany"></select>
+   </label>
+   <label class="company-timesheet-page-count">Čisté strany PDF
+    <input id="companyTimesheetPrintPages" type="number" inputmode="numeric" min="1" max="20" step="1" value="2">
+   </label>
+   <div class="company-timesheet-switcher-actions">
+    <button type="button" class="ghost" id="addCompanyTimesheetWorkerTop">+ Dopísať meno</button>
+    <button type="button" class="ghost" id="exportCompanyTimesheetCurrent">Export PDF</button>
+     <button type="button" class="ghost company-timesheet-delete-current" id="deleteCompanyTimesheetCurrent">Odstrániť smenovku</button>
+   </div>
+  </article>
+  <div class="company-hours-summary">
+   <article><span>Firiem so smenovkou</span><strong id="companyTimesheetsCount">0</strong></article>
+   <article><span>Hodiny spolu</span><strong id="companyTimesheetsHours">0 h</strong></article>
+   <article><span>Pracovníkov spolu</span><strong id="companyTimesheetsWorkers">0</strong></article>
+  </div>
+  <article class="worker-panel">
+   <div class="worker-table-wrap company-hours-wrap">
+     <table class="worker-table company-hours-table">
+      <colgroup id="companyTimesheetsCols"></colgroup>
+      <thead id="companyTimesheetsHead"></thead>
+     <tbody id="companyTimesheetsBody"></tbody>
+     <tfoot id="companyTimesheetsFoot"></tfoot>
     </table>
    </div>
   </article>
@@ -1086,9 +1128,9 @@
   <label>Firma<select id="defectCompany" required></select></label>
   <label>Číslo záznamu<input id="defectNumber" placeholder="vytvorí sa automaticky"></label>
   <label class="span2"><span id="defectLocationLabel">Miesto</span><input id="defectLocation" required placeholder="napr. 3. NP – byt B3.12 – obývacia izba"></label>
-  <label class="span2">Popis vady alebo porušenia BOZP<textarea id="defectDescription" rows="4" required></textarea></label>
+  <label class="span2">Popis vady alebo porušenia BOZP (nepovinný)<textarea id="defectDescription" rows="4"></textarea></label>
   <label>Termín odstránenia<input id="defectDueDate" type="date"></label>
-  <label>Závažnosť<select id="defectSeverity"><option>Bežná</option><option>Dôležitá</option><option>Urgentná</option></select></label>
+  <label id="defectSeverityField">Závažnosť<select id="defectSeverity"><option>Bežná</option><option>Dôležitá</option><option>Urgentná</option></select></label>
   <label>Stav<select id="defectStatus"><option>Nová</option><option>Odoslaná firme</option><option>V riešení</option><option>Odstránená</option><option>Skontrolovaná</option><option>Uzavretá</option></select></label>
   <label>Zodpovedná osoba<input id="defectResponsible"></label>
   <label class="span2 defect-photo-input">Fotografie
@@ -1505,7 +1547,7 @@ Certifikáty"></textarea></label>
 </form></div></div>
 
 <div class="modal hidden" id="deliveryNoteOcrModal"><div class="modal-card extra-wide delivery-ocr-card">
- <div class="modal-head"><div><p>PASPORT SKLADU · OCR + CODEX AI</p><h2>Kontrola dodacieho listu</h2><small>OCR prebehne lokálne. Codex následne overí firmu, materiál, množstvo a orientačnú cenu cez internet. Pred uložením všetko skontroluj.</small></div><button class="close" data-close="deliveryNoteOcrModal">×</button></div>
+ <div class="modal-head"><div><p>PASPORT SKLADU · OCR + CODEX AI</p><h2>Kontrola dodacieho listu</h2><small>OCR prebehne lokálne. Codex následne overí firmu, materiál a množstvo cez internet. Pred uložením všetko skontroluj.</small></div><button class="close" data-close="deliveryNoteOcrModal">×</button></div>
  <div class="delivery-ocr-layout">
   <div class="delivery-ocr-preview"><img id="deliveryNotePreview" alt="Náhľad dodacieho listu"><div id="deliveryOcrStatus">Pripravujem fotografiu…</div></div>
   <form id="deliveryNoteOcrForm" class="form-grid">
@@ -1516,12 +1558,10 @@ Certifikáty"></textarea></label>
    <label class="span2">Stručný názov materiálu<input id="deliveryOcrMaterial" required placeholder="napr. Vata / tepelná izolácia alebo Spotrebný materiál"></label>
    <label>Kategória materiálu<input id="deliveryOcrCategory" placeholder="určí AI; môžeš upraviť"></label>
    <label>Množstvo / balenie<input id="deliveryOcrQuantity" placeholder="napr. 12 bal. · 86,4 m²"></label>
-   <label>Orientačná cena dodacieho listu<input id="deliveryOcrPrice" inputmode="decimal" placeholder="napr. 1 859,37 €"></label>
-   <label>P. č.<input id="deliveryOcrSequence" readonly></label>
+    <label>P. č.<input id="deliveryOcrSequence" readonly></label>
    <section class="span2 delivery-ai-review" id="deliveryAiReview" aria-live="polite">
     <div><strong>AI rozpis materiálu</strong><span id="deliveryAiConfidence">Čakám na fotografiu.</span></div>
-    <div id="deliveryAiMaterialLines" class="delivery-ai-lines">Po rozpoznaní tu uvidíš materiály, množstvá, prepočet ceny a použité zdroje.</div>
-    <div id="deliveryAiPriceBasis" class="delivery-ai-basis"></div>
+     <div id="deliveryAiMaterialLines" class="delivery-ai-lines">Po rozpoznaní tu uvidíš materiály a množstvá.</div>
    </section>
    <details class="span2 delivery-ocr-raw"><summary>Zobraziť rozpoznaný text</summary><textarea id="deliveryOcrRawText" rows="8" readonly></textarea></details>
    <div class="modal-actions span2"><button type="button" class="ghost" id="deliveryAiRetry">Znova vyhodnotiť AI</button><button type="button" class="ghost" data-close="deliveryNoteOcrModal">Zrušiť</button><button type="submit">Uložiť do pasportu</button></div>
@@ -1549,7 +1589,7 @@ Ján Novák
 Peter Horváth
 Marek Kováč"></textarea>
  </label>
- <div class="database-hint span2">Sadzba sa zadáva pri založení smenovky. Pracovníci sú samostatné riadky ako v podsmenovke BETPRES – píšeš iba mená, bez profesie. Mená vieš dopísať priamo do tabuľky a každému pracovníkovi zadávaš hodiny osobitne.</div>
+ <div class="database-hint span2">Sadzba sa zadáva pri založení smenovky. Pracovníci sú samostatné riadky ako v podsmenovke BETPRES – píšeš iba mená, bez profesie.</div>
  <div class="worker-name-preview span2" id="companyHourPreview"><strong>Vyber firmu alebo zadaj vlastný názov</strong><span>Firma sa použije aj pre vytvorenie súpisu prác.</span></div>
  <div class="modal-actions span2"><button type="button" class="ghost" data-close="companyHourModal">Zrušiť</button><button type="submit">Pridať smenovku</button></div>
 </form></div></div>
@@ -1563,8 +1603,8 @@ Marek Kováč"></textarea>
   <label class="span2">Osobné číslo
    <input id="betpresEmployeePersonalNumber" type="text" inputmode="numeric" maxlength="3" pattern="[0-9]{1,3}" placeholder="napr. 123">
   </label>
-  <label class="span2">Meno a priezvisko
-   <input id="betpresEmployeeName" list="betpresEmployeeSuggestions" required placeholder="Vyber existujúce meno alebo napíš nové">
+  <label class="span2">Meno a priezvisko (nepovinné)
+   <input id="betpresEmployeeName" list="betpresEmployeeSuggestions" placeholder="Môže zostať prázdne na ručné dopísanie">
    <datalist id="betpresEmployeeSuggestions"></datalist>
   </label>
   <label class="span2">Pracovná pozícia
@@ -1620,7 +1660,6 @@ Marek Kováč"></textarea>
    <button data-command-label="koordinačná porada úlohy" data-go="siteMeetings"><span>◫</span><strong>Koordinačná porada</strong><small>Úlohy, uloženie a PDF</small></button>
    <button data-command-label="kontrolný deň kontrolné dni úlohy" data-go="controlDays"><span>▣</span><strong>Kontrolné dni</strong><small>Kontrola prác, úlohy a PDF</small></button>
    <button data-command-label="vzorkovanie vzorky materiál investor technický list pasport" data-go="materialSamples"><span>◇</span><strong>Vzorkovanie materiálov</strong><small>Technické listy, schválenie a pasport</small></button>
-   <button data-command-label="pasport skladu dodacie listy material" data-go="purchases"><span>▥</span><strong>Pasport skladu</strong><small>Foto dodacieho listu a OCR</small></button>
    <button data-command-label="fakturácia faktúry" data-go="billing"><span>€</span><strong>Fakturácia</strong><small>Faktúry podľa firiem</small></button>
    <button data-command-label="súpis prác výkon" data-go="workStatements"><span>▤</span><strong>Súpis prác</strong><small>Mesačné výkony a export</small></button>
    <button data-command-label="dokumenty archív" data-go="documents"><span>▤</span><strong>Dokumenty</strong><small>Uložené dokumenty a história</small></button>
@@ -1633,14 +1672,14 @@ Marek Kováč"></textarea>
 </div>
 
 <div id="toast" class="toast"></div>
-<script src="assets/js/data/seed-data.js"></script><script src="assets/js/data/material-passport-data.js"></script><script src="assets/js/vendor/jszip.min.js"></script><script src="assets/js/vendor/exceljs.min.js"></script>
-<script src="assets/js/legacy/sitedesk-core.js"></script>
-<script src="assets/js/features/work-spreadsheet.js"></script>
-<script src="assets/js/features/work-statement-roundtrip.js"></script>
-<script src="assets/js/features/pdf-preview.js"></script>
-<script src="assets/js/features/machine-passport.js"></script>
-<script src="assets/js/features/timesheet-pdf-export.js"></script>
-<script src="assets/js/features/mobile-diary-dashboard.js"></script>
-<script src="assets/js/features/appearance-settings.js"></script>
-<script src="assets/js/features/ai-assistant.js"></script>
-<script src="assets/js/features/material-samples.js"></script></body></html>
+<script src="assets/js/data/seed-data.js?v=5.1.0"></script><script src="assets/js/data/material-passport-data.js?v=5.1.0"></script><script src="assets/js/vendor/jszip.min.js"></script><script src="assets/js/vendor/exceljs.min.js"></script>
+<script src="assets/js/legacy/sitedesk-core.js?v=5.1.0"></script>
+<script src="assets/js/features/work-spreadsheet.js?v=5.1.0"></script>
+<script src="assets/js/features/work-statement-roundtrip.js?v=5.1.0"></script>
+<script src="assets/js/features/pdf-preview.js?v=5.1.0"></script>
+<script src="assets/js/features/machine-passport.js?v=5.1.0"></script>
+<script src="assets/js/features/timesheet-pdf-export.js?v=5.1.0"></script>
+<script src="assets/js/features/mobile-diary-dashboard.js?v=5.1.0"></script>
+<script src="assets/js/features/appearance-settings.js?v=5.1.0"></script>
+<script src="assets/js/features/ai-assistant.js?v=5.1.0"></script>
+<script src="assets/js/features/material-samples.js?v=5.1.0"></script></body></html>

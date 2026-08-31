@@ -49,7 +49,7 @@ window.__BETPRES_APP_READY__ = false;
 
   setTimeout(() => {
     if (!window.__BETPRES_APP_READY__) {
-      showStartupError("Aplikácia nedokončila načítanie do 10 sekúnd.");
+      showStartupError("Aplikácia nedokončila načítanie do 30 sekúnd.");
     }
-  }, 10000);
+  }, 30000);
 })();

@@ -56,10 +56,15 @@ body.ipad-web {
 }
 
 @media (orientation: portrait) and (max-width: 940px) {
-  .ipad-web .sidebar { width: 210px; }
+  .ipad-web .sidebar { width: min(286px, 86vw); }
   .ipad-web .main { min-width: 0; }
   .ipad-web .page { padding-left: 14px; padding-right: 14px; }
   .ipad-web .topbar { padding-left: 12px; padding-right: 12px; }
+}
+
+@media (max-width: 760px) {
+  .ipad-web-badge { display: none; }
+  .ipad-web .view { padding-left: 10px; padding-right: 10px; }
 }
 
 @media (display-mode: standalone) {

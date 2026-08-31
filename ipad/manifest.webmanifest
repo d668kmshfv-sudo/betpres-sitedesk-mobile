@@ -1,7 +1,7 @@
 {
-  "name": "BETPRES SiteDesk iPad",
-  "short_name": "SiteDesk iPad",
-  "description": "SiteDesk 5.0.86 pre iPad, kompatibilný s iPhonom a notebookmi",
+  "name": "BETPRES SiteDesk Online",
+  "short_name": "SiteDesk",
+  "description": "Online stavebná evidencia BETPRES pre notebook, iPad a iPhone",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

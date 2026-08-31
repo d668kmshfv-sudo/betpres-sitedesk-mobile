@@ -3,7 +3,7 @@
 
  const allowedViews=new Set([
   "dashboard","calendar","workers","defects","siteMeetings","controlDays","billing",
-  "workStatements","purchases","documents","handover","acceptance","companies"
+  "workStatements","documents","handover","acceptance","companies"
  ]);
  const conversation=[];
  let requestRunning=false;
