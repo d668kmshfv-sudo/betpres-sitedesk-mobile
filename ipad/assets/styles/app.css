@@ -4443,3 +4443,22 @@ option[value="concrete"],
 #concrete{
  display:none!important;
 }
+
+/* Výber firiem pred exportom smenoviek. */
+.company-timesheet-export-card{width:min(720px,100%)}
+.company-timesheet-export-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.company-timesheet-export-toolbar button{padding:8px 11px;font-size:12px}
+.company-timesheet-export-toolbar strong{margin-left:auto;color:var(--navy);font-size:13px}
+.company-timesheet-export-list{display:grid;grid-template-columns:1fr 1fr;gap:9px;max-height:52vh;overflow:auto;padding:2px 5px 2px 2px;margin-bottom:16px}
+.company-timesheet-export-option{display:flex;align-items:center;gap:11px;min-width:0;padding:12px;border:1px solid #d7e2eb;border-radius:11px;background:#f8fbfd;cursor:pointer}
+.company-timesheet-export-option:hover{border-color:#83add0;background:#eef7ff}
+.company-timesheet-export-option input{width:19px;height:19px;min-width:19px;margin:0;accent-color:var(--navy)}
+.company-timesheet-export-option span{min-width:0}
+.company-timesheet-export-option strong,.company-timesheet-export-option small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.company-timesheet-export-option strong{font-size:13px;color:var(--navy)}
+.company-timesheet-export-option small{margin-top:3px;color:var(--muted);font-size:11px}
+#confirmCompanyTimesheetExport:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:650px){
+ .company-timesheet-export-list{grid-template-columns:1fr;max-height:55vh}
+ .company-timesheet-export-toolbar strong{width:100%;margin-left:0}
+}

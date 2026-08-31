@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.1.2";
+ var APP_VERSION = "5.1.3";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -396,16 +396,89 @@ function splitRows(rows, size) {
   return currentCompanyTimesheetRows(sheet, month);
  }
 
- async function exportAssignedCompanyTimesheetsPdf() {
+ async function exportAssignedCompanyTimesheetsPdf(selectedRowIds) {
   var month = currentMonth();
   var rows = assignedCompanyTimesheetRows(month);
+  if (Array.isArray(selectedRowIds)) {
+   var selected = new Set(selectedRowIds);
+   rows = rows.filter(function (row) { return selected.has(row.id); });
+  }
   if (!rows.length) {
-   alert("V časti Firmy na stavbe zatiaľ nie je označená žiadna firma so smenovkou.");
+   alert(Array.isArray(selectedRowIds) ? "Vyber aspoň jednu firmu, ktorú chceš exportovať." : "V časti Firmy na stavbe zatiaľ nie je označená žiadna firma so smenovkou.");
    return { ok: false, reason: "missing-assigned-company-timesheets" };
   }
   var pages = [];
   rows.forEach(function (row) { pages = pages.concat(companyTimesheetPages(row, month)); });
   return savePdf("Smenovky firiem", "smenovky-firiem-" + safePart(projectLabel()) + "-" + month + ".pdf", pages);
+ }
+
+ function selectedCompanyTimesheetExportIds() {
+  var list = el("companyTimesheetExportList");
+  if (!list) return [];
+  return Array.prototype.slice.call(list.querySelectorAll('input[type="checkbox"][data-company-timesheet-export]:checked')).map(function (input) { return input.value; });
+ }
+
+ function updateCompanyTimesheetExportSelection() {
+  var list = el("companyTimesheetExportList");
+  var counter = el("companyTimesheetExportSelectedCount");
+  var confirmButton = el("confirmCompanyTimesheetExport");
+  if (!list) return;
+  var total = list.querySelectorAll('input[type="checkbox"][data-company-timesheet-export]').length;
+  var selected = selectedCompanyTimesheetExportIds().length;
+  if (counter) counter.textContent = selected + " z " + total + " vybraných";
+  if (confirmButton) confirmButton.disabled = selected === 0;
+ }
+
+ function setAllCompanyTimesheetExports(checked) {
+  var list = el("companyTimesheetExportList");
+  if (!list) return;
+  Array.prototype.forEach.call(list.querySelectorAll('input[type="checkbox"][data-company-timesheet-export]'), function (input) { input.checked = checked; });
+  updateCompanyTimesheetExportSelection();
+ }
+
+ function openCompanyTimesheetExportPicker() {
+  var month = currentMonth();
+  var rows = assignedCompanyTimesheetRows(month);
+  var modal = el("companyTimesheetExportModal");
+  var list = el("companyTimesheetExportList");
+  if (!rows.length) {
+   alert("V časti Firmy na stavbe zatiaľ nie je označená žiadna firma so smenovkou.");
+   return { ok: false, reason: "missing-assigned-company-timesheets" };
+  }
+  if (!modal || !list) return exportAssignedCompanyTimesheetsPdf();
+  list.innerHTML = rows.map(function (row) {
+   var workers = companyTimesheetWorkers(row);
+   var namedWorkers = workers.filter(function (worker) { return String(worker.name || "").trim(); }).length;
+   var pages = normalizeCompanyTimesheetPrintPages(row.printPageCount);
+   return '<label class="company-timesheet-export-option"><input type="checkbox" data-company-timesheet-export value="' + html(row.id) + '" checked><span><strong>' + html(companyTimesheetRowName(row)) + '</strong><small>' + namedWorkers + ' pracovníkov · ' + pages + ' ' + (pages === 1 ? 'strana' : pages < 5 ? 'strany' : 'strán') + '</small></span></label>';
+  }).join("");
+  var period = el("companyTimesheetExportPeriod");
+  if (period) period.textContent = "Mesiac " + monthInfo(month).label + " · " + projectLabel();
+  list.onchange = updateCompanyTimesheetExportSelection;
+  modal.classList.remove("hidden");
+  updateCompanyTimesheetExportSelection();
+  return { ok: true, picker: true };
+ }
+
+ async function confirmCompanyTimesheetExport() {
+  var button = el("confirmCompanyTimesheetExport");
+  var selectedIds = selectedCompanyTimesheetExportIds();
+  if (!selectedIds.length) {
+   updateCompanyTimesheetExportSelection();
+   return { ok: false, reason: "missing-selection" };
+  }
+  if (button) button.disabled = true;
+  try {
+   var result = await exportAssignedCompanyTimesheetsPdf(selectedIds);
+   if (!result || result.ok !== false) el("companyTimesheetExportModal").classList.add("hidden");
+   return result;
+  } catch (error) {
+   console.error("Export vybraných smenoviek zlyhal:", error);
+   alert("PDF sa nepodarilo vytvoriť. Skús export zopakovať.");
+   return { ok: false, reason: "export-error", error: String(error && error.message || error) };
+  } finally {
+   updateCompanyTimesheetExportSelection();
+  }
  }
 
  async function exportAllPdf() {
@@ -477,12 +550,17 @@ function splitRows(rows, size) {
  bind("exportThpTimesheetPdf", function () { return exportEmployeePdf("thp"); });
  bind("exportCompanyHoursPdf", chooseCompanyHourPdf);
  bind("printCompanyTimesheet", chooseCompanyTimesheetPdf);
- bind("exportAssignedCompanyTimesheets", exportAssignedCompanyTimesheetsPdf);
+ bind("exportAssignedCompanyTimesheets", openCompanyTimesheetExportPicker);
+
+ if (el("selectAllCompanyTimesheetExports")) el("selectAllCompanyTimesheetExports").onclick = function () { setAllCompanyTimesheetExports(true); };
+ if (el("clearCompanyTimesheetExports")) el("clearCompanyTimesheetExports").onclick = function () { setAllCompanyTimesheetExports(false); };
+ if (el("confirmCompanyTimesheetExport")) el("confirmCompanyTimesheetExport").onclick = confirmCompanyTimesheetExport;
 
  window.exportCompanyHourTimesheetPdf = exportCompanyHourPdf;
  window.chooseCompanyHourTimesheetForExport = chooseCompanyHourPdf;
  window.exportCompanyTimesheetPdf = exportCompanyTimesheetPdf;
  window.chooseCompanyTimesheetForExport = chooseCompanyTimesheetPdf;
+ window.openCompanyTimesheetExportPicker = openCompanyTimesheetExportPicker;
 
  window.__BETPRES_RUN_EXPORT_TESTS__ = async function () {
   var month = todayMonthValue();
