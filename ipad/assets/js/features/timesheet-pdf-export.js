@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.1.3";
+ var APP_VERSION = "5.1.4";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -135,8 +135,9 @@ function splitRows(rows, size) {
   ".company-time-pdf-stack{display:grid;grid-template-rows:1fr 1fr;min-height:6.4mm}",
   ".company-time-pdf-stack span{display:flex;align-items:center;justify-content:center;min-height:3.15mm;line-height:1;border-bottom:1px solid #d6e0e8}",
   ".company-time-pdf-stack span:last-child{border-bottom:0}.company-time-pdf-stack em{color:#082f61;font-size:6.2px;font-style:normal;font-weight:850}",
- ".company-timesheet-pdf-table .number{width:7mm}.company-timesheet-pdf-table .name{width:48mm}.company-timesheet-pdf-table .sum{width:10mm}",
-   ".company-timesheet-pdf-table tbody tr{height:8.5mm}.company-timesheet-pdf-table tbody td.name strong{font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+ ".company-timesheet-pdf-table{height:156mm}.company-timesheet-pdf-table .number{width:7mm}.company-timesheet-pdf-table .name{width:48mm}.company-timesheet-pdf-table .sum{width:10mm}",
+   ".company-timesheet-pdf-table thead th{font-size:8.4px}.company-timesheet-pdf-table tbody tr{height:9mm}.company-timesheet-pdf-table tbody td{height:9mm;font-size:9px}.company-timesheet-pdf-table tbody td.name strong{font-size:14px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-timesheet-pdf-table tfoot td{font-size:8.5px}",
+  ".company-timesheet-pdf-table .company-time-pdf-stack{min-height:8.7mm}.company-timesheet-pdf-table .company-time-pdf-stack span{min-height:4.3mm}.company-timesheet-pdf-table .company-time-pdf-stack em{font-size:7.4px}",
    ".company-status-table .number{width:3%}.company-status-table .name{width:19%;padding-left:2.4mm!important;padding-right:1.2mm!important}.company-status-table .day{width:2.35%;padding-left:.2mm!important;padding-right:.2mm!important;font-size:6.4px}.company-status-table .sum{width:5.15%}",
    ".company-status-table th,.company-status-table td{height:4.4mm;padding-top:.15mm;padding-bottom:.15mm}",
    ".company-status-table tbody td.name strong{font-size:11px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-status-table tbody td:not(.name){font-size:6.8px}.company-status-table tfoot td.name{font-size:8px}",

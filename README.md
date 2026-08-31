@@ -1,4 +1,4 @@
-# BETPRES SiteDesk Online 5.1.3
+# BETPRES SiteDesk Online 5.1.4
 
 Jedna online PWA aplikácia pre notebook, iPad a iPhone. Všetky zariadenia používajú rovnaké rozhranie a po pripojení k rovnakému pracovnému priestoru Supabase zdieľajú údaje.
 
