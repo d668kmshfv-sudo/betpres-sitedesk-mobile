@@ -28,6 +28,73 @@
   if(value.includes("nízk")||value.includes("nizk"))return"ok";
   return"warn"
  }
+ var diaryEditorPhotos=[];
+ function diaryUid(){
+  if(typeof uid==="function")return uid("diary");
+  return"diary-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9)
+ }
+ function diaryPhotoUid(){return"photo-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9)}
+ async function prepareDiaryPhoto(file){
+  if(!file||!String(file.type||"").startsWith("image/"))throw new Error("Vyber fotografiu.");
+  var url=URL.createObjectURL(file),picture=new Image();
+  try{
+   await new Promise(function(resolve,reject){picture.onload=resolve;picture.onerror=function(){reject(new Error("Fotografiu sa nepodarilo načítať."))};picture.src=url});
+   var scale=Math.min(1,1400/Math.max(picture.naturalWidth,picture.naturalHeight)),canvas=document.createElement("canvas");
+   canvas.width=Math.max(1,Math.round(picture.naturalWidth*scale));canvas.height=Math.max(1,Math.round(picture.naturalHeight*scale));
+   var context=canvas.getContext("2d");context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(picture,0,0,canvas.width,canvas.height);
+   var dataUrl=canvas.toDataURL("image/jpeg",.72);
+   return{id:diaryPhotoUid(),name:file.name||"foto.jpg",type:"image/jpeg",size:Math.round(dataUrl.length*.75),dataUrl:dataUrl}
+  }finally{URL.revokeObjectURL(url)}
+ }
+ function updateDiaryPhotoStatus(message){
+  var status=document.getElementById("mobileDiaryPhotoStatus");
+  if(status)status.textContent=message||("Fotografie: "+diaryEditorPhotos.length+" / 6. Pôvodné fotografie sa pri úprave zachovajú.")
+ }
+ function diaryAuthor(existing){
+  if(existing?.author||existing?.createdBy)return existing.author||existing.createdBy;
+  try{if(typeof cloudConfig!=="undefined"&&cloudConfig.displayName)return cloudConfig.displayName}catch(error){}
+  try{if(typeof cloudSessionUser==="function")return cloudSessionUser()?.email||""}catch(error){}
+  return"iPad / notebook"
+ }
+ function openDiaryEditor(id){
+  if(typeof state==="undefined")return;
+  if(!Array.isArray(state.mobileDiary))state.mobileDiary=[];
+  var item=id?state.mobileDiary.find(function(row){return row.id===id}):null,done=item?isDone(item):false,modal=document.getElementById("mobileDiaryModal");
+  if(!modal)return;
+  document.getElementById("mobileDiaryModalTitle").textContent=item?"Upraviť denný zápis":"Nový denný zápis";
+  document.getElementById("mobileDiaryId").value=item?.id||"";
+  document.getElementById("mobileDiaryTitle").value=item?.title||"";
+  document.getElementById("mobileDiaryText").value=item?.text||"";
+  document.getElementById("mobileDiaryPlace").value=item?.place||item?.object||"";
+  document.getElementById("mobileDiaryDueDate").value=item?.dueDate||"";
+  document.getElementById("mobileDiaryPriority").value=item?.priority||"Stredná";
+  document.getElementById("mobileDiaryStatus").value=done?"Splnené":"Aktívne";
+  document.getElementById("mobileDiaryPhotos").value="";
+  diaryEditorPhotos=Array.isArray(item?.photos)?item.photos.slice():[];
+  updateDiaryPhotoStatus();modal.classList.remove("hidden");
+  setTimeout(function(){document.getElementById("mobileDiaryTitle")?.focus()},40)
+ }
+ function saveDiaryEditor(event){
+  event.preventDefault();
+  if(typeof state==="undefined")return;
+  if(!Array.isArray(state.mobileDiary))state.mobileDiary=[];
+  var id=document.getElementById("mobileDiaryId").value,existing=id?state.mobileDiary.find(function(row){return row.id===id}):null,now=new Date().toISOString(),done=document.getElementById("mobileDiaryStatus").value==="Splnené";
+  var record=Object.assign({},existing||{},{
+   id:existing?.id||diaryUid(),projectId:existing?.projectId||state.selectedProjectId,title:document.getElementById("mobileDiaryTitle").value.trim(),text:document.getElementById("mobileDiaryText").value.trim(),place:document.getElementById("mobileDiaryPlace").value.trim(),dueDate:document.getElementById("mobileDiaryDueDate").value,priority:document.getElementById("mobileDiaryPriority").value,status:done?"Splnené":"Aktívne",completed:done,completedAt:done?(existing?.completedAt||now):"",photos:diaryEditorPhotos.slice(),author:diaryAuthor(existing),createdAt:existing?.createdAt||now,updatedAt:now
+  });
+  if(existing)state.mobileDiary[state.mobileDiary.indexOf(existing)]=record;else state.mobileDiary.push(record);
+  document.getElementById("mobileDiaryModal")?.classList.add("hidden");
+  if(typeof save==="function")save(existing?"Zmeny v denníku boli uložené.":"Denný zápis bol uložený.");
+  renderMobileDiaryDashboard();renderMobileDiaryPage()
+ }
+ async function addDiaryEditorPhotos(event){
+  var files=Array.from(event.target.files||[]),free=Math.max(0,6-diaryEditorPhotos.length),selected=files.slice(0,free);
+  if(!free){updateDiaryPhotoStatus("V zázname je už maximálne 6 fotografií.");event.target.value="";return}
+  updateDiaryPhotoStatus("Pripravujem fotografie…");
+  try{for(var index=0;index<selected.length;index++)diaryEditorPhotos.push(await prepareDiaryPhoto(selected[index]));updateDiaryPhotoStatus(files.length>selected.length?"Fotografie: "+diaryEditorPhotos.length+" / 6. Ďalšie sa nezmestili.":"")}
+  catch(error){updateDiaryPhotoStatus("Fotografiu sa nepodarilo pridať: "+error.message)}
+  event.target.value=""
+ }
  function ensureDashboardCard(){
   var grid=document.querySelector(".site-dashboard-grid");
   if(!grid||document.getElementById("dashboardMobileDiaryList"))return;
@@ -116,20 +183,28 @@
         author=item.author||item.createdBy||"Mobilný zápis",
         created=diaryDate(item.updatedAt||item.createdAt),
         due=item.dueDate||"Bez termínu";
-    return '<article class="mobile-diary-page-item '+(done?"is-done":"")+'"><div class="mobile-diary-page-state '+(done?"done":"active")+'">'+(done?"✓":"•")+'</div><div class="mobile-diary-page-body"><div class="mobile-diary-page-title"><div><strong>'+e(item.title||"Zápis z mobilu")+'</strong><small>'+e(author)+" · "+e(created)+'</small></div><span class="task-status '+priorityClass(priority)+'">'+e(priority)+"</span></div>"+(item.text?'<p>'+e(item.text)+"</p>":"")+'<div class="mobile-diary-page-meta"><span>⌖ '+e(place)+'</span><span>Termín: '+e(due)+'</span><span>'+(done?"Dokončené":"Aktívne")+'</span></div></div><button class="ghost mobile-diary-page-toggle" type="button" data-toggle-mobile-diary="'+e(item.id)+'" data-done="'+(done?"1":"0")+'">'+(done?"Obnoviť":"Označiť hotové")+"</button></article>"
+    var photoCount=Array.isArray(item.photos)?item.photos.length:0;
+    return '<article class="mobile-diary-page-item '+(done?"is-done":"")+'"><div class="mobile-diary-page-state '+(done?"done":"active")+'">'+(done?"✓":"•")+'</div><div class="mobile-diary-page-body"><div class="mobile-diary-page-title"><div><strong>'+e(item.title||"Zápis z mobilu")+'</strong><small>'+e(author)+" · "+e(created)+'</small></div><span class="task-status '+priorityClass(priority)+'">'+e(priority)+"</span></div>"+(item.text?'<p>'+e(item.text)+"</p>":"")+'<div class="mobile-diary-page-meta"><span>⌖ '+e(place)+'</span><span>Termín: '+e(due)+'</span><span>'+(done?"Dokončené":"Aktívne")+'</span>'+(photoCount?'<span>Fotografie: '+photoCount+'</span>':"")+'</div></div><div class="mobile-diary-page-actions"><button class="ghost" type="button" data-edit-mobile-diary="'+e(item.id)+'">Upraviť</button><button class="ghost mobile-diary-page-toggle" type="button" data-toggle-mobile-diary="'+e(item.id)+'" data-done="'+(done?"1":"0")+'">'+(done?"Obnoviť":"Označiť hotové")+"</button></div></article>"
    }).join("")||'<div class="mobile-diary-page-empty"><strong>Žiadne záznamy</strong><span>Po synchronizácii sa tu zobrazia zápisy z mobilu pre aktívnu stavbu.</span></div>';
    box.querySelectorAll("[data-toggle-mobile-diary]").forEach(function(button){
     button.onclick=function(){setDiaryItemDone(button.dataset.toggleMobileDiary,button.dataset.done!=="1")}
-   })
+   });
+   box.querySelectorAll("[data-edit-mobile-diary]").forEach(function(button){button.onclick=function(){openDiaryEditor(button.dataset.editMobileDiary)}})
   }catch(error){console.warn("Stránku denníka z mobilu sa nepodarilo vykresliť.",error)}
  }
  function bindPage(){
   var search=document.getElementById("mobileDiarySearch"),
       status=document.getElementById("mobileDiaryStatusFilter"),
-      refresh=document.getElementById("mobileDiaryPageRefresh");
+      refresh=document.getElementById("mobileDiaryPageRefresh"),
+      add=document.getElementById("addMobileDiaryEntry"),
+      form=document.getElementById("mobileDiaryForm"),
+      photos=document.getElementById("mobileDiaryPhotos");
   if(search&&!search.dataset.diaryBound){search.dataset.diaryBound="1";search.oninput=renderMobileDiaryPage}
   if(status&&!status.dataset.diaryBound){status.dataset.diaryBound="1";status.onchange=renderMobileDiaryPage}
   if(refresh&&!refresh.dataset.diaryBound){refresh.dataset.diaryBound="1";refresh.onclick=refreshMobileDiary}
+  if(add&&!add.dataset.diaryBound){add.dataset.diaryBound="1";add.onclick=function(){openDiaryEditor("")}}
+  if(form&&!form.dataset.diaryBound){form.dataset.diaryBound="1";form.onsubmit=saveDiaryEditor}
+  if(photos&&!photos.dataset.diaryBound){photos.dataset.diaryBound="1";photos.onchange=addDiaryEditorPhotos}
  }
  function hook(){
   bindPage();
@@ -145,5 +220,5 @@
  window.addEventListener("hashchange",function(){setTimeout(function(){renderMobileDiaryDashboard();renderMobileDiaryPage()},100)});
  window.renderMobileDiaryDashboard=renderMobileDiaryDashboard;
  window.renderMobileDiaryPage=renderMobileDiaryPage;
- window.__BETPRES_MOBILE_DIARY_TEST__={render:renderMobileDiaryPage,renderDashboard:renderMobileDiaryDashboard,setDone:setDiaryItemDone,isDone:isDone}
+ window.__BETPRES_MOBILE_DIARY_TEST__={render:renderMobileDiaryPage,renderDashboard:renderMobileDiaryDashboard,setDone:setDiaryItemDone,isDone:isDone,open:openDiaryEditor,save:saveDiaryEditor}
 })();

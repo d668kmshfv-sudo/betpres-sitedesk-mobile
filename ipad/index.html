@@ -2,11 +2,11 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
- <meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk Online 5.1.8</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.1.8"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0">
+ <meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk Online 5.1.9</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.1.9"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0">
 
 <script src="assets/js/bootstrap/startup-guard.js?v=5.1.0"></script>
-<script src="assets/js/ipad-bridge.js?v=1.1.8"></script>
+<script src="assets/js/ipad-bridge.js?v=1.1.9"></script>
 
 </head>
 <body>
@@ -14,7 +14,7 @@
 <aside class="sidebar site-sidebar" id="sidebar">
  <div class="brand site-brand">
   <img src="assets/images/navigation-logo.png" alt="Betpres">
-    <div><strong>BETPRES</strong><small>SiteDesk Online 5.1.8</small></div>
+    <div><strong>BETPRES</strong><small>SiteDesk Online 5.1.9</small></div>
  </div>
 
  <nav class="site-nav">
@@ -65,7 +65,7 @@
 
  <div class="site-sidebar-footer">
   <div class="site-version-dot"></div>
-      <div><strong>SiteDesk Online 5.1.8</strong><small>Pasporty · súpisy · smenovky</small></div>
+      <div><strong>SiteDesk Online 5.1.9</strong><small>Pasporty · súpisy · smenovky</small></div>
  </div>
 </aside>
 <main class="main">
@@ -212,7 +212,7 @@
 <section class="view" id="mobileDiary">
  <div class="page-title">
   <div><p>ZÁPISY ZO STAVBY</p><h1>Denník z mobilu</h1></div>
-  <div class="header-actions"><button class="ghost" id="mobileDiaryPageRefresh">Načítať z cloudu</button></div>
+  <div class="header-actions"><button id="addMobileDiaryEntry">+ Pridať záznam</button><button class="ghost" id="mobileDiaryPageRefresh">Načítať z cloudu</button></div>
  </div>
  <div class="mobile-diary-page-help">
   <div><strong>Spoločný denník pre mobil aj počítač</strong><span>Po synchronizácii tu uvidíš záznamy, ktoré píšeš v mobile pre aktívnu stavbu.</span></div>
@@ -1078,6 +1078,24 @@
 </main>
 </div>
 
+<div class="modal hidden" id="mobileDiaryModal"><div class="modal-card wide">
+ <div class="modal-head">
+  <div><p>SPOLOČNÝ STAVEBNÝ DENNÍK</p><h2 id="mobileDiaryModalTitle">Nový denný zápis</h2><small>Záznam sa po synchronizácii zobrazí na mobile, iPade aj notebooku.</small></div>
+  <button type="button" class="close" data-close="mobileDiaryModal">×</button>
+ </div>
+ <form id="mobileDiaryForm" class="form-grid">
+  <input id="mobileDiaryId" type="hidden">
+  <label class="span2">Názov záznamu<input id="mobileDiaryTitle" required placeholder="Čo sa na stavbe riešilo?"></label>
+  <label class="span2">Poznámka<textarea id="mobileDiaryText" rows="5" required placeholder="Priebeh prác, otázka alebo úloha na neskôr"></textarea></label>
+  <label>Miesto / objekt<input id="mobileDiaryPlace" placeholder="napr. strecha, 2. NP"></label>
+  <label>Termín<input id="mobileDiaryDueDate" type="date"></label>
+  <label>Priorita<select id="mobileDiaryPriority"><option>Nízka</option><option selected>Stredná</option><option>Vysoká</option></select></label>
+  <label>Stav<select id="mobileDiaryStatus"><option>Aktívne</option><option>Splnené</option></select></label>
+  <label class="span2 mobile-diary-photo-field">Fotografie (nepovinné)<input id="mobileDiaryPhotos" type="file" accept="image/*" multiple><small id="mobileDiaryPhotoStatus">Môžeš pridať najviac 6 fotografií. Pri úprave sa pôvodné fotografie zachovajú.</small></label>
+  <div class="modal-actions span2"><button type="button" class="ghost" data-close="mobileDiaryModal">Zrušiť</button><button type="submit">Uložiť záznam</button></div>
+ </form>
+</div></div>
+
 <div class="modal hidden" id="companyTimesheetExportModal"><div class="modal-card company-timesheet-export-card">
  <div class="modal-head">
   <div><p>EXPORT SMENOVIEK FIRIEM</p><h2>Vyber firmy do PDF</h2><small id="companyTimesheetExportPeriod"></small></div>
@@ -1666,12 +1684,12 @@ Marek Kováč"></textarea>
 
 <div id="toast" class="toast"></div>
 <script src="assets/js/data/seed-data.js?v=5.1.0"></script><script src="assets/js/data/material-passport-data.js?v=5.1.0"></script><script src="assets/js/vendor/jszip.min.js"></script><script src="assets/js/vendor/exceljs.min.js"></script>
-<script src="assets/js/legacy/sitedesk-core.js?v=5.1.8"></script>
+<script src="assets/js/legacy/sitedesk-core.js?v=5.1.9"></script>
 <script src="assets/js/features/work-spreadsheet.js?v=5.1.0"></script>
 <script src="assets/js/features/work-statement-roundtrip.js?v=5.1.8"></script>
 <script src="assets/js/features/pdf-preview.js?v=5.1.5"></script>
-<script src="assets/js/features/timesheet-pdf-export.js?v=5.1.8"></script>
-<script src="assets/js/features/mobile-diary-dashboard.js?v=5.1.0"></script>
+<script src="assets/js/features/timesheet-pdf-export.js?v=5.1.9"></script>
+<script src="assets/js/features/mobile-diary-dashboard.js?v=5.1.9"></script>
 <script src="assets/js/features/appearance-settings.js?v=5.1.0"></script>
 <script src="assets/js/features/ai-assistant.js?v=5.1.0"></script>
 <script src="assets/js/features/material-samples.js?v=5.1.0"></script></body></html>

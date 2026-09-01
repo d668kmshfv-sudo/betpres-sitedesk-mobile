@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.8";
+const SITE_DESK_APP_VERSION="5.1.9";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -943,14 +943,14 @@ function dataUrlToBlob(dataUrl){
 function encodeStoragePath(path){
  return String(path).split("/").map(encodeURIComponent).join("/")
 }
-async function cloudUploadPhoto(defect,photo,workspaceId){
+async function cloudUploadPhoto(record,photo,workspaceId,folder="defects"){
  if(photo.path)return photo.path;
  if(!photo.dataUrl)return"";
  const currentUser=cloudSessionUser();
  if(!currentUser?.id||!workspaceId)throw new Error("Fotografiu nie je možné nahrať bez pracovného priestoru.");
  const extension=photo.type==="image/png"?"png":"jpg",
        photoId=photo.id||uid("photo"),
-       path=`${workspaceId}/defects/${defect.id}/${photoId}.${extension}`,
+       path=`${workspaceId}/${folder}/${record.id}/${photoId}.${extension}`,
        response=await fetch(`${normalizeCloudUrl(cloudConfig.url)}/storage/v1/object/sitedesk-files/${encodeStoragePath(path)}`,{
         method:"POST",
         headers:{
@@ -980,7 +980,18 @@ async function cloudPrepareState(workspaceId){
   for(let index=0;index<(defect.photos||[]).length;index++){
    const localPhoto=defect.photos[index],
          cloudPhoto=cloudDefect.photos[index];
-   if(localPhoto.dataUrl&&!localPhoto.path){await cloudUploadPhoto(defect,localPhoto,workspaceId);localStateChanged=true}
+   if(localPhoto.dataUrl&&!localPhoto.path){await cloudUploadPhoto(defect,localPhoto,workspaceId,"defects");localStateChanged=true}
+   if(localPhoto.path)cloudPhoto.path=localPhoto.path;
+   delete cloudPhoto.dataUrl
+  }
+ }
+ for(const entry of state.mobileDiary||[]){
+  const cloudEntry=cloudData.mobileDiary.find(item=>item.id===entry.id);
+  if(!cloudEntry)continue;
+  cloudEntry.photos=Array.isArray(cloudEntry.photos)?cloudEntry.photos:[];
+  for(let index=0;index<(entry.photos||[]).length;index++){
+   const localPhoto=entry.photos[index],cloudPhoto=cloudEntry.photos[index];
+   if(localPhoto.dataUrl&&!localPhoto.path){await cloudUploadPhoto(entry,localPhoto,workspaceId,"diary");localStateChanged=true}
    if(localPhoto.path)cloudPhoto.path=localPhoto.path;
    delete cloudPhoto.dataUrl
   }

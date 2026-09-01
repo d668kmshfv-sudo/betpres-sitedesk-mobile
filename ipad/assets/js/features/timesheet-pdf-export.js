@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.1.8";
+ var APP_VERSION = "5.1.9";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -281,8 +281,9 @@ function splitRows(rows, size) {
  }
 
  function companyHourPages(row, month) {
-  var workers = companyHourWorkers(row);
+  var workers = companyHourWorkers(row).slice();
   var rowsPerPage = 15;
+  while (!workers.length || workers.length % rowsPerPage) workers.push({ name: "", values: {} });
   var chunks = splitRows(workers, rowsPerPage);
   var info = monthInfo(month);
   var rate = companyHourRate(row);
@@ -310,8 +311,8 @@ function splitRows(rows, size) {
     totals += '<td class="' + dayMeta(month, day).className + '">' + html(displayValue(companyHourDayTotal(row, day) || "")) + "</td>";
    }
    totals += '<td class="sum">' + html(displayValue(allHours)) + '</td><td class="amount">' + html(euro.format(allHours * rate)) + "</td></tr>";
-   var table = "<table><thead>" + tableHead(month, "Pracovník", true) + "</thead><tbody>" + body + "</tbody><tfoot>" + totals + "</tfoot></table>";
-   pages.push(page("HODINOVÁ SMENOVKA – " + companyName, month, pageIndex + 1, chunks.length, euro.format(rate) + "/h", table, displayValue(allHours) + " h · " + euro.format(allHours * rate)));
+   var table = '<table class="company-timesheet-pdf-table company-hour-timesheet-pdf-table"><thead>' + tableHead(month, "Pracovník", true) + "</thead><tbody>" + body + "</tbody><tfoot>" + totals + "</tfoot></table>";
+   pages.push(page("HODINOVÁ SMENOVKA – " + companyName, month, pageIndex + 1, chunks.length, "15 pracovníkov na stranu · " + euro.format(rate) + "/h", table, displayValue(allHours) + " h · " + euro.format(allHours * rate)));
   });
   return pages;
  }
@@ -590,6 +591,10 @@ function splitRows(rows, size) {
    hourSheet.rows.push({ id: uid("test-hours-choice"), companyId: "", companyName: "Druhá testovacia hodinová firma", hourlyRate: "24", description: "Test výberu exportu", workersText: "Druhý pracovník", workers: [{ id: uid("test-worker-choice"), name: "Druhý pracovník", values: { 1: 8 } }], values: {}, statementItemId: "" });
   }
   selectedCompanyHourRowId = hourSheet.rows[1].id;
+  var hourPages = companyHourPages(hourSheet.rows[0], month);
+  var hourBodyMatch = hourPages[0].match(/<tbody>([\s\S]*?)<\/tbody>/);
+  var hourPrintRows = hourBodyMatch ? (hourBodyMatch[1].match(/<tr>/g) || []).length : 0;
+  if (hourPrintRows !== 15 || hourPages[0].indexOf('company-timesheet-pdf-table company-hour-timesheet-pdf-table') === -1) throw new Error("Hodinová smenovka nie je vyplnená na celú stranu ako firemná smenovka.");
   var duplexTestRow = { id: uid("test-company-duplex"), companyId: "", companyName: "Test obojstrannej smenovky", printPageCount: 2, workers: [{ id: uid("test-company-worker"), name: "Testovací pracovník", values: {} }] };
   var duplexPages = companyTimesheetPages(duplexTestRow, month);
   if (duplexPages.length !== 2 || duplexPages[1].indexOf(">30<") === -1) throw new Error("Firemná smenovka nemá dve strany po 15 pracovníkov.");

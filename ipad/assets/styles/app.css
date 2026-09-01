@@ -4040,14 +4040,16 @@ table input.table-formula-error{background:#fff0f0!important;color:#a11!importan
 .mobile-diary-page-title .task-status.ok{background:#e5f4e9;color:#237347}.mobile-diary-page-title .task-status.danger{background:#fde8e7;color:#a13232}
 .mobile-diary-page-body>p{margin:9px 0;color:#38546a;font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
 .mobile-diary-page-meta{display:flex;flex-wrap:wrap;gap:6px}.mobile-diary-page-meta span{padding:5px 8px;border-radius:8px;background:#edf4f8;color:#526d80;font-size:9px;font-weight:750}
-.mobile-diary-page-toggle{align-self:center;white-space:nowrap}
+.mobile-diary-page-actions{display:grid;gap:7px;align-self:center}.mobile-diary-page-actions button{white-space:nowrap}
+.mobile-diary-photo-field small{color:#6b8191;font-size:10px;font-weight:650;line-height:1.4}
 .mobile-diary-page-empty{display:grid;place-items:center;gap:5px;min-height:220px;border:1px dashed #bfd0dc;border-radius:14px;background:#f9fbfc;color:#6b8191;text-align:center}
 .mobile-diary-page-empty strong{color:#35566d;font-size:15px}.mobile-diary-page-empty span{font-size:11px}
 @media(max-width:800px){
  #purchases,#concrete,#machines,#materialSamples{padding-left:10px!important;padding-right:10px!important}
  .mobile-diary-page-help{align-items:flex-start;flex-direction:column}.mobile-diary-page-toolbar{grid-template-columns:1fr}
  .mobile-diary-page-toolbar>span{padding:2px}.mobile-diary-page-item{grid-template-columns:34px minmax(0,1fr)}
- .mobile-diary-page-toggle{grid-column:2;width:100%}.mobile-diary-page-title{display:grid}
+ #mobileDiary .page-title .header-actions{display:flex;flex-wrap:wrap;justify-content:flex-end}
+ .mobile-diary-page-actions{grid-column:2;grid-template-columns:1fr 1fr;width:100%}.mobile-diary-page-title{display:grid}
 }
 #companyHoursPanel .company-hour-group{
   position:relative;
