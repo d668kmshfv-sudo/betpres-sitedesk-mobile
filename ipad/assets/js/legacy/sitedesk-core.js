@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.6";
+const SITE_DESK_APP_VERSION="5.1.7";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -489,7 +489,7 @@ function siteViewLabel(id){
  return({
   dashboard:"Prehľad stavby",quick:"Rýchle zadávanie",calendar:"Kalendár",mobileDiary:"Denník z mobilu",
   workers:"Stav pracovníkov",defects:"Vady a nedorobky",siteMeetings:"Koordinačné porady",controlDays:"Kontrolné dni",billing:"Fakturácia",
-  workStatements:"Súpis prác",purchases:"Pasport skladu",concrete:"Betóny",machines:"Pasport strojov",materialSamples:"Vzorkovanie materiálov",documents:"Archív dokumentov",
+  workStatements:"Súpis prác",purchases:"Pasport skladu",concrete:"Betóny",materialSamples:"Vzorkovanie materiálov",documents:"Archív dokumentov",
   handover:"Odovzdanie pracoviska",acceptance:"Preberacie protokoly",
   projects:"Stavby",companies:"Firmy a zmluvy",excelImport:"Import z Excelu",appearance:"Vzhľad aplikácie",cloud:"Cloud a databáza",data:"Dáta a záloha"
  })[id]||"Stavebná evidencia"
@@ -616,7 +616,7 @@ let cloudPushRunning=false;
 let cloudLastPushBackupAt=0;
 let cloudRemoteCheckRunning=false;
 let cloudLastLocalChangeAt=0;
-let cloudLocalDirty=false;
+let cloudLocalDirty=Boolean(cloudConfig.localDirty);
 let cloudPendingDescription="Synchronizácia údajov";
 let cloudTeamMembers=[];
 let cloudTeamActivity=[];
@@ -628,16 +628,17 @@ function loadCloudConfig(){
    url:"",
    key:"",
    workspaceName:"Medická – pilot",
-   autoSync:false,
+   autoSync:true,
    lastCloudVersion:0,
    lastCloudUpdatedAt:"",
    lastCloudId:"",
+   localDirty:false,
    currentRole:"none",
    displayName:"",
    lastEmail:"",
    deviceId:localStorage.getItem(KEY+"-device-id")||uid("device")
-  },JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||"{}"))
-  }catch{return{url:"",key:"",workspaceName:"Medická – pilot",autoSync:false,lastCloudVersion:0,lastCloudUpdatedAt:"",lastCloudId:"",currentRole:"none",displayName:"",lastEmail:"",deviceId:uid("device")}}
+  },JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||"{}"),{autoSync:true})
+  }catch{return{url:"",key:"",workspaceName:"Medická – pilot",autoSync:true,lastCloudVersion:0,lastCloudUpdatedAt:"",lastCloudId:"",localDirty:false,currentRole:"none",displayName:"",lastEmail:"",deviceId:uid("device")}}
 }
 function saveCloudConfig(){
  localStorage.setItem(KEY+"-device-id",cloudConfig.deviceId);
@@ -714,12 +715,14 @@ async function cloudSignIn(){
   saveCloudSession(data);
   cloudConfig.lastEmail=email;
   cloudConfig.displayName=displayName||cloudConfig.displayName||"";
+  cloudConfig.autoSync=true;
   saveCloudConfig();
   if(displayName)await cloudUpdateOwnProfile(displayName);
   $("cloudPassword").value="";
   setCloudMessage("cloudAuthMessage","Prihlásenie bolo úspešné. Na tomto počítači ostaneš prihlásený.","success");
   await cloudRefreshWorkspaceStatus();
-  await cloudLoadTeamContext()
+  await cloudLoadTeamContext();
+  await cloudResumeAutomaticSync()
  }catch(error){setCloudMessage("cloudAuthMessage",error.message,"error")}
 }
 async function cloudSignUp(){
@@ -1039,6 +1042,7 @@ async function cloudPush({force=false,silent=false}={}){
   cloudConfig.lastCloudId=remote.id;
   cloudPendingDescription="Synchronizácia údajov";
   cloudLocalDirty=false;
+  cloudConfig.localDirty=false;
   saveCloudConfig();
   cloudSetQuickStatus("connected",`Cloud v${cloudConfig.lastCloudVersion}`);
   setCloudMessage("cloudSyncMessage",`Dáta boli uložené. Cloudová verzia ${cloudConfig.lastCloudVersion}.`,"success");
@@ -1073,6 +1077,7 @@ async function cloudPull({silent=false}={}){
   cloudConfig.lastCloudUpdatedAt=remote.updated_at||"";
   cloudConfig.lastCloudId=remote.id||"";
   cloudLocalDirty=false;
+  cloudConfig.localDirty=false;
   saveCloudConfig();
   await cloudLoadTeamContext(remote);
   renderAll();
@@ -1113,6 +1118,8 @@ async function cloudRefreshWorkspaceStatus(){
 function queueCloudPush(description=""){
  cloudLastLocalChangeAt=Date.now();
  cloudLocalDirty=true;
+ cloudConfig.localDirty=true;
+ saveCloudConfig();
  if(description)cloudPendingDescription=description;
  if(!cloudConfig.autoSync||!cloudSession?.access_token)return;
  if(!["owner","editor"].includes(cloudConfig.currentRole))return;
@@ -1138,6 +1145,24 @@ function startCloudPolling(){
   cloudRemoteCheckRunning=false
  },60000)
 }
+async function cloudResumeAutomaticSync(){
+ if(!cloudConfigured()||!cloudSession?.access_token||!navigator.onLine)return;
+ cloudConfig.autoSync=true;
+ saveCloudConfig();
+ await cloudEnsureSession();
+ const remote=await cloudGetWorkspace();
+ if(!remote)return;
+ const remoteVersion=Number(remote.data_version||0),localVersion=Number(cloudConfig.lastCloudVersion||0);
+ if(remoteVersion>localVersion&&!cloudLocalDirty)await cloudPull({silent:true});
+ else if(cloudLocalDirty&&remoteVersion<=localVersion)await cloudPush({silent:true});
+ else await cloudRefreshWorkspaceStatus();
+ startCloudPolling()
+}
+window.siteDeskAdoptCloudSession=session=>{
+ if(!session?.access_token)return;
+ saveCloudSession(session)
+};
+window.siteDeskResumeCloudSync=cloudResumeAutomaticSync;
 function renderCloudPanel(){
  if(!$("cloudProjectUrl"))return;
  $("cloudProjectUrl").value=cloudConfig.url||"";
@@ -1626,7 +1651,6 @@ function renderActiveView(id=activeViewId()){
   case "workStatements":prepareWorkStatements();break;
   case "purchases":renderPurchases();break;
   case "concrete":renderConcretePassport();break;
-  case "machines":window.renderMachinePassport?.();break;
   case "materialSamples":window.renderMaterialSamples?.();break;
   case "workers":prepareWorkers();break;
   case "handover":prepareHandover(true);break;
@@ -1665,11 +1689,6 @@ function prepareCompaniesView(){
  lastCompaniesViewSignature=signature
 }
 function availableCompanies(currentCompanyId=""){const used=new Set(state.assignments.filter(a=>a.projectId===state.selectedProjectId&&a.companyId!==currentCompanyId).map(a=>a.companyId));return state.companies.filter(c=>!used.has(c.id)).sort((a,b)=>a.name.localeCompare(b.name,"sk"))}
-function assignmentCompanyOptions(currentCompanyId=""){
- const used=new Set(state.assignments.filter(a=>a.projectId===state.selectedProjectId&&a.companyId!==currentCompanyId).map(a=>a.companyId));
- const rows=[...state.companies].sort((a,b)=>a.name.localeCompare(b.name,"sk"));
- return `<option value="">Vyber firmu</option>`+rows.map(c=>{const assigned=used.has(c.id),selected=c.id===currentCompanyId;return `<option value="${esc(c.id)}"${selected?" selected":""}${assigned?" disabled":""}>${esc(c.name)}${assigned?" — už na tejto stavbe":""}</option>`}).join("")
-}
 function assignmentAddenda(item){if(!item)return[];if(!Array.isArray(item.addenda))item.addenda=[];return item.addenda}
 function assignmentAddendumLabel(item){return `Dodatok č. ${String(item?.number||"").trim()||"—"}`}
 function renderCompanies(){const q=$("companySearch").value.trim().toLowerCase();const rows=activeAssignments().map(a=>({a,c:company(a.companyId)})).filter(x=>x.c&&`${x.c.name} ${x.c.ico} ${x.c.contact||""} ${x.a.scope||""} ${assignmentAddenda(x.a).map(d=>`${d.number} ${d.name}`).join(" ")}`.toLowerCase().includes(q));$("companyCount").textContent=`${rows.length} firiem`;$("companyTable").innerHTML=rows.map(({a,c})=>{const addenda=assignmentAddenda(a);return `<tr><td><strong>${esc(c.name)}</strong></td><td><strong>${esc(assignmentDocRef(a))}</strong>${addenda.length?`<div class="assignment-addenda-chips">${addenda.map(d=>`<span title="${esc(d.name||"")}">${esc(assignmentAddendumLabel(d))} · ${esc(d.name||"Bez názvu")} · ${eur.format(parseWorkNumber(d.price||0))}</span>`).join("")}</div>`:""}</td><td>${esc(c.address||"—")}</td><td>${esc(c.postalCity||"—")}</td><td>${esc(c.ico||"—")}</td><td>${esc(c.dic||"—")}</td><td>${esc(c.icdph||"—")}</td><td>${esc(masterContact(c,"contact"))}</td><td>${esc(masterContact(c,"phone"))}</td><td><strong>${esc(a.scope||"—")}</strong></td><td><div class="row-actions multi"><button class="warn" data-edit-assignment="${c.id}">Doklad / predmet</button><button class="assignment-addendum-action" data-add-assignment-addendum="${a.id}">+ Dodatok</button><button class="ghost" data-edit-company="${c.id}">Údaje firmy</button><button data-handover-company="${c.id}">Odovzdanie</button><button class="danger" data-remove-assignment="${c.id}">Odobrať</button></div></td></tr>`}).join("")||`<tr><td colspan="11" style="text-align:center;color:#789;padding:30px">Na tejto stavbe zatiaľ nie sú firmy. Klikni na „Priradiť existujúcu firmu“.</td></tr>`;
@@ -1716,9 +1735,9 @@ function openCompany(id){const c=id?company(id):null;$("companyModalTitle").text
 
 $("companyForm").onsubmit=e=>{e.preventDefault();let id=$("companyId").value;let c=id?company(id):null;const isNew=!c;if(!c){id=uid("c");c={id};state.companies.push(c)}Object.assign(c,{name:$("companyName").value.trim(),address:$("companyAddress").value.trim(),postalCity:$("companyPostal").value.trim(),ico:$("companyIco").value.trim(),dic:$("companyDic").value.trim(),icdph:$("companyIcdph").value.trim(),contact:$("companyContact").value.trim(),phone:$("companyPhone").value.trim(),scope:$("companyScope").value.trim()});$("companyModal").classList.add("hidden");localStorage.setItem(KEY,JSON.stringify(state));renderAll();toast(isNew?"Firma bola uložená do databázy. Teraz jej zadaj číslo zmluvy na stavbe.":"Údaje firmy boli upravené.");if(isNew)setTimeout(()=>openAssignment(id),150)};
 
-function renderAssignmentPreview(){const c=company($("assignCompanySelect").value),box=$("assignCompanyPreview");if(!c){const total=state.companies.length,available=availableCompanies().length;box.className="company-preview empty span2";box.innerHTML=!total?"Spoločná databáza firiem je prázdna. Najprv pridaj novú firmu.":!available?"Všetky firmy zo spoločnej databázy už sú priradené k tejto stavbe. V zozname ich uvidíš označené ako „už na tejto stavbe“.":`Vyber jednu z ${available} firiem, ktoré ešte nie sú priradené k tejto stavbe.`;return}box.className="company-preview span2";box.innerHTML=`<div class="company-preview-grid"><div>Firma<strong>${esc(c.name)}</strong></div><div>IČO<strong>${esc(c.ico||"—")}</strong></div><div>Adresa<strong>${esc([c.address,c.postalCity].filter(Boolean).join(", ")||"—")}</strong></div><div>DIČ / IČ DPH<strong>${esc([c.dic,c.icdph].filter(Boolean).join(" / ")||"—")}</strong></div><div>Kontakt<strong>${esc(c.contact||"—")} · ${esc(c.phone||"—")}</strong></div><div>Údaje firmy<strong>Typ dokladu a predmet činnosti doplníš nižšie pre túto stavbu</strong></div></div>`}
+function renderAssignmentPreview(){const c=company($("assignCompanySelect").value),box=$("assignCompanyPreview");if(!c){box.className="company-preview empty span2";box.innerHTML="Vyber firmu zo spoločnej databázy.";return}box.className="company-preview span2";box.innerHTML=`<div class="company-preview-grid"><div>Firma<strong>${esc(c.name)}</strong></div><div>IČO<strong>${esc(c.ico||"—")}</strong></div><div>Adresa<strong>${esc([c.address,c.postalCity].filter(Boolean).join(", ")||"—")}</strong></div><div>DIČ / IČ DPH<strong>${esc([c.dic,c.icdph].filter(Boolean).join(" / ")||"—")}</strong></div><div>Kontakt<strong>${esc(c.contact||"—")} · ${esc(c.phone||"—")}</strong></div><div>Údaje firmy<strong>Typ dokladu a predmet činnosti doplníš nižšie pre túto stavbu</strong></div></div>`}
 
-function openAssignment(companyId=""){const existing=companyId?assignment(state.selectedProjectId,companyId):null;$("assignmentId").value=existing?.id||"";$("assignCompanyTitle").textContent=existing?"Zmeniť doklad a predmet činnosti":"Priradiť existujúcu firmu";$("assignProjectName").textContent=activeProject()?.name||"";$("assignCompanySelect").innerHTML=assignmentCompanyOptions(companyId);$("assignCompanySelect").disabled=!!existing;$("assignContractType").value=assignmentDocType(existing||{});$("assignContract").value=existing?.contractNo||"";$("assignContractStart").value=existing?.contractStart||"";$("assignContractEnd").value=existing?.contractEnd||"";$("assignScope").value=existing?.scope||company(companyId)?.scope||"";$("assignCompanyModal").classList.remove("hidden");renderAssignmentPreview();setTimeout(()=>existing?$("assignContract").focus():$("assignCompanySelect").focus(),60)}
+function openAssignment(companyId=""){const existing=companyId?assignment(state.selectedProjectId,companyId):null;const list=availableCompanies(companyId);$("assignmentId").value=existing?.id||"";$("assignCompanyTitle").textContent=existing?"Zmeniť doklad a predmet činnosti":"Priradiť existujúcu firmu";$("assignProjectName").textContent=activeProject()?.name||"";$("assignCompanySelect").innerHTML=optionList(list,companyId,x=>x.name,"Vyber firmu");$("assignCompanySelect").disabled=!!existing;$("assignContractType").value=assignmentDocType(existing||{});$("assignContract").value=existing?.contractNo||"";$("assignContractStart").value=existing?.contractStart||"";$("assignContractEnd").value=existing?.contractEnd||"";$("assignScope").value=existing?.scope||company(companyId)?.scope||"";$("assignCompanyModal").classList.remove("hidden");renderAssignmentPreview();setTimeout(()=>existing?$("assignContract").focus():$("assignCompanySelect").focus(),60)}
 $("assignCompanySelect").onchange=renderAssignmentPreview;
 $("assignCompanyForm").onsubmit=e=>{e.preventDefault();const assignmentId=$("assignmentId").value,companyId=$("assignCompanySelect").value;if(!companyId)return;let a=assignmentId?state.assignments.find(x=>x.id===assignmentId):assignment(state.selectedProjectId,companyId);if(!a){a={id:uid("a"),projectId:state.selectedProjectId,companyId};state.assignments.push(a)}a.contractType=$("assignContractType").value||"ZoD";a.contractNo=$("assignContract").value.trim();a.contractStart=$("assignContractStart").value||"";a.contractEnd=$("assignContractEnd").value||"";a.scope=$("assignScope").value.trim();$("assignCompanySelect").disabled=false;$("assignCompanyModal").classList.add("hidden");save(assignmentId?"Doklad a predmet činnosti boli upravené.":"Firma bola priradená ku stavbe.")};
 
@@ -7312,10 +7331,11 @@ function acceptanceFillFromAssignment(companyId,force=false){
 const betpresOpenAssignmentOriginal=typeof openAssignment==="function"?openAssignment:null;
 openAssignment=function(companyId=""){
  const existing=companyId?assignment(state.selectedProjectId,companyId):null;
+ const list=availableCompanies(companyId);
  $("assignmentId").value=existing?.id||"";
  $("assignCompanyTitle").textContent=existing?"Zmeniť doklad a predmet činnosti":"Priradiť existujúcu firmu";
  $("assignProjectName").textContent=activeProject()?.name||"";
- $("assignCompanySelect").innerHTML=assignmentCompanyOptions(companyId);
+ $("assignCompanySelect").innerHTML=optionList(list,companyId,x=>x.name,"Vyber firmu");
  $("assignCompanySelect").disabled=!!existing;
  $("assignContractType").value=assignmentDocType(existing||{});
  $("assignContract").value=existing?.contractNo||"";
@@ -7564,7 +7584,7 @@ async function initializeCloudPilot(){
  if(cloudConfigured()&&cloudSession?.access_token){
   try{
    await cloudEnsureSession();
-   await cloudRefreshWorkspaceStatus();
+   await cloudResumeAutomaticSync();
    await cloudLoadTeamContext();
    setCloudMessage("cloudAuthMessage","Prihlásenie bolo obnovené. Na tomto počítači ostávaš prihlásený.","success")
   }catch(error){

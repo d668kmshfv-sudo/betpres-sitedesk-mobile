@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.1.6";
+ var APP_VERSION = "5.1.7";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
