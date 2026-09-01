@@ -3564,7 +3564,7 @@ body.work-focus-mode #workStatements .work-sheet td{height:29px!important;min-he
 body.work-focus-mode #workStatements .work-sheet td input,
 body.work-focus-mode #workStatements .work-sheet td textarea{min-height:28px!important;height:28px!important;font-size:10px!important;padding:2px 4px!important}
 body.work-focus-mode #workStatements .work-sheet td.work-calculated{font-size:9.5px!important}
-.work-sheet.work-overview-mode .previous-col,.work-sheet.work-overview-mode .total-col{display:none!important}
+.work-sheet.work-overview-mode .total-col{display:none!important}
 .work-sheet .work-active-cell{outline:2px solid #217346!important;outline-offset:-2px!important;background:#fff!important;position:relative;z-index:3}
 .work-needs-attention td:first-child{box-shadow:inset 4px 0 0 #dc8b17}
 body.work-focus-mode #workStatements .work-bottom-grid{flex:0 0 auto;display:grid!important;grid-template-columns:minmax(0,2fr) minmax(230px,.8fr) minmax(270px,1fr)!important;gap:5px!important;max-height:78px;margin:5px 0 0!important;overflow:hidden}

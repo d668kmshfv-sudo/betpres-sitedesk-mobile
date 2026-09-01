@@ -131,7 +131,7 @@
   sheetRows.push(rowXml(3, padded(["STAVBA: " + (projectData && projectData.name || ""), "", "", "", documentShort + " č.: " + (assignmentData && assignmentData.contractNo || "—"), "", "", "", "OBDOBIE: " + formatBillingMonth(statement.period), "", "", "SÚPIS č. " + (statement.number || "—") + " · " + fmtDateISO(statement.statementDate)], 18), padded(Array(14).fill(2), 18), {}, 24));
   sheetRows.push(rowXml(4, padded(["POKYNY: Vyplň iba zelené bunky v stĺpci AKTUÁLNY MESIAC – MNOŽSTVO. Ostatné údaje sú chránené a program ich po vrátení skontroluje."], 18), padded(Array(14).fill(4), 18), {}, 28));
   sheetRows.push(rowXml(5, padded([], 18), padded([], 18), {}, 8));
-  var groups = padded(["POLOŽKY", "", "", "", "", "ROZPOČET (" + documentShort + ")", "", "", "AKTUÁLNY MESIAC", "", "DOTERAZ ČERPANÉ", "", "ZOSTÁVA ČERPAŤ", ""], 18);
+  var groups = padded(["POLOŽKY", "", "", "", "", "ROZPOČET (" + documentShort + ")", "", "", "AKTUÁLNY MESIAC", "", "PRESTAVANÉ MINULÉ OBDOBIE", "", "ZOSTÁVA ČERPAŤ", ""], 18);
   var groupStyles = padded([3,3,3,3,3,3,3,3,4,4,5,5,6,6], 18);
   sheetRows.push(rowXml(6, groups, groupStyles, {}, 26));
   var headers = ["TYP", "KÓD", "PODKÓD", "POPIS POLOŽKY", "MJ", "MNOŽSTVO", "J. CENA €", "CENA €", "MNOŽSTVO", "CENA €", "MNOŽSTVO", "CENA €", "MNOŽSTVO", "CENA €", "BETPRES_ITEM_ID", "BETPRES_STATEMENT_ID", "BETPRES_TEMPLATE_VERSION", "BETPRES_SOURCE"];
@@ -233,7 +233,7 @@
   sheet.getCell("I3").value = "OBDOBIE: " + formatBillingMonth(statement.period);
   sheet.getCell("L3").value = "SÚPIS č. " + (statement.number || "—") + " · " + fmtDateISO(statement.statementDate);
   sheet.getCell("A4").value = "POKYNY: Vyplň iba zelené bunky v stĺpci AKTUÁLNY MESIAC – MNOŽSTVO. Ostatné údaje sú chránené a program ich po vrátení skontroluje.";
-  [["A6","POLOŽKY"],["F6","ROZPOČET (" + documentShort + ")"],["I6","AKTUÁLNY MESIAC"],["K6","DOTERAZ ČERPANÉ"],["M6","ZOSTÁVA ČERPAŤ"]].forEach(function (entry) { sheet.getCell(entry[0]).value = entry[1]; });
+  [["A6","POLOŽKY"],["F6","ROZPOČET (" + documentShort + ")"],["I6","AKTUÁLNY MESIAC"],["K6","PRESTAVANÉ MINULÉ OBDOBIE"],["M6","ZOSTÁVA ČERPAŤ"]].forEach(function (entry) { sheet.getCell(entry[0]).value = entry[1]; });
   ["TYP","KÓD","PODKÓD","POPIS POLOŽKY","MJ","MNOŽSTVO","J. CENA €","CENA €","MNOŽSTVO","CENA €","MNOŽSTVO","CENA €","MNOŽSTVO","CENA €","BETPRES_ITEM_ID","BETPRES_STATEMENT_ID","BETPRES_TEMPLATE_VERSION","BETPRES_SOURCE"].forEach(function (value, index) { sheet.getCell(7, index + 1).value = value; });
 
   var navy = "FF082F61", blue = "FF174F7F", pale = "FFEAF2F8", green = "FFE3F4E9", amber = "FFFFF3D8", remaining = "FFE6F0F8", borderColor = "FFA9BAC8";

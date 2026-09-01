@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.7";
+const SITE_DESK_APP_VERSION="5.1.8";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -6488,7 +6488,7 @@ $("exportWorkPdf").onclick=async()=>{
        <th rowspan="2">MJ</th>
        <th colspan="3"><span class="group-title">ROZPOČET (${esc(documentShort)})</span></th>
        <th colspan="2"><span class="group-title">AKTUÁLNY MESIAC</span><small>${esc(formatBillingMonth(s.period))}</small></th>
-       <th colspan="2"><span class="group-title">DOTERAZ ČERPANÉ</span></th>
+       <th colspan="2"><span class="group-title">PRESTAVANÉ MINULÉ OBDOBIE</span></th>
        <th colspan="2"><span class="group-title">ZOSTÁVA ČERPAŤ</span></th>
       </tr>
       <tr class="sub-head-row">
