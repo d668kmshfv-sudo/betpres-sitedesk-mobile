@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.9";
+const SITE_DESK_APP_VERSION="5.1.10";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -1702,9 +1702,12 @@ function prepareCompaniesView(){
 function availableCompanies(currentCompanyId=""){const used=new Set(state.assignments.filter(a=>a.projectId===state.selectedProjectId&&a.companyId!==currentCompanyId).map(a=>a.companyId));return state.companies.filter(c=>!used.has(c.id)).sort((a,b)=>a.name.localeCompare(b.name,"sk"))}
 function assignmentAddenda(item){if(!item)return[];if(!Array.isArray(item.addenda))item.addenda=[];return item.addenda}
 function assignmentAddendumLabel(item){return `Dodatok č. ${String(item?.number||"").trim()||"—"}`}
-function renderCompanies(){const q=$("companySearch").value.trim().toLowerCase();const rows=activeAssignments().map(a=>({a,c:company(a.companyId)})).filter(x=>x.c&&`${x.c.name} ${x.c.ico} ${x.c.contact||""} ${x.a.scope||""} ${assignmentAddenda(x.a).map(d=>`${d.number} ${d.name}`).join(" ")}`.toLowerCase().includes(q));$("companyCount").textContent=`${rows.length} firiem`;$("companyTable").innerHTML=rows.map(({a,c})=>{const addenda=assignmentAddenda(a);return `<tr><td><strong>${esc(c.name)}</strong></td><td><strong>${esc(assignmentDocRef(a))}</strong>${addenda.length?`<div class="assignment-addenda-chips">${addenda.map(d=>`<span title="${esc(d.name||"")}">${esc(assignmentAddendumLabel(d))} · ${esc(d.name||"Bez názvu")} · ${eur.format(parseWorkNumber(d.price||0))}</span>`).join("")}</div>`:""}</td><td>${esc(c.address||"—")}</td><td>${esc(c.postalCity||"—")}</td><td>${esc(c.ico||"—")}</td><td>${esc(c.dic||"—")}</td><td>${esc(c.icdph||"—")}</td><td>${esc(masterContact(c,"contact"))}</td><td>${esc(masterContact(c,"phone"))}</td><td><strong>${esc(a.scope||"—")}</strong></td><td><div class="row-actions multi"><button class="warn" data-edit-assignment="${c.id}">Doklad / predmet</button><button class="assignment-addendum-action" data-add-assignment-addendum="${a.id}">+ Dodatok</button><button class="ghost" data-edit-company="${c.id}">Údaje firmy</button><button data-handover-company="${c.id}">Odovzdanie</button><button class="danger" data-remove-assignment="${c.id}">Odobrať</button></div></td></tr>`}).join("")||`<tr><td colspan="11" style="text-align:center;color:#789;padding:30px">Na tejto stavbe zatiaľ nie sú firmy. Klikni na „Priradiť existujúcu firmu“.</td></tr>`;
+function assignmentOrders(item){if(!item)return[];if(!Array.isArray(item.orders))item.orders=[];return item.orders}
+function assignmentOrderLabel(item){return `Objednávka č. ${String(item?.number||"").trim()||"—"}`}
+function renderCompanies(){const q=$("companySearch").value.trim().toLowerCase();const rows=activeAssignments().map(a=>({a,c:company(a.companyId)})).filter(x=>x.c&&`${x.c.name} ${x.c.ico} ${x.c.contact||""} ${x.a.scope||""} ${assignmentAddenda(x.a).map(d=>`${d.number} ${d.name}`).join(" ")} ${assignmentOrders(x.a).map(d=>`${d.number} ${d.name}`).join(" ")}`.toLowerCase().includes(q));$("companyCount").textContent=`${rows.length} firiem`;$("companyTable").innerHTML=rows.map(({a,c})=>{const addenda=assignmentAddenda(a),orders=assignmentOrders(a);return `<tr><td><strong>${esc(c.name)}</strong></td><td><strong>${esc(assignmentDocRef(a))}</strong>${addenda.length?`<div class="assignment-addenda-chips">${addenda.map(d=>`<span title="${esc(d.name||"")}">${esc(assignmentAddendumLabel(d))} · ${esc(d.name||"Bez názvu")} · ${eur.format(parseWorkNumber(d.price||0))}</span>`).join("")}</div>`:""}${orders.length?`<div class="assignment-addenda-chips assignment-order-chips">${orders.map(d=>`<span title="${esc(d.name||"")}">${esc(assignmentOrderLabel(d))} · ${esc(d.name||"Bez názvu")} · ${eur.format(parseWorkNumber(d.price||0))}</span>`).join("")}</div>`:""}</td><td>${esc(c.address||"—")}</td><td>${esc(c.postalCity||"—")}</td><td>${esc(c.ico||"—")}</td><td>${esc(c.dic||"—")}</td><td>${esc(c.icdph||"—")}</td><td>${esc(masterContact(c,"contact"))}</td><td>${esc(masterContact(c,"phone"))}</td><td><strong>${esc(a.scope||"—")}</strong></td><td><div class="row-actions multi"><button class="warn" data-edit-assignment="${c.id}">Doklad / predmet</button><button class="assignment-addendum-action" data-add-assignment-addendum="${a.id}">+ Dodatok</button><button class="assignment-order-action" data-add-assignment-order="${a.id}">+ Objednávka</button><button class="ghost" data-edit-company="${c.id}">Údaje firmy</button><button data-handover-company="${c.id}">Odovzdanie</button><button class="danger" data-remove-assignment="${c.id}">Odobrať</button></div></td></tr>`}).join("")||`<tr><td colspan="11" style="text-align:center;color:#789;padding:30px">Na tejto stavbe zatiaľ nie sú firmy. Klikni na „Priradiť existujúcu firmu“.</td></tr>`;
 document.querySelectorAll("[data-edit-assignment]").forEach(b=>b.onclick=()=>openAssignment(b.dataset.editAssignment));
 document.querySelectorAll("[data-add-assignment-addendum]").forEach(b=>b.onclick=()=>openAssignmentAddendum(b.dataset.addAssignmentAddendum));
+document.querySelectorAll("[data-add-assignment-order]").forEach(b=>b.onclick=()=>openAssignmentOrder(b.dataset.addAssignmentOrder));
 document.querySelectorAll("[data-edit-company]").forEach(b=>b.onclick=()=>openCompany(b.dataset.editCompany));
 document.querySelectorAll("[data-remove-assignment]").forEach(b=>b.onclick=()=>removeAssignment(b.dataset.removeAssignment));
 document.querySelectorAll("[data-handover-company]").forEach(b=>b.onclick=()=>{showView("handover");$("handoverProject").value=state.selectedProjectId;renderHandoverCompanies(b.dataset.handoverCompany);renderHandover()})}
@@ -1737,6 +1740,23 @@ if($("assignmentAddendumForm"))$("assignmentAddendumForm").onsubmit=event=>{
  if(existing)Object.assign(existing,record);else item.addenda.push(record);
  $("assignmentAddendumId").value="";$("assignmentAddendumNumber").value="";$("assignmentAddendumName").value="";$("assignmentAddendumPrice").value="";
  renderAssignmentAddendumList(item);save(`${assignmentAddendumLabel(record)} bol uložený a je dostupný v súpise prác.`)
+};
+function renderAssignmentOrderList(item){
+ const box=$("assignmentOrderList");if(!box)return;
+ box.innerHTML=assignmentOrders(item).map(order=>`<div class="assignment-addendum-row"><div><strong>${esc(assignmentOrderLabel(order))} · ${esc(order.name||"Bez názvu")}</strong><small>${eur.format(parseWorkNumber(order.price||0))} bez DPH</small></div><div><button type="button" class="ghost" data-edit-assignment-order="${order.id}">Upraviť</button><button type="button" class="danger" data-delete-assignment-order="${order.id}">Vymazať</button></div></div>`).join("")||`<div class="assignment-addendum-empty">Firma zatiaľ nemá pridanú objednávku.</div>`;
+ box.querySelectorAll("[data-edit-assignment-order]").forEach(button=>button.onclick=()=>openAssignmentOrder(item.id,button.dataset.editAssignmentOrder));
+ box.querySelectorAll("[data-delete-assignment-order]").forEach(button=>button.onclick=()=>{const current=assignmentOrders(item).find(x=>x.id===button.dataset.deleteAssignmentOrder);if(!current)return;if(!confirm(`Vymazať ${assignmentOrderLabel(current)} – ${current.name||"bez názvu"}?`))return;item.orders=item.orders.filter(x=>x.id!==current.id);renderAssignmentOrderList(item);save("Objednávka bola odstránená z firmy.")})
+}
+function openAssignmentOrder(assignmentId,orderId=""){
+ const item=state.assignments.find(x=>x.id===assignmentId);if(!item)return;const order=assignmentOrders(item).find(x=>x.id===orderId);
+ $("assignmentOrderAssignmentId").value=item.id;$("assignmentOrderId").value=order?.id||"";$("assignmentOrderTitle").textContent=order?"Upraviť objednávku":"Pridať objednávku";$("assignmentOrderCompanyName").textContent=company(item.companyId)?.name||"Firma";
+ $("assignmentOrderNumber").value=order?.number||"";$("assignmentOrderName").value=order?.name||"";$("assignmentOrderPrice").value=order?.price||"";renderAssignmentOrderList(item);$("assignmentOrderModal").classList.remove("hidden");setTimeout(()=>$("assignmentOrderNumber").focus(),40)
+}
+if($("assignmentOrderForm"))$("assignmentOrderForm").onsubmit=event=>{
+ event.preventDefault();const item=state.assignments.find(x=>x.id===$("assignmentOrderAssignmentId").value);if(!item)return;const id=$("assignmentOrderId").value||uid("ord"),number=$("assignmentOrderNumber").value.trim(),name=$("assignmentOrderName").value.trim(),price=$("assignmentOrderPrice").value.trim();if(!number||!name)return;
+ const duplicate=assignmentOrders(item).find(x=>String(x.number).toLowerCase()===number.toLowerCase()&&x.id!==id);if(duplicate){alert("Objednávka s rovnakým číslom už pri tejto firme existuje.");return}
+ const record={id,number,name,price,updatedAt:new Date().toISOString()},existing=assignmentOrders(item).find(x=>x.id===id);if(existing)Object.assign(existing,record);else item.orders.push(record);
+ $("assignmentOrderId").value="";$("assignmentOrderNumber").value="";$("assignmentOrderName").value="";$("assignmentOrderPrice").value="";renderAssignmentOrderList(item);save(`${assignmentOrderLabel(record)} bola uložená a je dostupná v súpise prác.`)
 };
 $("companySearch").oninput=renderCompanies;
 $("addCompanyBtn").onclick=()=>openAssignment();
@@ -5354,6 +5374,7 @@ function workBudgetDocLabel(type="ZoD",number=""){
  const t=String(type||"ZoD").trim();
  const n=String(number||"").trim();
  if(t.toLowerCase().includes("dodat"))return n?`Dodatok č. ${n}`:"Dodatok";
+ if(t.toLowerCase().startsWith("obj"))return n?`Objednávka č. ${n}`:"Objednávka";
  return "ZoD"
 }
 function workBudgetDocClass(label){return /dodat/i.test(String(label||""))?"addendum":""}
@@ -5368,10 +5389,15 @@ function workBudgetList(companyId=selectedWorkCompanyId){
 function workBudgetOptions(companyId=selectedWorkCompanyId){
  const docs=new Map();
  const companyAssignment=assignment(state.selectedProjectId,companyId);
- docs.set(workDocumentId("ZoD"),{id:workDocumentId("ZoD"),label:"ZoD",title:companyAssignment?.contractNo||""});
+ const baseLabel=assignmentDocType(companyAssignment)==="Obj"?"Objednávka":"ZoD",baseId=workDocumentId(baseLabel);
+ docs.set(baseId,{id:baseId,label:baseLabel,title:companyAssignment?.contractNo||""});
  assignmentAddenda(companyAssignment).forEach(addendum=>{
   const label=assignmentAddendumLabel(addendum),price=parseWorkNumber(addendum.price||0),title=[addendum.name,price?`${eur.format(price)} bez DPH`:""].filter(Boolean).join(" · ");
   docs.set(`assignment-addendum:${addendum.id}`,{id:`assignment-addendum:${addendum.id}`,label,title})
+ });
+ assignmentOrders(companyAssignment).forEach(order=>{
+  const label=assignmentOrderLabel(order),price=parseWorkNumber(order.price||0),title=[order.name,price?`${eur.format(price)} bez DPH`:""].filter(Boolean).join(" · ");
+  docs.set(`assignment-order:${order.id}`,{id:`assignment-order:${order.id}`,label,title})
  });
  workBudgetList(companyId).forEach(b=>{const label=b.label||"Rozpočet",id=canonicalWorkDocumentId(companyId,label,b.id);docs.set(id,{id,label,title:b.title||""})});
  const statement=state.workStatements?.find(x=>x.projectId===state.selectedProjectId&&x.companyId===companyId&&x.period===selectedWorkPeriod);
@@ -5381,8 +5407,8 @@ function workBudgetOptions(companyId=selectedWorkCompanyId){
   if(id&&label&&!docs.has(id))docs.set(id,{id,label,title:""})
  });
  const labels=[...docs.values()].sort((a,b)=>{
-  const ao=/^ZoD$/i.test(a.label||"")?"000":String(a.label||"");
-  const bo=/^ZoD$/i.test(b.label||"")?"000":String(b.label||"");
+  const ao=/^ZoD$/i.test(a.label||"")?"000":/^Dodatok/i.test(a.label||"")?`100-${a.label}`:/^Objednávka/i.test(a.label||"")?`200-${a.label}`:String(a.label||"");
+  const bo=/^ZoD$/i.test(b.label||"")?"000":/^Dodatok/i.test(b.label||"")?`100-${b.label}`:/^Objednávka/i.test(b.label||"")?`200-${b.label}`:String(b.label||"");
   return ao.localeCompare(bo,"sk",{numeric:true})
  });
  return labels.map(b=>`<option value="${esc(b.id)}">${esc(b.label||"Doklad")}${b.title?` – ${esc(b.title)}`:""}</option>`).join("")
@@ -5396,22 +5422,27 @@ function normalizeWorkDocumentLabel(value,defaultToAddendum=false){
  const raw=String(value||"").trim();
  if(!raw)return defaultToAddendum?"":"ZoD";
  if(/^zod$/i.test(raw)||/zmluv/i.test(raw))return"ZoD";
+ if(/^obj/i.test(raw)||/objednáv/i.test(raw)){const number=raw.replace(/^(?:objednávka|obj)\s*(?:č\.?|cislo|číslo)?\s*/i,"").trim();return number?`Objednávka č. ${number}`:"Objednávka"}
  const number=raw.replace(/^dodatok\s*(?:č\.?|cislo|číslo)?\s*/i,"").trim();
  return number?`Dodatok č. ${number}`:(defaultToAddendum?"":"ZoD")
 }
 function canonicalWorkDocumentId(companyId,label,preferredId=""){
  const normalized=normalizeWorkDocumentLabel(label)||"ZoD";
  if(/^ZoD$/i.test(normalized))return workDocumentId("ZoD");
- const number=normalized.replace(/^Dodatok\s*č\.\s*/i,"").trim().toLowerCase(),known=assignmentAddenda(assignment(state.selectedProjectId,companyId)).find(addendum=>String(addendum.number||"").trim().toLowerCase()===number);
+ if(/^Objednávka$/i.test(normalized))return workDocumentId("Objednávka");
+ const companyAssignment=assignment(state.selectedProjectId,companyId);
+ if(/^Objednávka\s*č\./i.test(normalized)){const number=normalized.replace(/^Objednávka\s*č\.\s*/i,"").trim().toLowerCase(),known=assignmentOrders(companyAssignment).find(order=>String(order.number||"").trim().toLowerCase()===number);return known?`assignment-order:${known.id}`:(preferredId||workDocumentId(normalized))}
+ const number=normalized.replace(/^Dodatok\s*č\.\s*/i,"").trim().toLowerCase(),known=assignmentAddenda(companyAssignment).find(addendum=>String(addendum.number||"").trim().toLowerCase()===number);
  return known?`assignment-addendum:${known.id}`:(preferredId||workDocumentId(normalized))
 }
 function selectedWorkDocument(){
- const id=selectedWorkDocFilter||workDocumentId("ZoD"),companyId=selectedWorkCompanyId,companyAssignment=assignment(state.selectedProjectId,companyId);
- if(id===workDocumentId("ZoD"))return{id,label:"ZoD"};
+ const companyId=selectedWorkCompanyId,companyAssignment=assignment(state.selectedProjectId,companyId),baseLabel=assignmentDocType(companyAssignment)==="Obj"?"Objednávka":"ZoD",id=selectedWorkDocFilter||workDocumentId(baseLabel);
+ if(id===workDocumentId(baseLabel))return{id,label:baseLabel};
  if(id.startsWith("assignment-addendum:")){
   const addendum=assignmentAddenda(companyAssignment).find(item=>`assignment-addendum:${item.id}`===id);
   if(addendum)return{id,label:assignmentAddendumLabel(addendum)}
  }
+ if(id.startsWith("assignment-order:")){const order=assignmentOrders(companyAssignment).find(item=>`assignment-order:${item.id}`===id);if(order)return{id,label:assignmentOrderLabel(order),number:order.number||"",title:order.name||"",price:order.price||"",order}}
  const budget=workBudgetList(companyId).find(item=>canonicalWorkDocumentId(companyId,item.label||"",item.id)===id);
  if(budget)return{id,label:budget.label||workBudgetDocLabel(budget.docType,budget.docNumber)};
  const statement=getWorkStatement(false),item=statement?.items?.find(row=>workItemSourceId(row)===id);
@@ -5420,7 +5451,8 @@ function selectedWorkDocument(){
 function ensureWorkStatementDocuments(statement){
  (statement?.items||[]).forEach(item=>{
   if(isWorkDocSectionItem(item))return;
-  if(!workItemSourceLabel(item))item.sourceDocLabel="ZoD";
+  const baseLabel=assignmentDocType(assignment(statement.projectId,statement.companyId))==="Obj"?"Objednávka":"ZoD";
+  if(!workItemSourceLabel(item)||(baseLabel==="Objednávka"&&/^ZoD$/i.test(workItemSourceLabel(item))))item.sourceDocLabel=baseLabel;
   item.sourceDocId=canonicalWorkDocumentId(statement.companyId,workItemSourceLabel(item),workItemSourceId(item))
  });
  return statement
@@ -5430,6 +5462,9 @@ function setWorkItemDocument(item,label,sourceDocId=""){
  item.sourceDocLabel=normalized;
  item.sourceDocId=sourceDocId||workDocumentId(normalized)
 }
+function isWorkOrderDocument(id="",label=""){return String(id||"").startsWith("assignment-order:")||/^Objednávka/i.test(String(label||""))}
+function isWorkOrderItem(item){return isWorkOrderDocument(workItemSourceId(item),workItemSourceLabel(item))}
+function isSelectedWorkOrderDocument(){const doc=selectedWorkDocument();return isWorkOrderDocument(doc?.id,doc?.label)}
 function isWorkDocSectionItem(item){return String(item?.type||"").toUpperCase()==="D"&&/^DOKLAD:/i.test(String(item?.description||"").trim())}
 function workSectionForDoc(sourceDocId,label){
  return{id:uid("wi"),budgetItemId:`section:${sourceDocId||label}:${uid("s")}`,sourceDocId:sourceDocId||"",sourceDocLabel:label||"",pc:"",type:"D",code:"",description:`DOKLAD: ${label||"Rozpočet"}`,unit:"",contractQty:"",unitPrice:"",contractTotal:"",currentQty:""}
@@ -5717,6 +5752,7 @@ function workRound(value,decimals=2){const p=10**decimals;return Math.round((Num
 function workQty(value){return Number(value||0).toLocaleString("sk-SK",{minimumFractionDigits:3,maximumFractionDigits:3})}
 function workMoney(value){return Number(value||0).toLocaleString("sk-SK",{minimumFractionDigits:2,maximumFractionDigits:2})}
 function isWorkPriceOnlyItem(item){return item&&(item.priceOnly===true||item.priceOnly==="true")}
+function isWorkOrderStatement(){return isSelectedWorkOrderDocument()}
 function workQtyOrBlank(value,item){return isWorkPriceOnlyItem(item)?"":workQty(value)}
 function workStatementCompanies(){
  const assigned=activeAssignments().map(a=>company(a.companyId)).filter(Boolean);
@@ -5770,13 +5806,13 @@ function workItemCalc(statement,item){
         currentPrice=contractTotal;
   return{priceOnly:true,contractQty:0,unitPrice:0,contractTotal,currentQty:0,currentPrice,previousQty:0,previousPrice:0,totalQty:0,totalPrice:currentPrice,remainingQty:0,remainingPrice:0,difference:0,over:false}
  }
- const contractQty=parseWorkNumber(item.contractQty),unitPrice=parseWorkNumber(item.unitPrice),
+ const orderMode=isWorkOrderItem(item),contractQty=parseWorkNumber(item.contractQty),unitPrice=parseWorkNumber(item.unitPrice),
        explicit=String(item.contractTotal??"").trim(),
-       contractTotal=explicit!==""?parseWorkNumber(explicit):workRound(contractQty*unitPrice,2),
-       currentQty=parseWorkNumber(item.currentQty),previousQty=previousWorkQty(statement,item),
-       currentPrice=workRound(currentQty*unitPrice,2),previousPrice=workRound(previousQty*unitPrice,2),
+       contractTotal=orderMode&&contractQty&&unitPrice?workRound(contractQty*unitPrice,2):(explicit!==""?parseWorkNumber(explicit):workRound(contractQty*unitPrice,2)),
+       currentQty=orderMode?contractQty:parseWorkNumber(item.currentQty),previousQty=orderMode?0:previousWorkQty(statement,item),
+       currentPrice=orderMode?contractTotal:workRound(currentQty*unitPrice,2),previousPrice=orderMode?0:workRound(previousQty*unitPrice,2),
        totalQty=workRound(currentQty+previousQty,6),totalPrice=workRound(totalQty*unitPrice,2),
-       remainingQty=workRound(contractQty-totalQty,6),remainingPrice=workRound(contractTotal-totalPrice,2),
+       remainingQty=orderMode?0:workRound(contractQty-totalQty,6),remainingPrice=orderMode?0:workRound(contractTotal-totalPrice,2),
        difference=workRound(contractTotal-contractQty*unitPrice,2);
  return{priceOnly:false,contractQty,unitPrice,contractTotal,currentQty,currentPrice,previousQty,previousPrice,totalQty,totalPrice,remainingQty,remainingPrice,difference,over:remainingQty<-0.0005}
 }
@@ -5835,13 +5871,15 @@ function renderWorkStatements(){
  const companies=workStatementCompanies();
  if(!companies.some(c=>c.id===selectedWorkCompanyId))selectedWorkCompanyId=companies[0]?.id||"";
  $("workStatementCompany").innerHTML=optionList(companies,selectedWorkCompanyId,x=>x.name,"Vyber firmu");
- if($("workStatementSourceFilter")){const current=selectedWorkDocFilter||workDocumentId("ZoD");$("workStatementSourceFilter").innerHTML=workBudgetOptions(selectedWorkCompanyId);if([...$("workStatementSourceFilter").options].some(o=>o.value===current)){$("workStatementSourceFilter").value=current;selectedWorkDocFilter=current}else{selectedWorkDocFilter=workDocumentId("ZoD");$("workStatementSourceFilter").value=selectedWorkDocFilter}}
+ const currentAssignment=assignment(state.selectedProjectId,selectedWorkCompanyId),baseWorkLabel=assignmentDocType(currentAssignment)==="Obj"?"Objednávka":"ZoD",baseWorkId=workDocumentId(baseWorkLabel);
+ if($("workStatementSourceFilter")){const current=selectedWorkDocFilter||baseWorkId;$("workStatementSourceFilter").innerHTML=workBudgetOptions(selectedWorkCompanyId);if([...$("workStatementSourceFilter").options].some(o=>o.value===current)){$("workStatementSourceFilter").value=current;selectedWorkDocFilter=current}else{selectedWorkDocFilter=baseWorkId;$("workStatementSourceFilter").value=selectedWorkDocFilter}}
  $("workStatementPeriod").value=selectedWorkPeriod||todayMonthValue();if($("workCurrentPeriodHead"))$("workCurrentPeriodHead").textContent=`Aktuálne obdobie (${selectedWorkPeriod})`;
- const statement=getWorkStatement(!!selectedWorkCompanyId),a=assignment(state.selectedProjectId,selectedWorkCompanyId);
- $("workStatementContract").value=a?assignmentDocRef(a):"";
- if($("workInvoiceContractNumber"))$("workInvoiceContractNumber").textContent=a?assignmentDocRef(a):"Bez čísla dokladu";
+ const statement=getWorkStatement(!!selectedWorkCompanyId),a=currentAssignment,activeWorkDoc=selectedWorkDocument(),orderMode=isSelectedWorkOrderDocument();
+ $("workStatementTable")?.classList.toggle("work-order-mode",orderMode);$("workStatements")?.classList.toggle("work-order-statement",orderMode);
+ $("workStatementContract").value=orderMode?[activeWorkDoc?.label,activeWorkDoc?.title].filter(Boolean).join(" – "):(a?assignmentDocRef(a):"");
+ if($("workInvoiceContractNumber"))$("workInvoiceContractNumber").textContent=orderMode?(activeWorkDoc?.label||"Objednávka"):(a?assignmentDocRef(a):"Bez čísla dokladu");
  if(!statement){
-  $("workStatementBody").innerHTML=`<tr class="work-empty-row"><td colspan="17">Na stavbe nie je dostupná firma.</td></tr>`;
+  $("workStatementBody").innerHTML=`<tr class="work-empty-row"><td colspan="${orderMode?7:17}">Na stavbe nie je dostupná firma.</td></tr>`;
   if($("workInvoiceAmount"))$("workInvoiceAmount").textContent="0,00 €";
   if($("workInvoicePeriodName"))$("workInvoicePeriodName").textContent="—";
   if($("workInvoiceContractNumber"))$("workInvoiceContractNumber").textContent="—";
@@ -5867,9 +5905,13 @@ function renderWorkStatements(){
  else if(workRowFilter==="issues")rows=rows.filter(item=>workItemNeedsAttention(statement,item));
  if($("workVisibleCount"))$("workVisibleCount").textContent=`${rows.length} / ${allRows.length}`;
  selectedWorkItemIds=new Set([...selectedWorkItemIds].filter(id=>rows.some(item=>item.id===id)));
+ $("workStatementTable").querySelector("colgroup").innerHTML=orderMode?`<col class="work-select-col"><col class="work-pc-col"><col class="work-desc-col"><col class="work-unit-col"><col class="work-num-col"><col class="work-money-col"><col class="work-money-col">`:`<col class="work-select-col"><col class="work-pc-col"><col class="work-type-col"><col class="work-code-col"><col class="work-desc-col"><col class="work-unit-col"><col class="work-num-col"><col class="work-money-col"><col class="work-money-col"><col class="work-num-col current-col"><col class="work-money-col current-col"><col class="work-num-col previous-col"><col class="work-money-col previous-col"><col class="work-num-col total-col"><col class="work-money-col total-col"><col class="work-num-col remain-col"><col class="work-money-col remain-col">`;
+ $("workStatementTable").querySelector("thead").innerHTML=orderMode?`<tr><th><input id="workSelectAll" class="work-row-select" type="checkbox" title="Označiť všetky riadky"></th><th>P. č.</th><th>Popis položky</th><th>MJ</th><th>Množstvo</th><th>Cena [EUR]</th><th>Cena celkom [EUR]</th></tr>`:`<tr class="work-group-head"><th rowspan="2"><input id="workSelectAll" class="work-row-select" type="checkbox" title="Označiť všetky riadky"></th><th rowspan="2">P. č.</th><th rowspan="2">Typ</th><th rowspan="2">Kód položky</th><th rowspan="2">Popis položky</th><th rowspan="2">MJ</th><th rowspan="2">Zmluvné<br>množstvo</th><th rowspan="2">J. cena<br>[EUR]</th><th rowspan="2">Cena celkom<br>[EUR]</th><th colspan="2" class="current-col" id="workCurrentPeriodHead">Aktuálne obdobie (${esc(selectedWorkPeriod)})</th><th colspan="2" class="previous-col" id="workPreviousPeriodHead">Prestavané minulé obdobia</th><th colspan="2" class="total-col">Prestavané spolu</th><th colspan="2" class="remain-col">Zostatok</th></tr><tr class="work-sub-head"><th class="current-col">Množstvo</th><th class="current-col">Cena [EUR]</th><th class="previous-col">Množstvo</th><th class="previous-col">Cena [EUR]</th><th class="total-col">Množstvo</th><th class="total-col">Cena [EUR]</th><th class="remain-col">Množstvo</th><th class="remain-col">Cena [EUR]</th></tr>`;
+ if(!orderMode&&$("workPreviousPeriodHead"))$("workPreviousPeriodHead").textContent=previousStatement?`Prestavané minulé obdobia – stav k ${formatBillingMonth(previousStatement.period)}`:"Prestavané minulé obdobia";
  $("workStatementBody").innerHTML=rows.map(item=>{
   const c=workItemCalc(statement,item),section=c.section,selected=selectedWorkItemIds.has(item.id),needsAttention=workItemNeedsAttention(statement,item);
   const docLabel=workItemSourceLabel(item)||"ZoD",docClass=workBudgetDocClass(docLabel);
+  if(orderMode)return `<tr class="${selected?"work-row-selected":""}" data-work-row="${item.id}"><td><input class="work-row-select" type="checkbox" value="${item.id}" ${selected?"checked":""}></td>${workEditCell(item,"pc")}${workEditCell(item,"description")}${workEditCell(item,"unit")}${workEditCell(item,"contractQty","numeric")}${workEditCell(item,"unitPrice","numeric")}${workCalcCell(c.contractTotal,"order-total-col","money",section)}</tr>`;
   return `<tr class="${section?"work-section-row":""} ${section&&docLabel?"work-section-doc":""} ${docClass?"work-doc-addendum":"work-doc-zod"} ${c.over?"work-over":""} ${needsAttention?"work-needs-attention":""} ${selected?"work-row-selected":""}" data-work-row="${item.id}">
    <td><input class="work-row-select" type="checkbox" value="${item.id}" ${selected?"checked":""}></td>
    ${workEditCell(item,"pc")}${workEditCell(item,"type")}${workEditCell(item,"code")}${workEditCell(item,"description")}${workEditCell(item,"unit")}
@@ -5880,7 +5922,7 @@ function renderWorkStatements(){
    ${workCalcCell(c.totalQty,"total-col","qty",c.priceOnly||section)}${workCalcCell(c.totalPrice,"total-col","money",section)}
    ${workCalcCell(c.remainingQty,"remain-col","qty",c.priceOnly||section)}${workCalcCell(c.remainingPrice,"remain-col","money",section)}
   </tr>`
- }).join("")||`<tr class="work-empty-row"><td colspan="17">Súpis je prázdny. Pridaj riadok alebo vlož položky z Excelu cez Ctrl + V.</td></tr>`;
+ }).join("")||`<tr class="work-empty-row"><td colspan="${orderMode?7:17}">Súpis je prázdny. Pridaj riadok alebo vlož položky z Excelu cez Ctrl + V.</td></tr>`;
  attachWorkTableEvents(statement);updateWorkSelectionUI(statement);updateWorkStatementSummary(statement);applyWorkOverviewUI()
 }
 function workEditCell(item,field,cls="",extra=""){
@@ -5913,6 +5955,7 @@ function scheduleWorkStatementSummary(statement){
 function refreshWorkRowCalculations(statement,item,row){
  if(!row||!item)return;
  const c=workItemCalc(statement,item),cells=row.cells;
+ if(isWorkOrderItem(item)){if(cells.length>=7)cells[6].textContent=workMoney(c.contractTotal);scheduleWorkStatementSummary(statement);return}
  if(cells.length<17)return;
  cells[8].classList.toggle("work-difference",Math.abs(c.difference)>.011);
  cells[10].textContent=workMoney(c.currentPrice);
@@ -5990,12 +6033,19 @@ function parseWorkRows(text){
   return line.trim().split(/\s{2,}/).map(x=>x.trim())
  })
 }
+function workItemsForCurrentDocument(statement){
+ const items=(statement?.items||[]).filter(item=>!isWorkDocSectionItem(item));
+ if(isSelectedWorkOrderDocument())return items.filter(item=>workItemSourceId(item)===selectedWorkDocFilter||(!selectedWorkDocFilter&&isWorkOrderItem(item)));
+ return items.filter(item=>!isWorkOrderItem(item))
+}
 function updateWorkStatementSummary(statement){
  const currentAssignment=assignment(
   statement?.projectId||state.selectedProjectId,
   statement?.companyId||selectedWorkCompanyId
  );
- const calculations=statement.items.filter(x=>!isWorkDocSectionItem(x)&&String(x.type||"").toUpperCase()!=="D").map(x=>workItemCalc(statement,x));
+ const orderMode=isSelectedWorkOrderDocument(),calculations=workItemsForCurrentDocument(statement).filter(x=>String(x.type||"").toUpperCase()!=="D").map(x=>workItemCalc(statement,x));
+ $("workStatements")?.classList.toggle("work-order-statement",orderMode);
+ const currentLabel=$("workCurrentTotal")?.previousElementSibling;if(currentLabel)currentLabel.textContent=orderMode?"Cena celkom bez DPH":"Aktuálne obdobie – suma na faktúru";
  const sum=k=>calculations.reduce((a,c)=>a+Number(c[k]||0),0);
  $("workContractTotal").textContent=eur.format(sum("contractTotal"));
  $("workPreviousTotal").textContent=eur.format(sum("previousPrice"));
@@ -6005,7 +6055,7 @@ function updateWorkStatementSummary(statement){
  $("workInvoicePeriod").textContent="bez DPH · vystaviť faktúru";
  $("workInvoicePeriodName").textContent=formatBillingMonth(statement.period);
  if($("workInvoiceCompanyStatement"))$("workInvoiceCompanyStatement").textContent=`${company(statement.companyId)?.name||company(selectedWorkCompanyId)?.name||"Bez firmy"} · súpis č. ${statement.number||"—"}`;
- $("workInvoiceContractNumber").textContent=currentAssignment?.contractNo||"Bez čísla zmluvy";
+ const selectedDoc=selectedWorkDocument();$("workInvoiceContractNumber").textContent=selectedDoc?.number||currentAssignment?.contractNo||"Bez čísla dokladu";
  $("workBuiltTotal").textContent=eur.format(sum("totalPrice"));
  $("workRemainingTotal").textContent=eur.format(sum("remainingPrice"));
  $("workItemCount").textContent=calculations.length;
@@ -6280,9 +6330,9 @@ $("newWorkStatement").onclick=()=>{
    :`Vytvorený súpis pre ${formatBillingMonth(next)}. Do minulých období sa preniesla hodnota Prestavané spolu z ${formatBillingMonth(shiftMonth(next,-1))}.`)
  }else renderWorkStatements()
 };
-function workItemsWithDocumentSections(statement){
+function workItemsWithDocumentSections(statement,sourceItems=null){
  const output=[];let lastDocument="";
- (statement.items||[]).filter(item=>!isWorkDocSectionItem(item)).forEach(item=>{
+ (sourceItems||statement.items||[]).filter(item=>!isWorkDocSectionItem(item)).forEach(item=>{
   const label=workItemSourceLabel(item)||"ZoD";
   if(label!==lastDocument){output.push(workSectionForDoc(workItemSourceId(item)||workDocumentId(label),label));lastDocument=label}
   output.push(item)
@@ -6290,7 +6340,9 @@ function workItemsWithDocumentSections(statement){
  return output
 }
 function workExportRows(statement){
- return workItemsWithDocumentSections(statement).map(item=>{
+ const sourceItems=workItemsForCurrentDocument(statement);
+ if(isSelectedWorkOrderDocument())return sourceItems.filter(item=>String(item.type||"").toUpperCase()!=="D").map(item=>{const c=workItemCalc(statement,item);return[item.pc,item.description,item.unit,c.contractQty,c.unitPrice,c.contractTotal]});
+ return workItemsWithDocumentSections(statement,sourceItems).map(item=>{
   const c=workItemCalc(statement,item),section=String(item.type||"").toUpperCase()==="D",blankQty=c.priceOnly||section;
   if(section)return[item.pc,item.type,item.code,item.description,item.unit,"","","","","","","","","","",""];
   return[item.pc,item.type,item.code,item.description,item.unit,blankQty?"":c.contractQty,blankQty?"":c.unitPrice,c.contractTotal,blankQty?"":c.currentQty,c.currentPrice,blankQty?"":c.previousQty,c.previousPrice,blankQty?"":c.totalQty,c.totalPrice,blankQty?"":c.remainingQty,c.remainingPrice]
@@ -6301,7 +6353,7 @@ function workFileBase(statement){
  return `supis-prac-${safe(c?.name)}-${statement.period}`
 }
 $("exportWorkCsv").onclick=()=>{
- const s=getWorkStatement(false);if(!s)return;const headers=["P. č.","Typ","Kód","Popis","MJ","Zmluvné množstvo","J. cena","Cena celkom","Aktuálne množstvo","Aktuálna cena","Predchádzajúce množstvo","Predchádzajúca cena","Prestavané spolu množstvo","Prestavané spolu cena","Zostatok množstvo","Zostatok cena"],escCsv=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+ const s=getWorkStatement(false);if(!s)return;const headers=isSelectedWorkOrderDocument()?["P. č.","Popis","MJ","Množstvo","Cena","Cena celkom"]:["P. č.","Typ","Kód","Popis","MJ","Zmluvné množstvo","J. cena","Cena celkom","Aktuálne množstvo","Aktuálna cena","Predchádzajúce množstvo","Predchádzajúca cena","Prestavané spolu množstvo","Prestavané spolu cena","Zostatok množstvo","Zostatok cena"],escCsv=v=>`"${String(v??"").replace(/"/g,'""')}"`;
  const data="\uFEFF"+[headers,...workExportRows(s)].map(r=>r.map(escCsv).join(";")).join("\n"),blob=new Blob([data],{type:"text/csv;charset=utf-8"});downloadWorkBlob(blob,workFileBase(s)+".csv")
 };
 function downloadWorkBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),500)}
@@ -6349,24 +6401,27 @@ $("exportWorkXlsx").onclick=async()=>{
  zip.folder("xl").folder("worksheets").file("sheet1.xml",sheet);zip.folder("xl").file("styles.xml",styles);
  const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});downloadWorkBlob(blob,workFileBase(s)+".xlsx")
 };
-function workItemSummary(statement,key){return statement.items.filter(x=>String(x.type||"").toUpperCase()!=="D").reduce((sum,x)=>sum+Number(workItemCalc(statement,x)[key]||0),0)}
-function workItemSummaryQtyDisplay(statement,key){const items=statement.items.filter(x=>String(x.type||"").toUpperCase()!=="D"),hasQty=items.some(x=>!isWorkPriceOnlyItem(x));return hasQty?workQty(workItemSummary(statement,key)):""}
+function workItemSummary(statement,key){return workItemsForCurrentDocument(statement).filter(x=>String(x.type||"").toUpperCase()!=="D").reduce((sum,x)=>sum+Number(workItemCalc(statement,x)[key]||0),0)}
+function workItemSummaryQtyDisplay(statement,key){const items=workItemsForCurrentDocument(statement).filter(x=>String(x.type||"").toUpperCase()!=="D"),hasQty=items.some(x=>!isWorkPriceOnlyItem(x));return hasQty?workQty(workItemSummary(statement,key)):""}
 $("exportWorkPdf").onclick=async()=>{
  const s=getWorkStatement(false);if(!s)return;
  ensureWorkStatementDates(s);
  const project=activeProject(),
        c=company(s.companyId),
        a=assignment(s.projectId,s.companyId),
+       orderMode=isSelectedWorkOrderDocument(),
+       selectedDoc=selectedWorkDocument(),
        previous=previousWorkStatement(s),
        managerFull=project?.manager||"Ing. Peter Baláž – stavbyvedúci",
        managerSigner=managerFull.replace(/\s*[–-]\s*stavbyvedúci.*$/i,"").trim()||"Ing. Peter Baláž",
        supplierSigner=a?.contact||"",
        previousLabel=previous?formatBillingMonth(previous.period):"bez predchádzajúceho obdobia",
-       allItems=workItemsWithDocumentSections(s);
+       allItems=orderMode?workItemsForCurrentDocument(s):workItemsWithDocumentSections(s,workItemsForCurrentDocument(s));
 
  function printRowHtml(item){
   const x=workItemCalc(s,item);
-  if(x.section)return`<tr class="section"><td>${esc(item.pc)}</td><td>${esc(item.type)}</td><td>${esc(item.code)}</td><td class="desc" colspan="10">${esc(item.description)}</td></tr>`;
+  if(x.section)return orderMode?`<tr class="section"><td colspan="6">${esc(item.description)}</td></tr>`:`<tr class="section"><td>${esc(item.pc)}</td><td>${esc(item.type)}</td><td>${esc(item.code)}</td><td class="desc" colspan="10">${esc(item.description)}</td></tr>`;
+  if(orderMode)return`<tr><td>${esc(item.pc)}</td><td class="desc">${esc(item.description)}</td><td>${esc(item.unit)}</td><td>${workQty(x.contractQty)}</td><td>${workMoney(x.unitPrice)}</td><td>${workMoney(x.contractTotal)}</td></tr>`;
   const q=v=>x.priceOnly?"":workQty(v),m=v=>workMoney(v);
   return`<tr>
    <td>${esc(item.pc)}</td>
@@ -6417,8 +6472,8 @@ $("exportWorkPdf").onclick=async()=>{
        printDate=fmtDateISO(s.statementDate),
        periodBounds=`${fmtDateISO(s.dateFrom)} – ${fmtDateISO(s.dateTo)}`,
        scopeText=s.scope||a?.scope||"",
-       contractNumber=a?.contractNo||"",
-       documentShort=assignmentDocShort(a),
+       contractNumber=selectedDoc?.number||a?.contractNo||"",
+       documentShort=orderMode?"Obj.":assignmentDocShort(a),
         currentInvoiceTotal=workItemSummary(s,"currentPrice");
 
  const pages=chunks.map((chunk,index)=>{
@@ -6473,7 +6528,12 @@ $("exportWorkPdf").onclick=async()=>{
 
     <div class="ws-project-line"><strong>Stavba:</strong> <span class="ws-project-name">${esc(project?.name||"")}</span> ${scopeText?`<span class="ws-scope">· ${esc(scopeText)}</span>`:""}</div>
 
-    <table class="ws-table">
+    ${orderMode?`<table class="ws-table ws-order-table">
+     <colgroup><col style="width:7%"><col style="width:48%"><col style="width:9%"><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>
+     <thead><tr><th>P. Č.</th><th class="left">POPIS POLOŽKY</th><th>MJ</th><th>MNOŽSTVO</th><th>CENA €</th><th>CENA CELKOM €</th></tr></thead>
+     <tbody>${rows}</tbody>
+     ${isLast?`<tfoot><tr><td colspan="5" class="left total-label">CELKOM (bez DPH)</td><td class="total-number invoice-current-total">${workMoney(workItemSummary(s,"contractTotal"))}</td></tr></tfoot>`:""}
+    </table>`:`<table class="ws-table">
      <colgroup>
       <col style="width:2.5%">
       <col style="width:3.5%">
@@ -6527,7 +6587,7 @@ $("exportWorkPdf").onclick=async()=>{
        <td class="total-number">${workMoney(workItemSummary(s,"remainingPrice"))}</td>
       </tr>
      </tfoot>`:""}
-    </table>
+    </table>`}
 
     ${isLast?`<div class="ws-bottom">
       ${String(s.note||"").trim()?`<div class="ws-billing-note"><strong>Poznámka k fakturácii:</strong><span>${nl2br(s.note)}</span></div>`:""}

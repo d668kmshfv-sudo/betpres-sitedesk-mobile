@@ -3566,6 +3566,14 @@ body.work-focus-mode #workStatements .work-sheet td textarea{min-height:28px!imp
 body.work-focus-mode #workStatements .work-sheet td.work-calculated{font-size:9.5px!important}
 .work-sheet.work-overview-mode .total-col{display:none!important}
 .work-sheet .work-active-cell{outline:2px solid #217346!important;outline-offset:-2px!important;background:#fff!important;position:relative;z-index:3}
+.work-sheet.work-order-mode{min-width:760px!important;width:100%!important;table-layout:fixed!important}
+.work-sheet.work-order-mode .work-select-col{width:42px!important}.work-sheet.work-order-mode .work-pc-col{width:70px!important}
+.work-sheet.work-order-mode .work-desc-col{width:auto!important}.work-sheet.work-order-mode .work-unit-col{width:80px!important}
+.work-sheet.work-order-mode .work-num-col{width:130px!important}.work-sheet.work-order-mode .work-money-col{width:145px!important}
+.work-sheet.work-order-mode th{font-size:11px!important;height:42px}.work-sheet.work-order-mode td,.work-sheet.work-order-mode td input{font-size:11px!important}
+.work-sheet.work-order-mode .order-total-col{background:#e7f3e7;font-weight:900}
+.work-order-statement .work-summary-card>div:not(.work-current-summary-row){display:none}.work-order-statement .work-summary-card .work-current-summary-row{margin-top:8px}
+.assignment-order-chips span{border-color:#b9d7c1!important;background:#edf8ef!important;color:#18512c!important}.assignment-order-action{background:#e9f5eb!important;color:#18512c!important;border-color:#acd0b5!important}
 .work-needs-attention td:first-child{box-shadow:inset 4px 0 0 #dc8b17}
 body.work-focus-mode #workStatements .work-bottom-grid{flex:0 0 auto;display:grid!important;grid-template-columns:minmax(0,2fr) minmax(230px,.8fr) minmax(270px,1fr)!important;gap:5px!important;max-height:78px;margin:5px 0 0!important;overflow:hidden}
 body.work-focus-mode #workStatements .work-bottom-grid .panel{min-height:0!important;margin:0!important;padding:7px 9px!important;border-radius:9px!important;overflow:hidden}
