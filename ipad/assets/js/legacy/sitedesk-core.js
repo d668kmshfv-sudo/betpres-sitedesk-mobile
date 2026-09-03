@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.10";
+const SITE_DESK_APP_VERSION="5.1.11";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -607,7 +607,7 @@ const CLOUD_CONFIG_KEY=KEY+"-cloud-config";
 const CLOUD_SESSION_KEY=KEY+"-cloud-session";
 const CLOUD_PRE_PULL_BACKUP_KEY=KEY+"-pre-cloud-pull";
 const CLOUD_PRE_PUSH_BACKUP_KEY=KEY+"-pre-cloud-push";
-const SITE_DESK_MOBILE_URL="https://d668kmshfv-sudo.github.io/betpres-sitedesk-mobile/";
+const SITE_DESK_MOBILE_URL="https://d668kmshfv-sudo.github.io/betpres-sitedesk-mobile/ipad/";
 let cloudConfig=loadCloudConfig();
 let cloudSession=loadCloudSession();
 let cloudPushTimer=null;
@@ -659,6 +659,12 @@ function normalizeCloudUrl(value){
 function cloudConfigured(){
  return Boolean(normalizeCloudUrl(cloudConfig.url)&&String(cloudConfig.key||"").trim())
 }
+function cloudKeyIsSecret(value){
+ const key=String(value||"").trim();if(/^sb_secret_/i.test(key))return true;
+ if(!key.includes("."))return false;
+ try{const part=key.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"),payload=JSON.parse(atob(part+"=".repeat((4-part.length%4)%4)));return /service_role|secret/i.test(String(payload.role||""))}catch{return false}
+}
+function assertPublicCloudKey(value){if(cloudKeyIsSecret(value))throw new Error("Toto je tajný Supabase kľúč. Na iPade použi iba Publishable key (sb_publishable_…) alebo verejný anon key.")}
 function cloudAuthHeaders(json=true){
  const headers={apikey:cloudConfig.key};
  if(cloudSession?.access_token)headers.Authorization=`Bearer ${cloudSession.access_token}`;
@@ -719,12 +725,12 @@ async function cloudSignIn(){
   saveCloudConfig();
   if(displayName)await cloudUpdateOwnProfile(displayName);
   $("cloudPassword").value="";
-  setCloudMessage("cloudAuthMessage","Prihlásenie bolo úspešné. Na tomto počítači ostaneš prihlásený.","success");
-  await cloudRefreshWorkspaceStatus();
-  await cloudLoadTeamContext();
-  await cloudResumeAutomaticSync()
- }catch(error){setCloudMessage("cloudAuthMessage",error.message,"error")}
+  setCloudMessage("cloudAuthMessage","Prihlásenie bolo úspešné. Na tomto zariadení ostaneš prihlásený.","success")
+ }catch(error){setCloudMessage("cloudAuthMessage",cloudFriendlyAuthError(error),"error");return}
+ try{await cloudRefreshWorkspaceStatus();await cloudLoadTeamContext();await cloudResumeAutomaticSync()}
+ catch(error){setCloudMessage("cloudSyncMessage",`Prihlásenie je v poriadku, ale pracovný priestor sa zatiaľ nenačítal: ${error.message}`,"error")}
 }
+function cloudFriendlyAuthError(error){const message=String(error?.message||error||"");if(/invalid login credentials/i.test(message))return"Nesprávny e-mail alebo heslo.";if(/email not confirmed/i.test(message))return"E-mail ešte nie je potvrdený. Otvor potvrdzovací e-mail zo Supabase a potom sa prihlás.";if(/failed to fetch|network/i.test(message))return"iPad sa nevie pripojiť k Supabase. Skontroluj internet a Project URL.";return message}
 async function cloudSignUp(){
  const email=$("cloudEmail").value.trim(),
        password=$("cloudPassword").value,
@@ -782,8 +788,8 @@ async function testCloudConnection(){
  cloudConfig.url=normalizeCloudUrl($("cloudProjectUrl").value);
  cloudConfig.key=$("cloudPublishableKey").value.trim();
  cloudConfig.workspaceName=$("cloudWorkspaceName").value.trim()||"Medická – pilot";
- saveCloudConfig();
  try{
+  assertPublicCloudKey(cloudConfig.key);saveCloudConfig();
   setCloudMessage("cloudSyncMessage","Testujem Supabase projekt...","");
   await cloudFetch("/auth/v1/settings",{method:"GET"},false);
   setCloudMessage("cloudSyncMessage","Project URL a verejný kľúč sú platné.","success");
@@ -1262,6 +1268,23 @@ function encodePairingPayload(value){
  let binary="";
  for(let offset=0;offset<bytes.length;offset+=8192)binary+=String.fromCharCode(...bytes.subarray(offset,offset+8192));
  return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")
+}
+function decodeCloudPairingPayload(value){
+ const normalized=String(value||"").replace(/-/g,"+").replace(/_/g,"/"),padded=normalized+"=".repeat((4-normalized.length%4)%4),binary=atob(padded),bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));
+ return JSON.parse(new TextDecoder().decode(bytes))
+}
+function applyCloudPairingFromUrl(){
+ const current=new URL(location.href),encoded=current.searchParams.get("pair");if(!encoded)return{paired:false};
+ try{
+  const data=decodeCloudPairingPayload(encoded),url=normalizeCloudUrl(data.url),parsed=new URL(url),key=String(data.publishableKey||"").trim();
+  if(data.type!=="BETPRES_SITEDESK_PAIRING"||Number(data.version)!==1||parsed.protocol!=="https:"||!key)throw new Error("Neplatný párovací odkaz.");
+  assertPublicCloudKey(key);
+  const email=String(data.email||"").trim(),changed=Boolean(cloudConfig.url&&(normalizeCloudUrl(cloudConfig.url)!==url||cloudConfig.key!==key));
+  if(changed){cloudSession=null;localStorage.removeItem(CLOUD_SESSION_KEY);localStorage.removeItem("betpres-mobile-session-v1")}
+  Object.assign(cloudConfig,{url,key,workspaceName:String(data.workspaceName||"Medická – pilot"),lastEmail:email||cloudConfig.lastEmail||"",autoSync:true});saveCloudConfig();
+  current.searchParams.delete("pair");history.replaceState({},"",`${current.pathname}${current.search}${current.hash}`);
+  return{paired:true,email}
+ }catch(error){current.searchParams.delete("pair");history.replaceState({},"",`${current.pathname}${current.search}${current.hash}`);return{paired:false,error:error.message||"Párovanie sa nepodarilo."}}
 }
 function mobilePairingLink(){
  const email=cloudSessionUser()?.email||cloudConfig.lastEmail||$("cloudEmail")?.value.trim()||"";
@@ -7220,8 +7243,10 @@ siteDeskUiObserver.observe(document.body,{childList:true,subtree:true});
 
 
 $("saveCloudConfig").onclick=()=>{
- cloudConfig.url=normalizeCloudUrl($("cloudProjectUrl").value);
- cloudConfig.key=$("cloudPublishableKey").value.trim();
+ const url=normalizeCloudUrl($("cloudProjectUrl").value),key=$("cloudPublishableKey").value.trim();
+ try{assertPublicCloudKey(key)}catch(error){setCloudMessage("cloudSyncMessage",error.message,"error");return}
+ cloudConfig.url=url;
+ cloudConfig.key=key;
  cloudConfig.workspaceName=$("cloudWorkspaceName").value.trim()||"Medická – pilot";
  cloudConfig.displayName=$("cloudDisplayName").value.trim()||cloudConfig.displayName||"";
  saveCloudConfig();
@@ -7254,6 +7279,7 @@ $("importCloudConnection").onchange=event=>{
   try{
    const data=JSON.parse(reader.result);
    if(data.type!=="BETPRES_SITEDESK_CONNECTION"||!data.url||!data.publishableKey)throw new Error("Neplatný súbor");
+   assertPublicCloudKey(data.publishableKey);
    cloudConfig.url=normalizeCloudUrl(data.url);
    cloudConfig.key=String(data.publishableKey);
    cloudConfig.workspaceName=data.workspaceName||"Medická – pilot";
@@ -7272,6 +7298,7 @@ $("copyMobilePairingLink").onclick=copyMobilePairingLink;
 $("openMobilePairingLink").onclick=()=>window.open($("mobilePairingLink").value,"_blank","noopener");
 $("cloudSignIn").onclick=cloudSignIn;
 $("cloudSignUp").onclick=cloudSignUp;
+[$("cloudEmail"),$("cloudPassword")].filter(Boolean).forEach(input=>input.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();cloudSignIn()}}));
 $("cloudSignOut").onclick=cloudSignOut;
 $("cloudPushData").onclick=()=>cloudPush();
 $("cloudForcePush").onclick=()=>{
@@ -7651,13 +7678,18 @@ renderDocuments=function(){
 };
 
 async function initializeCloudPilot(){
+ const pairing=applyCloudPairingFromUrl();
+ const removedSecret=cloudKeyIsSecret(cloudConfig.key)||sessionStorage.getItem("betpres-cloud-secret-removed")==="1";sessionStorage.removeItem("betpres-cloud-secret-removed");if(removedSecret){cloudConfig.key="";saveCloudConfig();try{const mobile=JSON.parse(localStorage.getItem("betpres-mobile-cloud-v1")||"{}");mobile.key="";localStorage.setItem("betpres-mobile-cloud-v1",JSON.stringify(mobile))}catch{}}
  renderCloudPanel();
+ if(pairing.paired){if(pairing.email)$("cloudEmail").value=pairing.email;setCloudMessage("cloudAuthMessage",cloudSession?.access_token?"iPad je pripojený a prihlásenie zostalo zachované.":"iPad je pripojený k správnemu cloudu. Zadaj už iba svoj e-mail a heslo.","success");showView("cloud")}
+ if(pairing.error){setCloudMessage("cloudAuthMessage",pairing.error,"error");showView("cloud")}
+ if(removedSecret){setCloudMessage("cloudSyncMessage","Tajný Supabase kľúč bol z tohto zariadenia odstránený. Vlož Publishable key (sb_publishable_…) a ulož nastavenie.","error");showView("cloud")}
  if(cloudConfigured()&&cloudSession?.access_token){
   try{
    await cloudEnsureSession();
    await cloudResumeAutomaticSync();
    await cloudLoadTeamContext();
-   setCloudMessage("cloudAuthMessage","Prihlásenie bolo obnovené. Na tomto počítači ostávaš prihlásený.","success")
+   setCloudMessage("cloudAuthMessage","Prihlásenie bolo obnovené. Na tomto zariadení ostávaš prihlásený.","success")
   }catch(error){
    const message=String(error?.message||error||"");
    if(/invalid.*refresh|refresh.*invalid|token.*expired|not authorized|unauthorized|HTTP 401|HTTP 403/i.test(message)){

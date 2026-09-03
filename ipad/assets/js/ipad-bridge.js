@@ -23,13 +23,26 @@
     tokenIssuedAt(session),
     Number(session?._savedAt || 0) / 1000
   );
+  const isSecretKey = (value) => {
+    const key = String(value || "").trim();
+    if (/^sb_secret_/i.test(key)) return true;
+    if (!key.includes(".")) return false;
+    try { const raw = key.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"); return /service_role|secret/i.test(String(JSON.parse(atob(raw + "=".repeat((4 - raw.length % 4) % 4))).role || "")); }
+    catch { return false; }
+  };
 
   function reconcileConfig() {
     const mobile = read(KEYS.mobileConfig, {});
     const desktop = read(KEYS.desktopConfig, {});
     const url = mobile.url || desktop.url || "";
-    const key = mobile.key || desktop.key || "";
+    const key = [mobile.key, desktop.key].find((value) => value && !isSecretKey(value)) || "";
     const workspaceName = mobile.workspaceName || desktop.workspaceName || "Medická – pilot";
+    if (!key && (mobile.key || desktop.key)) {
+      localStorage.setItem(KEYS.desktopConfig, JSON.stringify({ ...desktop, key: "" }));
+      localStorage.setItem(KEYS.mobileConfig, JSON.stringify({ ...mobile, key: "" }));
+      sessionStorage.setItem("betpres-cloud-secret-removed", "1");
+      return;
+    }
     if (!url || !key) return;
     localStorage.setItem(KEYS.desktopConfig, JSON.stringify({
       ...desktop,
@@ -79,7 +92,7 @@
     const badge = document.createElement("div");
     badge.id = "ipadWebBadge";
     badge.className = "ipad-web-badge";
-    badge.innerHTML = '<span>Online · 5.1.10</span>';
+    badge.innerHTML = '<span>Online · 5.1.11</span>';
     document.body.appendChild(badge);
   }
 
