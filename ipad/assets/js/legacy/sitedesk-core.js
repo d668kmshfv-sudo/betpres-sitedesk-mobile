@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.11";
+const SITE_DESK_APP_VERSION="5.1.12";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -5993,7 +5993,8 @@ function refreshWorkRowCalculations(statement,item,row){
 }
 function updateWorkSelectionUI(statement){
  const checks=[...document.querySelectorAll(".work-row-select[value]")],count=selectedWorkItemIds.size,
-       selectAll=$("workSelectAll"),deleteBtn=$("deleteWorkRow"),copyBtn=$("copyWorkRow");
+       selectAll=$("workSelectAll"),deleteBtn=$("deleteWorkRow"),copyBtn=$("copyWorkRow"),
+       moveUp=$("moveWorkRowUp"),moveDown=$("moveWorkRowDown"),reorderBlocked=Boolean(workRowSearch)||workRowFilter!=="all";
  checks.forEach(check=>{
   check.checked=selectedWorkItemIds.has(check.value);
   check.closest("tr")?.classList.toggle("work-row-selected",check.checked)
@@ -6004,7 +6005,39 @@ function updateWorkSelectionUI(statement){
  }
  if(deleteBtn){deleteBtn.disabled=count===0;deleteBtn.textContent=count?`Vymazať označené (${count})`:"Vymazať označené"}
  if(copyBtn)copyBtn.disabled=count!==1;
+ if(moveUp){moveUp.disabled=count===0||reorderBlocked||!canMoveSelectedWorkItems(statement,-1);moveUp.title=reorderBlocked?"Najprv zruš vyhľadávanie a nastav filter Všetky položky.":"Posunúť označené položky o jeden riadok vyššie"}
+ if(moveDown){moveDown.disabled=count===0||reorderBlocked||!canMoveSelectedWorkItems(statement,1);moveDown.title=reorderBlocked?"Najprv zruš vyhľadávanie a nastav filter Všetky položky.":"Posunúť označené položky o jeden riadok nižšie"}
  selectedWorkItemId=count?[...selectedWorkItemIds][0]:""
+}
+function reorderableWorkItems(statement){
+ return (statement?.items||[]).filter(item=>!isWorkDocSectionItem(item)&&(!selectedWorkDocFilter||workItemSourceId(item)===selectedWorkDocFilter))
+}
+function canMoveSelectedWorkItems(statement,direction){
+ const items=reorderableWorkItems(statement);
+ if(!items.some(item=>selectedWorkItemIds.has(item.id)))return false;
+ if(direction<0)return items.some((item,index)=>selectedWorkItemIds.has(item.id)&&index>0&&!selectedWorkItemIds.has(items[index-1].id));
+ return items.some((item,index)=>selectedWorkItemIds.has(item.id)&&index<items.length-1&&!selectedWorkItemIds.has(items[index+1].id))
+}
+function moveSelectedWorkItems(direction){
+ const statement=getWorkStatement(false);
+ if(!statement||!selectedWorkItemIds.size)return;
+ if(workRowSearch||workRowFilter!=="all"){toast("Pre usporiadanie najprv zruš vyhľadávanie a nastav Všetky položky.");return}
+ const items=reorderableWorkItems(statement);
+ let moved=false;
+ const swap=(first,second)=>{
+  const firstIndex=statement.items.indexOf(first),secondIndex=statement.items.indexOf(second);
+  if(firstIndex<0||secondIndex<0)return;
+  [statement.items[firstIndex],statement.items[secondIndex]]=[statement.items[secondIndex],statement.items[firstIndex]];
+  moved=true
+ };
+ if(direction<0){
+  for(let index=1;index<items.length;index++)if(selectedWorkItemIds.has(items[index].id)&&!selectedWorkItemIds.has(items[index-1].id)){swap(items[index-1],items[index]);[items[index-1],items[index]]=[items[index],items[index-1]]}
+ }else{
+  for(let index=items.length-2;index>=0;index--)if(selectedWorkItemIds.has(items[index].id)&&!selectedWorkItemIds.has(items[index+1].id)){swap(items[index],items[index+1]);[items[index],items[index+1]]=[items[index+1],items[index]]}
+ }
+ if(!moved){toast(direction<0?"Označené položky sú už úplne hore.":"Označené položky sú už úplne dole.");return}
+ statement.status="draft";statement.updatedAt=new Date().toISOString();
+ save(direction<0?"Označené položky boli posunuté vyššie.":"Označené položky boli posunuté nižšie.")
 }
 function attachWorkTableEvents(statement){
  const checks=[...document.querySelectorAll(".work-row-select[value]")];
@@ -6165,6 +6198,8 @@ $("copyWorkRow").onclick=()=>{
        index=s.items.indexOf(item);
  s.items.splice(index+1,0,copy);s.status="draft";selectedWorkItemIds.clear();selectedWorkItemIds.add(copy.id);save("Riadok bol skopírovaný.")
 };
+if($("moveWorkRowUp"))$("moveWorkRowUp").onclick=()=>moveSelectedWorkItems(-1);
+if($("moveWorkRowDown"))$("moveWorkRowDown").onclick=()=>moveSelectedWorkItems(1);
 $("deleteWorkRow").onclick=()=>{
  const s=getWorkStatement(false),count=selectedWorkItemIds.size;
  if(!s||!count){alert("Označ riadky, ktoré chceš vymazať.");return}

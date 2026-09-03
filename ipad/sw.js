@@ -1,13 +1,13 @@
-const CACHE = "betpres-sitedesk-online-1.1.11";
+const CACHE = "betpres-sitedesk-online-1.1.12";
 const CACHE_PREFIX = "betpres-sitedesk-online-";
 const SHELL = [
   "./", "index.html", "manifest.webmanifest",
-  "assets/styles/app.css?v=5.1.11", "assets/styles/appearance-settings.css?v=5.1.0",
+  "assets/styles/app.css?v=5.1.12", "assets/styles/appearance-settings.css?v=5.1.0",
   "assets/styles/ai-assistant.css?v=5.1.0", "assets/styles/material-samples.css?v=5.1.0", "assets/styles/ipad.css?v=1.1.0",
   "assets/images/app-icon.png", "assets/images/navigation-logo.png", "assets/images/document-logo.png",
-  "assets/js/ipad-bridge.js?v=1.1.11", "assets/js/bootstrap/startup-guard.js?v=5.1.0",
+  "assets/js/ipad-bridge.js?v=1.1.12", "assets/js/bootstrap/startup-guard.js?v=5.1.0",
   "assets/js/data/seed-data.js?v=5.1.0", "assets/js/data/material-passport-data.js?v=5.1.0",
-  "assets/js/vendor/jszip.min.js", "assets/js/vendor/exceljs.min.js", "assets/js/legacy/sitedesk-core.js?v=5.1.11",
+  "assets/js/vendor/jszip.min.js", "assets/js/vendor/exceljs.min.js", "assets/js/legacy/sitedesk-core.js?v=5.1.12",
   "assets/js/features/work-spreadsheet.js?v=5.1.0", "assets/js/features/work-statement-roundtrip.js?v=5.1.10",
   "assets/js/features/pdf-preview.js?v=5.1.5", "assets/js/features/timesheet-pdf-export.js?v=5.1.9",
   "assets/js/features/mobile-diary-dashboard.js?v=5.1.9", "assets/js/features/appearance-settings.js?v=5.1.0",
