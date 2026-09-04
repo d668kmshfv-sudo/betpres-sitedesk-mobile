@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.16";
+const SITE_DESK_APP_VERSION="5.1.17";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -5547,7 +5547,7 @@ function addManualRowsToStatement(statement,rows,label,preferredDocId=""){
  syncWorkItemsAcrossCompanyMonths(statement,docId);
  return rows.length
 }
-const workCatalogFields=["budgetItemId","sourceDocId","sourceDocLabel","pc","type","code","description","unit","contractQty","unitPrice","contractTotal"];
+const workCatalogFields=["budgetItemId","sourceDocId","sourceDocLabel","pc","type","code","description","unit","contractQty","unitPrice","contractTotal","contractTotalAuto"];
 function matchingWorkCatalogItem(items,source){
  const docId=workItemSourceId(source),budgetKey=String(source.budgetItemId||"").trim(),pc=String(source.pc||"").trim(),code=String(source.code||"").trim(),description=String(source.description||"").trim();
  return (budgetKey&&items.find(item=>String(item.budgetItemId||"").trim()===budgetKey))||
@@ -5953,6 +5953,24 @@ function getWorkStatement(create=true){
  }
  return statement
 }
+function workNumericInputIsValid(value){
+ const raw=String(value??"").trim();
+ if(!raw)return false;
+ if(isWorkFormula(raw))return evalWorkFormula(raw).ok;
+ return /^[0-9+\-*/().,\s€]+$/.test(raw)&&Number.isFinite(parseWorkNumber(raw))
+}
+function updateAutomaticWorkTotal(item){
+ if(!item||isWorkPriceOnlyItem(item))return false;
+ const qtyValid=workNumericInputIsValid(item.contractQty),priceValid=workNumericInputIsValid(item.unitPrice);
+ if(qtyValid&&priceValid){
+  const next=workRound(parseWorkNumber(item.contractQty)*parseWorkNumber(item.unitPrice),2).toFixed(2).replace(".",",");
+  const changed=String(item.contractTotal??"")!==next||item.contractTotalAuto!==true;
+  item.contractTotal=next;item.contractTotalAuto=true;
+  return changed
+ }
+ if(item.contractTotalAuto){item.contractTotal="";return true}
+ return false
+}
 let workRowSearch="",workRowFilter="all",workOverviewMode=true,workDetailsVisible=true;
 function workSearchKey(value){
  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("sk").replace(/[^a-z0-9]+/g,"")
@@ -6070,6 +6088,8 @@ function refreshWorkRowCalculations(statement,item,row){
  const c=workItemCalc(statement,item),cells=row.cells;
  if(isWorkOrderItem(item)){if(cells.length>=7)cells[6].textContent=workMoney(c.contractTotal);scheduleWorkStatementSummary(statement);return}
  if(cells.length<17)return;
+ const totalInput=row.querySelector('[data-work-field="contractTotal"]');
+ if(totalInput&&totalInput!==document.activeElement)totalInput.value=item.contractTotal??"";
  cells[8].classList.toggle("work-difference",Math.abs(c.difference)>.011);
  cells[10].textContent=workMoney(c.currentPrice);
  cells[11].textContent=c.priceOnly?"":workQty(c.previousQty);
@@ -6156,7 +6176,7 @@ function attachWorkTableEvents(statement){
   const fit=()=>{if(inp.tagName==="TEXTAREA"){inp.style.height="auto";inp.style.height=(inp.scrollHeight+2)+"px"}};
   fit();
   inp.onfocus=()=>{beginDirectUndo("Úprava súpisu prác");fit()};
-  inp.oninput=()=>{const item=statement.items.find(x=>x.id===inp.dataset.workItem);if(!item)return;item[inp.dataset.workField]=inp.value;const cell=inp.closest("td");if(cell){cell.classList.toggle("work-formula-field",isWorkFormula(inp.value));cell.classList.toggle("work-formula-error",isWorkFormula(inp.value)&&!evalWorkFormula(inp.value).ok)}fit();statement.status="draft";statement.updatedAt=new Date().toISOString();commitDirectState();refreshWorkRowCalculations(statement,item,inp.closest("tr"))};
+  inp.oninput=()=>{const item=statement.items.find(x=>x.id===inp.dataset.workItem);if(!item)return;const field=inp.dataset.workField;item[field]=inp.value;if(field==="contractTotal")item.contractTotalAuto=false;if(field==="contractQty"||field==="unitPrice")updateAutomaticWorkTotal(item);const cell=inp.closest("td");if(cell){cell.classList.toggle("work-formula-field",isWorkFormula(inp.value));cell.classList.toggle("work-formula-error",isWorkFormula(inp.value)&&!evalWorkFormula(inp.value).ok)}fit();statement.status="draft";statement.updatedAt=new Date().toISOString();commitDirectState();refreshWorkRowCalculations(statement,item,inp.closest("tr"))};
   inp.onblur=()=>{const v=inp.value.trim(),rerender=inp.dataset.workField==="type",item=statement.items.find(x=>x.id===inp.dataset.workItem);if(isWorkFormula(v)&&!evalWorkFormula(v).ok)toast("Vzorec v súpise nie je platný.");if(item&&inp.dataset.workField!=="currentQty")syncWorkItemsAcrossCompanyMonths(statement,workItemSourceId(item));endDirectUndo();commitDirectState();if(rerender)renderWorkStatements()};
   inp.onpaste=e=>handleWorkGridPaste(e,statement,inp.dataset.workItem,inp.dataset.workField)
  })
@@ -6168,7 +6188,9 @@ function handleWorkGridPaste(event,statement,itemId,field){
  event.preventDefault();const rows=parseWorkRows(text),startRow=statement.items.findIndex(x=>x.id===itemId),startCol=Math.max(0,workPasteFields.indexOf(field)),startItem=statement.items[startRow],docId=workItemSourceId(startItem),docLabel=workItemSourceLabel(startItem);
  rows.forEach((cols,r)=>{
   while(statement.items.length<=startRow+r)statement.items.push(createBlankWorkItem(docLabel,docId));
-  const item=statement.items[startRow+r];cols.forEach((value,c)=>{const target=workPasteFields[startCol+c];if(target)item[target]=value})
+  const item=statement.items[startRow+r],supplied=new Set();cols.forEach((value,c)=>{const target=workPasteFields[startCol+c];if(target){item[target]=value;supplied.add(target)}});
+  if(supplied.has("contractTotal")&&String(item.contractTotal??"").trim())item.contractTotalAuto=false;
+  else if(supplied.has("contractQty")||supplied.has("unitPrice"))updateAutomaticWorkTotal(item)
  });
  syncWorkItemsAcrossCompanyMonths(statement,docId);
  statement.updatedAt=new Date().toISOString();save("Riadky boli vložené do súpisu.")
