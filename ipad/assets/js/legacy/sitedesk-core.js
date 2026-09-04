@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.14";
+const SITE_DESK_APP_VERSION="5.1.15";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -5694,7 +5694,7 @@ function renderBudgetImportPreview(){
  const label=workBudgetDocLabel($("budgetImportDocType")?.value,$("budgetImportDocNumber")?.value);
  const total=budgetImportItems.reduce((s,x)=>s+(parseWorkNumber(x.contractTotal)||workRound(parseWorkNumber(x.contractQty)*parseWorkNumber(x.unitPrice),2)),0);
  const mapped=budgetImportRowsRaw.length?` · hlavička riadok ${(budgetImportMapping.headerRow||0)+1}`:"";
- summary.innerHTML=`<div><span>Položky</span><strong>${budgetImportItems.length}</strong></div><div><span>Rozpočet bez DPH</span><strong>${eur.format(total)}</strong></div><div><span>Doklad</span><strong>${esc(label)}${esc(mapped)}</strong></div>`;
+ summary.innerHTML=`<div><span>Položky</span><strong>${budgetImportItems.length}</strong></div><div><span>Cena úvodného súpisu bez DPH</span><strong>${eur.format(total)}</strong></div><div><span>Doklad</span><strong>${esc(label)}${esc(mapped)}</strong></div>`;
  if(!budgetImportItems.length){table.innerHTML=`<tbody><tr><td style="padding:26px;text-align:center;color:#789">Bez načítaných položiek. Načítaj Excel a skontroluj mapovanie stĺpcov.</td></tr></tbody>`;return}
  const rows=budgetImportItems.slice(0,35);
  table.innerHTML=`<thead><tr><th>P. č.</th><th>Typ</th><th>Kód</th><th>Popis</th><th>MJ</th><th>Množstvo</th><th>J. cena</th><th>Cena celkom</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.pc)}</td><td>${esc(r.type)}</td><td>${esc(r.code)}</td><td class="desc">${esc(r.description)}</td><td>${esc(r.unit)}</td><td>${esc(r.contractQty)}</td><td>${esc(r.unitPrice)}</td><td>${esc(r.contractTotal)}</td></tr>`).join("")}${budgetImportItems.length>rows.length?`<tr><td colspan="8" style="text-align:center;color:#789;padding:10px">Náhľad zobrazuje prvých ${rows.length} z ${budgetImportItems.length} položiek.</td></tr>`:""}</tbody>`
@@ -5703,8 +5703,10 @@ function openBudgetImportModal(){
  prepareWorkStatements();
  $("budgetImportCompany").innerHTML=optionList(workStatementCompanies(),selectedWorkCompanyId,x=>x.name,"Vyber firmu");
  $("budgetImportCompany").value=selectedWorkCompanyId||"";
- $("budgetImportDocType").value="ZoD";$("budgetImportDocNumber").value="";$("budgetImportTitle").value="";
+ $("budgetImportDocType").value="ZoD";$("budgetImportDocNumber").value="";$("budgetImportTitle").value="Úvodný súpis – ZoD";
  $("budgetImportFile").value="";budgetImportRowsRaw=[];budgetImportItems=[];budgetImportMapping={headerRow:0,columns:{}};
+ if($("budgetImportPaste"))$("budgetImportPaste").value="";
+ if($("budgetImportAddToStatement"))$("budgetImportAddToStatement").checked=true;
  if($("budgetImportMappingWrap"))$("budgetImportMappingWrap").classList.add("hidden");
  if($("budgetImportRawPreview"))$("budgetImportRawPreview").innerHTML="";
  $("executeBudgetImport").disabled=true;$("executeBudgetImportBottom").disabled=true;
@@ -5712,11 +5714,11 @@ function openBudgetImportModal(){
  renderBudgetImportPreview();$("budgetImportModal").classList.remove("hidden")
 }
 async function readBudgetImportFile(){
- const file=$("budgetImportFile").files[0],status=$("budgetImportStatus");
- if(!file){status.className="import-status error";status.textContent="Vyber Excel alebo CSV súbor s rozpočtom.";return}
+ const file=$("budgetImportFile").files[0],pasted=$("budgetImportPaste")?.value.trim()||"",status=$("budgetImportStatus");
+ if(!file&&!pasted){status.className="import-status error";status.textContent="Vyber Excel/CSV alebo vlož skopírované riadky z Excelu.";return}
  try{
-  status.className="import-status";status.textContent="Načítavam rozpočet…";
-  budgetImportRowsRaw=file.name.toLowerCase().endsWith(".csv")?parseCsv(await file.text()):await parseXlsx(file);
+  status.className="import-status";status.textContent="Načítavam úvodný súpis…";
+  budgetImportRowsRaw=pasted?parseWorkRows(pasted):(file.name.toLowerCase().endsWith(".csv")?parseCsv(await file.text()):await parseXlsx(file));
   const headerIndex=detectBudgetHeaderRow(budgetImportRowsRaw);
   budgetImportMapping=inferBudgetMapping(budgetImportRowsRaw,headerIndex);
   applyBudgetMappingToControls(budgetImportMapping);
@@ -5728,7 +5730,7 @@ async function readBudgetImportFile(){
   updateBudgetImportButtonsAndStatus();
   const hasDescription=budgetImportMapping.columns.description!==undefined;
   status.className=(budgetImportItems.length&&hasDescription)?"import-status success":(hasDescription?"import-status warning":"import-status error");
-  status.textContent=(budgetImportItems.length&&hasDescription)?`Načítaných ${budgetImportItems.length} položiek. Aplikácia navrhla mapovanie stĺpcov – skontroluj ho a importuj.`:(hasDescription?"Súbor sa načítal, ale položky sa nenašli. Skontroluj mapovanie stĺpcov.":"Súbor sa načítal, ale neviem nájsť stĺpec Popis položky. Vyber ho ručne v mapovaní.")
+  status.textContent=(budgetImportItems.length&&hasDescription)?`Načítaných ${budgetImportItems.length} položiek. Skontroluj mapovanie stĺpcov a ulož úvodný súpis firmy.`:(hasDescription?"Údaje sa načítali, ale položky sa nenašli. Skontroluj mapovanie stĺpcov.":"Údaje sa načítali, ale neviem nájsť stĺpec Popis položky. Vyber ho ručne v mapovaní.")
  }catch(err){budgetImportRowsRaw=[];budgetImportItems=[];budgetImportMapping={headerRow:0,columns:{}};if($("budgetImportMappingWrap"))$("budgetImportMappingWrap").classList.add("hidden");renderBudgetImportPreview();$("executeBudgetImport").disabled=true;$("executeBudgetImportBottom").disabled=true;status.className="import-status error";status.textContent=`Súbor sa nepodarilo načítať: ${err.message}`}
 }
 function executeBudgetImport(){
@@ -5739,7 +5741,7 @@ function executeBudgetImport(){
  const docType=$("budgetImportDocType").value||"ZoD",docNumber=$("budgetImportDocNumber").value.trim(),label=workBudgetDocLabel(docType,docNumber),title=$("budgetImportTitle").value.trim()||label,file=$("budgetImportFile").files[0];
  ensureWorkBudgetState();
  const existing=state.workBudgets.find(b=>b.projectId===state.selectedProjectId&&b.companyId===companyId&&String(b.label||"").toLowerCase()===label.toLowerCase());
- if(existing&&!confirm(`Rozpočet ${label} pre túto firmu už existuje. Nahradiť ho novým importom?`))return;
+ if(existing&&!confirm(`Úvodný súpis ${label} pre túto firmu už existuje. Nahradiť ho novými položkami?`))return;
  const id=existing?.id||uid("wb");
  const budget={id,projectId:state.selectedProjectId,companyId,docType,docNumber,label,title,fileName:file?.name||"",importedAt:new Date().toISOString(),items:budgetImportItems.map(x=>({...x,id:x.id||uid("wbi"),sourceDocId:id,sourceDocLabel:label}))};
  if(existing)Object.assign(existing,budget);else state.workBudgets.push(budget);
@@ -5751,7 +5753,7 @@ function executeBudgetImport(){
  }
  $("budgetImportModal").classList.add("hidden");
  selectedWorkDocFilter="";
- save(`Rozpočet ${label} bol importovaný (${budget.items.length} položiek). Do aktuálneho súpisu pridané: ${addedToStatement}.`)
+ save(`Úvodný súpis firmy bol uložený (${budget.items.length} položiek). Položky sa použijú vo všetkých jej mesiacoch.`)
 }
 function loadSelectedBudgetToStatement(){
  const budgets=workBudgetList(selectedWorkCompanyId);
@@ -6387,6 +6389,7 @@ $("confirmWorkPaste").onclick=()=>{
  selectedWorkDocFilter=doc.id;
  $("workPasteModal").classList.add("hidden");save(`${rows.length} riadkov bolo vložených do ${label}. Medzi dokladmi prepínaš filtrom hore.`)
 };
+if($("openInitialWorkStatement"))$("openInitialWorkStatement").onclick=openBudgetImportModal;
 if($("openBudgetImport"))$("openBudgetImport").onclick=openBudgetImportModal;
 if($("loadBudgetToStatement"))$("loadBudgetToStatement").onclick=loadSelectedBudgetToStatement;
 if($("readBudgetImport"))$("readBudgetImport").onclick=readBudgetImportFile;
