@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.13";
+const SITE_DESK_APP_VERSION="5.1.14";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -5558,6 +5558,23 @@ function syncWorkItemsAcrossCompanyMonths(sourceStatement,onlyDocId=""){
  workPreviousIndexCache=new WeakMap();
  return changedStatements
 }
+function mergeWorkItemsFromCompanyMonths(statement){
+ if(!statement)return 0;
+ ensureWorkStatementDocuments(statement);
+ let added=0;
+ const currentItems=(statement.items||[]).filter(item=>!isWorkDocSectionItem(item));
+ state.workStatements.filter(source=>source.id!==statement.id&&source.projectId===statement.projectId&&source.companyId===statement.companyId).sort((a,b)=>a.period.localeCompare(b.period)).forEach(source=>{
+  ensureWorkStatementDocuments(source);
+  (source.items||[]).filter(item=>!isWorkDocSectionItem(item)).forEach(sourceItem=>{
+   if(matchingWorkCatalogItem(currentItems,sourceItem))return;
+   const item={...clone(sourceItem),id:uid("wi"),currentQty:""};if("currentPriceOverride" in item)item.currentPriceOverride="";
+   const docId=workItemSourceId(item),lastIndex=statement.items.reduce((found,candidate,index)=>!isWorkDocSectionItem(candidate)&&workItemSourceId(candidate)===docId?index:found,-1);
+   statement.items.splice(lastIndex<0?statement.items.length:lastIndex+1,0,item);currentItems.push(item);added++
+  })
+ });
+ if(added){statement.updatedAt=new Date().toISOString();workPreviousIndexCache=new WeakMap()}
+ return added
+}
 function budgetHeaderAliases(){return{
  pc:["p. č.","pč","por. č.","poradie","poradové číslo","č.","c.","pol.","polozka c","položka č"],
  type:["typ","druh","t","k/d"],
@@ -5903,7 +5920,11 @@ function getWorkStatement(create=true){
   statement={id:uid("wsu"),projectId:state.selectedProjectId,companyId:selectedWorkCompanyId,period:selectedWorkPeriod,number:Number.isFinite(previousNumber)?previousNumber+1:1,object:template?.object||"",scope:template?.scope||currentAssignment?.scope||"",statementDate:bounds.to,dateFrom:bounds.from,dateTo:bounds.to,note:"",items,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
   state.workStatements.push(statement);commitDirectState()
  }
- if(statement){ensureWorkStatementDates(statement);ensureWorkStatementDocuments(statement)}return statement
+ if(statement){
+  ensureWorkStatementDates(statement);ensureWorkStatementDocuments(statement);
+  if(create){const merged=mergeWorkItemsFromCompanyMonths(statement),synchronized=syncWorkItemsAcrossCompanyMonths(statement);if(merged||synchronized)commitDirectState()}
+ }
+ return statement
 }
 let workRowSearch="",workRowFilter="all",workOverviewMode=true,workDetailsVisible=true;
 function workSearchKey(value){
