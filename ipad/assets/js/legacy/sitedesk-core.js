@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.17";
+const SITE_DESK_APP_VERSION="5.1.18";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -53,7 +53,7 @@ const normalizeStateList=key=>{
 [
  "projects","companies","assignments","billings","materials","purchases","machinePassport",
  "handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays",
- "documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"
+ "documentVersions","calendarEvents","workStatements","workStatementDeletions","workBudgets","defects","mobileDiary","materialSamples"
 ].forEach(normalizeStateList);
 if(!Array.isArray(state.defects))state.defects=[];
 
@@ -1734,7 +1734,7 @@ function renderProjectSelectors(){if(!project(state.selectedProjectId))state.sel
 function renderDashboard(){const p=activeProject();if(!p)return;$('dashTitle').textContent=p.name;const bs=state.billings.filter(b=>b.projectId===p.id),hs=state.handovers.filter(h=>h.projectId===p.id),ps=state.purchases.filter(x=>x.projectId===p.id),assignmentRows=state.assignments.filter(a=>a.projectId===p.id),protocols=state.acceptanceProtocols.filter(x=>x.projectId===p.id);const today=todayISO(),month=today.slice(0,7),day=Number(today.slice(8,10)),todaySheet=syncBetpresWorkerRow(month,workerSheet(month,true))&&workerSheet(month,true),workersToday=(todaySheet?.rows||[]).reduce((sum,r)=>sum+(Number(r.values?.[day])||0),0);$('metricWorkersToday').textContent=workersToday;$('metricWorkersDate').textContent=workersToday?`${fmtDateISO(today)} · spolu na stavbe`:`${fmtDateISO(today)} · dnešný stav zatiaľ nevyplnený`;$('metricBilling').textContent=eur.format(bs.reduce((s,x)=>s+Number(x.amount||0),0));$('metricHandovers').textContent=hs.length;if($('metricPurchases'))$('metricPurchases').textContent=ps.length;const missingAcceptance=Math.max(0,assignmentRows.length-new Set(protocols.map(x=>x.companyId)).size);if($('metricAcceptance'))$('metricAcceptance').textContent=protocols.length;if($('metricAcceptanceText'))$('metricAcceptanceText').textContent=`${missingAcceptance} firiem bez protokolu`;
 const recent=[...ps].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);if($('recentPurchases'))$('recentPurchases').innerHTML='';const monthly={};bs.forEach(b=>monthly[b.month]=(monthly[b.month]||0)+Number(b.amount||0));const keys=Object.keys(monthly).sort().slice(-12);const max=Math.max(1,...keys.map(k=>monthly[k]));$('billingChart').innerHTML=keys.length?keys.map(k=>{const m=Number(k.slice(5));return `<div class="bar-group"><div class="bar ${k===keys.at(-1)?'current':''}" style="height:${Math.max(3,monthly[k]/max*90)}%" data-value="${esc(eur.format(monthly[k]))}"></div><small>${monthNames[m-1]}</small></div>`}).join(''):`<div style="align-self:center;color:#789">Zatiaľ bez fakturácie</div>`;const byCompany={};bs.forEach(b=>byCompany[b.companyId]=(byCompany[b.companyId]||0)+Number(b.amount||0));$('topCompanies').innerHTML=Object.entries(byCompany).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v],i)=>`<div class="rank-row"><b>${i+1}.</b><div><strong>${esc(company(id)?.name||'')}</strong><small>${esc(company(id)?.scope||'')}</small></div><span>${eur.format(v)}</span></div>`).join('')||`<p style="color:#789">Zatiaľ bez údajov.</p>`;$('projectCards').innerHTML=state.projects.slice(0,5).map(x=>`<div class="mini-row"><div><strong>${esc(x.name)}</strong><small>${esc(x.address||'')}</small></div><span class="status">${x.id===state.selectedProjectId?'Aktívna':'Stavba'}</span></div>`).join('')}
 function renderProjects(){$("projectsGrid").innerHTML=state.projects.map(p=>`<article class="panel project-card"><h3>${esc(p.name)}</h3><p>${esc(p.address||"Bez adresy")}</p><div class="project-meta"><span class="chip">${state.assignments.filter(a=>a.projectId===p.id).length} firiem</span><span class="chip">${state.handovers.filter(h=>h.projectId===p.id).length} zápisníc</span><span class="chip">${esc(p.region||"Kraj neuvedený")}</span></div><div class="project-card-actions"><button class="ghost" data-activate-project="${p.id}">${p.id===state.selectedProjectId?"Aktívna stavba":"Nastaviť ako aktívnu"}</button><button class="delete-project" data-delete-project="${p.id}">Vymazať stavbu</button></div></article>`).join("");document.querySelectorAll("[data-activate-project]").forEach(b=>b.onclick=()=>{state.selectedProjectId=b.dataset.activateProject;localStorage.setItem(KEY,JSON.stringify(state));renderAll();toast("Aktívna stavba bola zmenená.")});document.querySelectorAll("[data-delete-project]").forEach(b=>b.onclick=()=>deleteProject(b.dataset.deleteProject))}
-function deleteProject(id){const p=project(id);if(!p)return;if(state.projects.length===1){alert("Poslednú stavbu nie je možné vymazať. Najprv vytvor inú stavbu.");return}const typed=prompt(`Vymazanie je trvalé. Pre potvrdenie napíš presný názov stavby:\n\n${p.name}`);if(typed!==p.name){if(typed!==null)alert("Názov sa nezhoduje. Stavba nebola vymazaná.");return}state.projects=state.projects.filter(x=>x.id!==id);state.assignments=state.assignments.filter(x=>x.projectId!==id);state.billings=state.billings.filter(x=>x.projectId!==id);state.materials=state.materials.filter(x=>x.projectId!==id);state.purchases=state.purchases.filter(x=>x.projectId!==id);state.handovers=state.handovers.filter(x=>x.projectId!==id);state.workerSheets=state.workerSheets.filter(x=>x.projectId!==id);state.betpresTimesheets=state.betpresTimesheets.filter(x=>x.projectId!==id);state.thpTimesheets=state.thpTimesheets.filter(x=>x.projectId!==id);state.companyHourTimesheets=state.companyHourTimesheets.filter(x=>x.projectId!==id);state.companyTimesheets=state.companyTimesheets.filter(x=>x.projectId!==id);state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.projectId!==id);state.siteMeetings=state.siteMeetings.filter(x=>x.projectId!==id);state.controlDays=state.controlDays.filter(x=>x.projectId!==id);state.documentVersions=state.documentVersions.filter(x=>x.projectId!==id);state.calendarEvents=state.calendarEvents.filter(x=>x.projectId!==id);state.workStatements=state.workStatements.filter(x=>x.projectId!==id);state.workBudgets=state.workBudgets.filter(x=>x.projectId!==id);state.materialSamples=state.materialSamples.filter(x=>x.projectId!==id);if(state.selectedProjectId===id)state.selectedProjectId=state.projects[0]?.id||"";save("Stavba a jej naviazané údaje boli vymazané. Firmy zostali v databáze.")}
+function deleteProject(id){const p=project(id);if(!p)return;if(state.projects.length===1){alert("Poslednú stavbu nie je možné vymazať. Najprv vytvor inú stavbu.");return}const typed=prompt(`Vymazanie je trvalé. Pre potvrdenie napíš presný názov stavby:\n\n${p.name}`);if(typed!==p.name){if(typed!==null)alert("Názov sa nezhoduje. Stavba nebola vymazaná.");return}state.projects=state.projects.filter(x=>x.id!==id);state.assignments=state.assignments.filter(x=>x.projectId!==id);state.billings=state.billings.filter(x=>x.projectId!==id);state.materials=state.materials.filter(x=>x.projectId!==id);state.purchases=state.purchases.filter(x=>x.projectId!==id);state.handovers=state.handovers.filter(x=>x.projectId!==id);state.workerSheets=state.workerSheets.filter(x=>x.projectId!==id);state.betpresTimesheets=state.betpresTimesheets.filter(x=>x.projectId!==id);state.thpTimesheets=state.thpTimesheets.filter(x=>x.projectId!==id);state.companyHourTimesheets=state.companyHourTimesheets.filter(x=>x.projectId!==id);state.companyTimesheets=state.companyTimesheets.filter(x=>x.projectId!==id);state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.projectId!==id);state.siteMeetings=state.siteMeetings.filter(x=>x.projectId!==id);state.controlDays=state.controlDays.filter(x=>x.projectId!==id);state.documentVersions=state.documentVersions.filter(x=>x.projectId!==id);state.calendarEvents=state.calendarEvents.filter(x=>x.projectId!==id);state.workStatements=state.workStatements.filter(x=>x.projectId!==id);state.workStatementDeletions=state.workStatementDeletions.filter(x=>x.projectId!==id);state.workBudgets=state.workBudgets.filter(x=>x.projectId!==id);state.materialSamples=state.materialSamples.filter(x=>x.projectId!==id);if(state.selectedProjectId===id)state.selectedProjectId=state.projects[0]?.id||"";save("Stavba a jej naviazané údaje boli vymazané. Firmy zostali v databáze.")}
 $("addProjectBtn").onclick=()=>$("projectModal").classList.remove("hidden");$("projectForm").onsubmit=e=>{e.preventDefault();const id=uid("p");state.projects.push({id,name:$("projectName").value,address:$("projectAddress").value,city:$("projectCity").value,documentCity:$("projectDocumentCity").value||$("projectCity").value,cadastre:$("projectCadastre").value,region:$("projectRegion").value,manager:$("projectManager").value,managerPhone:$("projectManagerPhone").value,constructionPermit:$("projectPermit").value||"áno",constructionLine:$("projectConstructionLine").value,surveyPoints:$("projectSurvey").value||"geodetickým vytýčením",mechanisms:$("projectMechanisms").value,electricity:$("projectElectricity").value||"Zo staveniskového rozvádzača",water:$("projectWater").value||"Staveniskové rozvody",networks:$("projectNetworks").value,documentation:$("projectDocumentation").value||"Bola odovzdaná projektová dokumentácia"});state.selectedProjectId=id;e.target.reset();$("projectPermit").value="áno";$("projectSurvey").value="geodetickým vytýčením";$("projectElectricity").value="Zo staveniskového rozvádzača";$("projectWater").value="Staveniskové rozvody";$("projectDocumentation").value="Bola odovzdaná projektová dokumentácia";$("projectModal").classList.add("hidden");save("Stavba bola pridaná a je pripravená aj pre odovzdanie pracoviska.")};
 function activeAssignments(){return state.assignments.filter(a=>a.projectId===state.selectedProjectId)}function masterContact(c,key){return c?.[key]||"—"}
 function companiesViewSignature(){
@@ -5927,10 +5927,23 @@ function createBlankWorkItem(documentLabel="ZoD",sourceDocId=""){
  return item
 }
 function defaultWorkExample(){return{id:uid("wi"),budgetItemId:uid("budget"),pc:"15",type:"K",code:"273321411.S",description:"Betón základových dosiek, železový (bez výstuže), tr. C 25/30, X0(SK), CL 0,4, Dmax 16",unit:"m3",contractQty:"405,871",unitPrice:"10,00",contractTotal:"4 058,61",currentQty:""}}
+function workStatementDeletionMatches(record,projectId=state.selectedProjectId,companyId=selectedWorkCompanyId,period=selectedWorkPeriod){
+ return record?.projectId===projectId&&record?.companyId===companyId&&record?.period===period
+}
+function workStatementWasDeleted(projectId=state.selectedProjectId,companyId=selectedWorkCompanyId,period=selectedWorkPeriod){
+ return state.workStatementDeletions.some(record=>workStatementDeletionMatches(record,projectId,companyId,period))
+}
+function clearWorkStatementDeletion(projectId=state.selectedProjectId,companyId=selectedWorkCompanyId,period=selectedWorkPeriod){
+ state.workStatementDeletions=state.workStatementDeletions.filter(record=>!workStatementDeletionMatches(record,projectId,companyId,period))
+}
+function restoreDeletedWorkStatement(){
+ clearWorkStatementDeletion();
+ return getWorkStatement(true)
+}
 function getWorkStatement(create=true){
  if(!selectedWorkCompanyId)return null;
  let statement=state.workStatements.find(x=>x.projectId===state.selectedProjectId&&x.companyId===selectedWorkCompanyId&&x.period===selectedWorkPeriod);
- if(!statement&&create){
+ if(!statement&&create&&!workStatementWasDeleted()){
   const previousPeriod=shiftMonth(selectedWorkPeriod,-1);
   const related=state.workStatements.filter(x=>x.projectId===state.selectedProjectId&&x.companyId===selectedWorkCompanyId),previous=related
    .filter(x=>x.projectId===state.selectedProjectId&&x.companyId===selectedWorkCompanyId&&x.period===previousPeriod)
@@ -6010,7 +6023,10 @@ function renderWorkStatements(){
  $("workStatementContract").value=orderMode?[activeWorkDoc?.label,activeWorkDoc?.title].filter(Boolean).join(" – "):(a?assignmentDocRef(a):"");
  if($("workInvoiceContractNumber"))$("workInvoiceContractNumber").textContent=orderMode?(activeWorkDoc?.label||"Objednávka"):(a?assignmentDocRef(a):"Bez čísla dokladu");
  if(!statement){
-  $("workStatementBody").innerHTML=`<tr class="work-empty-row"><td colspan="${orderMode?7:17}">Na stavbe nie je dostupná firma.</td></tr>`;
+  const emptyMessage=selectedWorkCompanyId?"Súpis pre túto firmu a mesiac neexistuje. Tlačidlom Pridať položku vytvoríš nový súpis.":"Na stavbe nie je dostupná firma.";
+  $("workStatementBody").innerHTML=`<tr class="work-empty-row"><td colspan="${orderMode?7:17}">${emptyMessage}</td></tr>`;
+  ["workStatementNumber","workStatementObject","workStatementDate","workStatementDateFrom","workStatementDateTo","workStatementScope","workStatementNote"].forEach(id=>{if($(id))$(id).value=""});
+  if($("deleteWorkStatement"))$("deleteWorkStatement").disabled=true;
   if($("workInvoiceAmount"))$("workInvoiceAmount").textContent="0,00 €";
   if($("workInvoicePeriodName"))$("workInvoicePeriodName").textContent="—";
   if($("workInvoiceContractNumber"))$("workInvoiceContractNumber").textContent="—";
@@ -6018,6 +6034,7 @@ function renderWorkStatements(){
   applyWorkOverviewUI();
   return
  }
+ if($("deleteWorkStatement"))$("deleteWorkStatement").disabled=false;
  $("workStatementNumber").value=statement.number;const previousStatement=previousWorkStatement(statement);if($("workPreviousPeriodHead"))$("workPreviousPeriodHead").textContent=previousStatement?`Prestavané minulé obdobia – stav k ${formatBillingMonth(previousStatement.period)}`:"Prestavané minulé obdobia";
  ensureWorkStatementDates(statement);
  if($("workInvoiceCompanyStatement"))$("workInvoiceCompanyStatement").textContent=`${company(selectedWorkCompanyId)?.name||"Bez firmy"} · súpis č. ${statement.number||"—"}`;
@@ -6269,7 +6286,7 @@ if($("workRowFilter"))$("workRowFilter").onchange=()=>{workRowFilter=$("workRowF
  }
 });
 $("addWorkRow").onclick=()=>{
- const s=getWorkStatement(true),doc=selectedWorkDocument(),item=createBlankWorkItem(doc.label,doc.id);s.items.push(item);s.status="draft";
+ const s=restoreDeletedWorkStatement(),doc=selectedWorkDocument(),item=createBlankWorkItem(doc.label,doc.id);s.items.push(item);s.status="draft";
  syncWorkItemsAcrossCompanyMonths(s,doc.id);
  selectedWorkDocFilter=item.sourceDocId;
  selectedWorkItemIds.clear();selectedWorkItemIds.add(item.id);save(`Položka bola pridaná do dokladu ${doc.label}.`)
@@ -6321,6 +6338,19 @@ $("deleteWorkRow").onclick=()=>{
  if(!confirm(`Vymazať označené riadky (${count})?`))return;
  s.items=s.items.filter(item=>!selectedWorkItemIds.has(item.id));s.status="draft";
  selectedWorkItemIds.clear();selectedWorkItemId="";lastWorkSelectionIndex=-1;save(`${count} riadkov bolo vymazaných.`)
+};
+if($("deleteWorkStatement"))$("deleteWorkStatement").onclick=()=>{
+ const statement=getWorkStatement(false);
+ if(!statement){alert("Pre vybranú firmu a obdobie nie je vytvorený žiadny súpis.");return}
+ const companyName=company(statement.companyId)?.name||"vybraná firma",periodName=formatBillingMonth(statement.period),linkedBillings=state.billings.filter(record=>record.workStatementId===statement.id);
+ const billingWarning=linkedBillings.length?`\n\nSúpis je prepojený s ${linkedBillings.length===1?"jedným záznamom":"viacerými záznamami"} vo fakturácii. Fakturácia zostane zachovaná a odpojí sa od vymazaného súpisu.`:"";
+ if(!confirm(`Naozaj vymazať celý súpis č. ${statement.number||"—"} firmy ${companyName} za ${periodName}?\n\nVymažú sa jeho položky aj mesačné množstvá. Ostatné mesiace firmy zostanú zachované.${billingWarning}`))return;
+ linkedBillings.forEach(record=>{record.workStatementId="";record.sourceLabel=`Pôvodne zo súpisu č. ${statement.number||"—"}`;record.updatedAt=new Date().toISOString()});
+ state.workStatements=state.workStatements.filter(record=>record.id!==statement.id);
+ clearWorkStatementDeletion(statement.projectId,statement.companyId,statement.period);
+ state.workStatementDeletions.push({projectId:statement.projectId,companyId:statement.companyId,period:statement.period,deletedAt:new Date().toISOString()});
+ selectedWorkItemIds.clear();selectedWorkItemId="";lastWorkSelectionIndex=-1;workPreviousIndexCache=new WeakMap();
+ save(`Súpis firmy ${companyName} za ${periodName} bol vymazaný.`);renderWorkStatements()
 };
 
 function workTemplateColumn(headers,aliases,start=0){
@@ -6431,7 +6461,7 @@ if($("readWorkPasteFile"))$("readWorkPasteFile").onclick=readWorkPasteFile;
 $("confirmWorkPaste").onclick=()=>{
  const rows=parseWorkRows($("workPasteTextarea").value);
  if(!rows.length){alert("Vlož najprv riadky z Excelu.");return}
- const doc=selectedWorkDocument(),s=getWorkStatement(true),label=doc.label;
+ const doc=selectedWorkDocument(),s=restoreDeletedWorkStatement(),label=doc.label;
  addManualRowsToStatement(s,rows,label,doc.id);
  selectedWorkDocFilter=doc.id;
  $("workPasteModal").classList.add("hidden");save(`${rows.length} riadkov bolo vložených do ${label}. Medzi dokladmi prepínaš filtrom hore.`)
@@ -6468,8 +6498,10 @@ if($("saveAndBillWorkStatement"))$("saveAndBillWorkStatement").onclick=()=>{
  $("billingCompanyFilter").value=s.companyId;$("billingMonthFilter").value=s.period;$("billingYearFilter").value=s.period.slice(0,4);renderBilling()
 };
 $("refreshPreviousWork").onclick=()=>{
- const statement=getWorkStatement(false),previous=previousWorkStatement(statement);
- if(!statement||!previous){alert("Pre tento súpis neexistuje predchádzajúci mesačný súpis.");return}
+ const statement=getWorkStatement(false);
+ if(!statement){alert("Pre vybraný mesiac nie je vytvorený súpis.");return}
+ const previous=previousWorkStatement(statement);
+ if(!previous){alert("Pre tento súpis neexistuje predchádzajúci mesačný súpis.");return}
  let matched=0;
  statement.items.forEach(item=>{if(matchingPreviousWorkItem(previous,item))matched++});
  statement.updatedAt=new Date().toISOString();
@@ -6482,7 +6514,7 @@ $("previousWorkStatement").onclick=()=>{
  if(exists){renderWorkStatements();toast(`Otvorený súpis pre ${formatBillingMonth(previous)}.`)}
  else{
   const create=confirm(`Súpis pre ${formatBillingMonth(previous)} ešte neexistuje. Vytvoriť ho?`);
-  if(create){getWorkStatement(true);save(`Vytvorený súpis pre ${formatBillingMonth(previous)}.`)}
+  if(create){restoreDeletedWorkStatement();save(`Vytvorený súpis pre ${formatBillingMonth(previous)}.`)}
   else{selectedWorkPeriod=shiftMonth(previous,1);renderWorkStatements()}
  }
 };
@@ -6495,7 +6527,7 @@ $("newWorkStatement").onclick=()=>{
  const next=shiftMonth(selectedWorkPeriod||todayMonthValue(),1),
        existed=state.workStatements.some(x=>x.projectId===state.selectedProjectId&&x.companyId===selectedWorkCompanyId&&x.period===next);
  selectedWorkPeriod=next;
- const nextStatement=getWorkStatement(true);
+ const nextStatement=restoreDeletedWorkStatement();
  selectedWorkItemId="";selectedWorkItemIds.clear();lastWorkSelectionIndex=-1;
  if(nextStatement){
   nextStatement.updatedAt=new Date().toISOString();
