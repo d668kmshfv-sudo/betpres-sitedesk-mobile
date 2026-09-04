@@ -142,9 +142,12 @@
    var calculated = workItemCalc(statement, item);
    var section = String(item.type || "").toUpperCase() === "D";
    if (section) {
-    var sectionValues = padded([item.pc || "", item.type || "D", item.code || "", item.description || "", "", "", "", "", "", "", "", "", "", "", item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || ""], 18);
+    var documentSection = isWorkDocSectionItem(item);
+    var sectionValues = padded(documentSection
+     ? [item.pc || "", item.type || "D", item.code || "", item.description || "", "", "", "", "", "", "", "", "", "", "", item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || ""]
+     : [item.pc || "", item.type || "D", item.code || "", item.description || "", "", "", "", calculated.contractTotal, "", calculated.currentPrice, "", calculated.previousPrice, "", calculated.remainingPrice, item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || ""], 18);
     sheetRows.push(rowXml(rowNumber, sectionValues, [12,12,12,12,12,12,12,12,12,12,12,12,12,12,18,18,18,18], {}, 21));
-    merges.push("D" + rowNumber + ":N" + rowNumber);
+    if(documentSection)merges.push("D" + rowNumber + ":N" + rowNumber);
     return;
    }
    var priceOnly = isWorkPriceOnlyItem(item);
@@ -170,7 +173,8 @@
   var lastDataRow = Math.max(firstDataRow, sourceItems.length + 7);
   var summaryRow = sourceItems.length + 8;
   var summaryValues = padded(["CELKOM (bez DPH)", "", "", "", "", "", "", 0, 0, 0, 0, 0, 0, 0], 18);
-  var summaryFormulas = {7:"SUM(H"+firstDataRow+":H"+lastDataRow+")",8:"SUM(I"+firstDataRow+":I"+lastDataRow+")",9:"SUM(J"+firstDataRow+":J"+lastDataRow+")",10:"SUM(K"+firstDataRow+":K"+lastDataRow+")",11:"SUM(L"+firstDataRow+":L"+lastDataRow+")",12:"SUM(M"+firstDataRow+":M"+lastDataRow+")",13:"SUM(N"+firstDataRow+":N"+lastDataRow+")"};
+  var summaryFormula = function(column){return 'SUMIF(B'+firstDataRow+':B'+lastDataRow+',"<>D",'+column+firstDataRow+':'+column+lastDataRow+')';};
+  var summaryFormulas = {7:summaryFormula("H"),8:summaryFormula("I"),9:summaryFormula("J"),10:summaryFormula("K"),11:summaryFormula("L"),12:summaryFormula("M"),13:summaryFormula("N")};
   sheetRows.push(rowXml(summaryRow, summaryValues, [13,13,13,13,13,13,13,14,19,14,19,14,19,14,18,18,18,18], summaryFormulas, 25));
   merges.push("A" + summaryRow + ":G" + summaryRow);
 
@@ -277,9 +281,13 @@
    var rowNumber = index + 8, row = sheet.getRow(rowNumber), calculated = workItemCalc(statement, item), section = String(item.type || "").toUpperCase() === "D", priceOnly = isWorkPriceOnlyItem(item);
    row.height = section ? 21 : 23;
    if (section) {
-    [item.pc || "", item.type || "D", item.code || "", item.description || "", "", "", "", "", "", "", "", "", "", "", item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || ""].forEach(function (value, column) { row.getCell(column + 1).value = value; });
-    sheet.mergeCells("D" + rowNumber + ":N" + rowNumber);
+    var documentSection = isWorkDocSectionItem(item);
+    (documentSection
+     ? [item.pc || "", item.type || "D", item.code || "", item.description || "", "", "", "", "", "", "", "", "", "", "", item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || ""]
+     : [item.pc || "", item.type || "D", item.code || "", item.description || "", "", "", "", calculated.contractTotal, "", calculated.currentPrice, "", calculated.previousPrice, "", calculated.remainingPrice, item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || ""]).forEach(function (value, column) { row.getCell(column + 1).value = value; });
+    if(documentSection)sheet.mergeCells("D" + rowNumber + ":N" + rowNumber);
     row.eachCell({ includeEmpty: true }, function (cellItem) { cellItem.fill = { type: "pattern", pattern: "solid", fgColor: { argb: blue } }; cellItem.font = { name: "Aptos", size: 9, bold: true, color: { argb: "FFFFFFFF" } }; cellItem.alignment = { vertical: "middle", wrapText: true }; });
+    if(!documentSection)[8,10,12,14].forEach(function(column){sheet.getCell(rowNumber,column).numFmt="#,##0.00";sheet.getCell(rowNumber,column).alignment={horizontal:"right",vertical:"middle"};});
    } else {
     var currentValue = itemCurrentValue(item, calculated);
     [item.pc || "", item.type || "K", item.code || "", item.description || "", item.unit || "", priceOnly ? null : calculated.contractQty, priceOnly ? null : calculated.unitPrice, calculated.contractTotal, priceOnly || currentValue === "" ? null : Number(currentValue), null, priceOnly ? null : calculated.previousQty, calculated.previousPrice, priceOnly ? null : calculated.remainingQty, calculated.remainingPrice, item.id || "", statement.id, TEMPLATE_VERSION, workItemSourceLabel(item) || "ZoD"].forEach(function (value, column) { row.getCell(column + 1).value = value; });
@@ -290,7 +298,7 @@
   });
   var firstDataRow = 8, lastDataRow = Math.max(firstDataRow, sourceItems.length + 7), summaryRow = sourceItems.length + 8;
   sheet.mergeCells("A" + summaryRow + ":G" + summaryRow); sheet.getCell("A" + summaryRow).value = "CELKOM (bez DPH)";
-  [[8,"SUM(H"+firstDataRow+":H"+lastDataRow+")"],[9,"SUM(I"+firstDataRow+":I"+lastDataRow+")"],[10,"SUM(J"+firstDataRow+":J"+lastDataRow+")"],[11,"SUM(K"+firstDataRow+":K"+lastDataRow+")"],[12,"SUM(L"+firstDataRow+":L"+lastDataRow+")"],[13,"SUM(M"+firstDataRow+":M"+lastDataRow+")"],[14,"SUM(N"+firstDataRow+":N"+lastDataRow+")"]].forEach(function (entry) { sheet.getCell(summaryRow, entry[0]).value = { formula: entry[1], result: 0 }; });
+  [[8,"H"],[9,"I"],[10,"J"],[11,"K"],[12,"L"],[13,"M"],[14,"N"]].forEach(function (entry) { sheet.getCell(summaryRow, entry[0]).value = { formula:'SUMIF(B'+firstDataRow+':B'+lastDataRow+',"<>D",'+entry[1]+firstDataRow+':'+entry[1]+lastDataRow+')', result: 0 }; });
   sheet.getRow(summaryRow).height = 25; sheet.getRow(summaryRow).eachCell({ includeEmpty: true }, function (cellItem, colNumber) { cellItem.fill = { type: "pattern", pattern: "solid", fgColor: { argb: colNumber === 9 || colNumber === 10 ? green : pale } }; cellItem.font = { name: "Aptos", size: 9, bold: true, color: { argb: "FF173753" } }; cellItem.alignment = { vertical: "middle", horizontal: colNumber >= 8 ? "right" : "left" }; if (colNumber >= 8 && colNumber <= 14) cellItem.numFmt = colNumber % 2 ? "0.000" : "#,##0.00"; });
   sheet.eachRow(function (row) { row.eachCell({ includeEmpty: true }, function (cellItem, colNumber) { if (colNumber <= 14) cellItem.border = { top: { style: "thin", color: { argb: borderColor } }, left: { style: "thin", color: { argb: borderColor } }, bottom: { style: "thin", color: { argb: borderColor } }, right: { style: "thin", color: { argb: borderColor } } }; }); });
   for (var rowNumber = 8; rowNumber <= lastDataRow; rowNumber += 1) sheet.getCell("I" + rowNumber).dataValidation = { type: "decimal", operator: "between", allowBlank: true, showErrorMessage: true, errorTitle: "Neplatné množstvo", error: "Zadaj číslo, napríklad 12,5.", formulae: [-999999999, 999999999] };

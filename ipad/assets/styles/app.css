@@ -213,6 +213,8 @@
 .work-row-select{width:16px;height:16px}
 /* Oddiely rozpočtu musia zostať čitateľné aj pri prejdení myšou. */
 .work-section-row.work-section-doc td{background:#c7dceb!important;color:#082f61!important;border-top:1px solid #88abc5;border-bottom:1px solid #88abc5;font-weight:950}
+.work-section-row.work-section-subtotal td{background:#dceaf4!important;color:#082f61!important;border-top:2px solid #6e9abb;border-bottom:1px solid #9db9cd;font-weight:900}
+.work-section-row.work-section-subtotal .work-section-total{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
 .work-section-row.work-section-doc input,.work-section-row.work-section-doc textarea,.work-section-row.work-section-doc select{background:transparent!important;color:#082f61!important;font-weight:950;text-shadow:none!important}
 .work-section-row.work-section-doc input::placeholder,.work-section-row.work-section-doc textarea::placeholder{color:#476781!important;opacity:1}
 body.sitedesk-v3 .work-section-row.work-section-doc:hover td{background:#b8d2e5!important;color:#062b55!important}

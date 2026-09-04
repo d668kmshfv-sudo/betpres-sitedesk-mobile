@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.18";
+const SITE_DESK_APP_VERSION="5.1.19";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -74,6 +74,22 @@ function cleanupBachCorporationWorkStatements(currentState){
 }
 const initialBachWorkCleanup=cleanupBachCorporationWorkStatements(state);
 if(initialBachWorkCleanup.applied){
+ const serialized=JSON.stringify(state);localStorage.setItem(KEY,serialized);lastCommittedState=serialized
+}
+
+const DUPLICATE_WORK_ITEMS_CLEANUP="deduplicate-work-statement-items-2026-09-04";
+function cleanupDuplicateWorkStatementItems(currentState){
+ if(!currentState||!Array.isArray(currentState.workStatements))return{applied:false,removed:0};
+ if(!currentState.dataCleanupVersions||typeof currentState.dataCleanupVersions!=="object"||Array.isArray(currentState.dataCleanupVersions))currentState.dataCleanupVersions={};
+ if(currentState.dataCleanupVersions[DUPLICATE_WORK_ITEMS_CLEANUP])return{applied:false,removed:0};
+ const before=JSON.stringify(currentState);let removed=0;
+ currentState.workStatements.forEach(statement=>{removed+=dedupeWorkStatementItems(statement)});
+ if(removed)try{localStorage.setItem(AUTO_BACKUP_KEY,before)}catch{}
+ currentState.dataCleanupVersions[DUPLICATE_WORK_ITEMS_CLEANUP]={appliedAt:new Date().toISOString(),removed};
+ return{applied:true,removed}
+}
+const initialDuplicateWorkCleanup=cleanupDuplicateWorkStatementItems(state);
+if(initialDuplicateWorkCleanup.applied){
  const serialized=JSON.stringify(state);localStorage.setItem(KEY,serialized);lastCommittedState=serialized
 }
 
@@ -643,6 +659,9 @@ let cloudTeamActivity=[];
 let cloudPilotFeedback=[];
 if(initialBachWorkCleanup.removed){
  cloudLocalDirty=true;cloudConfig.localDirty=true;cloudPendingDescription=`Vymazané súpisy prác Bach corporation (${initialBachWorkCleanup.removed})`;saveCloudConfig()
+}
+if(initialDuplicateWorkCleanup.removed){
+ cloudLocalDirty=true;cloudConfig.localDirty=true;cloudPendingDescription=`Odstránené duplicitné položky súpisov (${initialDuplicateWorkCleanup.removed})`;saveCloudConfig()
 }
 
 function loadCloudConfig(){
@@ -5548,14 +5567,42 @@ function addManualRowsToStatement(statement,rows,label,preferredDocId=""){
  return rows.length
 }
 const workCatalogFields=["budgetItemId","sourceDocId","sourceDocLabel","pc","type","code","description","unit","contractQty","unitPrice","contractTotal","contractTotalAuto"];
+function workIdentityPart(value){return String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("sk").replace(/\s+/g," ").trim()}
+function workItemSemanticIdentity(item){
+ if(!item||isWorkDocSectionItem(item))return"";
+ const pc=workIdentityPart(item.pc),code=workIdentityPart(item.code),description=workIdentityPart(item.description),unit=workIdentityPart(item.unit),type=workIdentityPart(item.type||"K"),doc=workIdentityPart(workItemSourceId(item)||workItemSourceLabel(item));
+ if(!pc&&!code&&!description)return"";
+ return[doc,type,pc,code,description,unit].join("|")
+}
+function dedupeWorkStatementItems(statement){
+ if(!statement||!Array.isArray(statement.items))return 0;
+ const byBudget=new Map(),bySemantic=new Map(),unique=[];let removed=0;
+ statement.items.forEach(item=>{
+  if(isWorkDocSectionItem(item)){unique.push(item);return}
+  const budgetKey=String(item.budgetItemId||"").trim(),semanticKey=workItemSemanticIdentity(item),duplicate=(budgetKey&&byBudget.get(budgetKey))||(semanticKey&&bySemantic.get(semanticKey));
+  if(!duplicate){unique.push(item);if(budgetKey)byBudget.set(budgetKey,item);if(semanticKey)bySemantic.set(semanticKey,item);return}
+  ["currentQty","currentPriceOverride"].forEach(field=>{if(String(duplicate[field]??"").trim()===""&&String(item[field]??"").trim()!=="")duplicate[field]=item[field]});
+  removed++
+ });
+ if(removed){statement.items=unique;statement.updatedAt=new Date().toISOString()}
+ return removed
+}
+function sameWorkCatalogItem(item,source){
+ const itemBudget=String(item?.budgetItemId||"").trim(),sourceBudget=String(source?.budgetItemId||"").trim();
+ if(itemBudget&&sourceBudget&&itemBudget===sourceBudget)return true;
+ const itemIdentity=workItemSemanticIdentity(item),sourceIdentity=workItemSemanticIdentity(source);
+ return Boolean(itemIdentity&&sourceIdentity&&itemIdentity===sourceIdentity)
+}
 function matchingWorkCatalogItem(items,source){
  const docId=workItemSourceId(source),budgetKey=String(source.budgetItemId||"").trim(),pc=String(source.pc||"").trim(),code=String(source.code||"").trim(),description=String(source.description||"").trim();
  return (budgetKey&&items.find(item=>String(item.budgetItemId||"").trim()===budgetKey))||
   items.find(item=>workItemSourceId(item)===docId&&((pc||code)&&String(item.pc||"").trim()===pc&&String(item.code||"").trim()===code))||
-  items.find(item=>workItemSourceId(item)===docId&&code&&String(item.code||"").trim()===code&&String(item.description||"").trim()===description)||null
+  items.find(item=>workItemSourceId(item)===docId&&code&&String(item.code||"").trim()===code&&String(item.description||"").trim()===description)||
+  (()=>{const identity=workItemSemanticIdentity(source);return identity?items.find(item=>workItemSemanticIdentity(item)===identity):null})()||null
 }
 function syncWorkItemsAcrossCompanyMonths(sourceStatement,onlyDocId=""){
  if(!sourceStatement)return 0;
+ dedupeWorkStatementItems(sourceStatement);
  ensureWorkStatementDocuments(sourceStatement);
  const sourceItems=(sourceStatement.items||[]).filter(item=>!isWorkDocSectionItem(item)&&(!onlyDocId||workItemSourceId(item)===onlyDocId));
  const docIds=[...new Set(sourceItems.map(workItemSourceId).filter(Boolean))];
@@ -5563,7 +5610,7 @@ function syncWorkItemsAcrossCompanyMonths(sourceStatement,onlyDocId=""){
  let changedStatements=0;
  state.workStatements.filter(target=>target.id!==sourceStatement.id&&target.projectId===sourceStatement.projectId&&target.companyId===sourceStatement.companyId).forEach(target=>{
   ensureWorkStatementDocuments(target);
-  let changed=false;
+  let changed=dedupeWorkStatementItems(target)>0;
   docIds.forEach(docId=>{
    const sourceDocItems=sourceItems.filter(item=>workItemSourceId(item)===docId),targetDocItems=(target.items||[]).filter(item=>!isWorkDocSectionItem(item)&&workItemSourceId(item)===docId),ordered=[];
    sourceDocItems.forEach(source=>{
@@ -5586,10 +5633,11 @@ function syncWorkItemsAcrossCompanyMonths(sourceStatement,onlyDocId=""){
 function mergeWorkItemsFromCompanyMonths(statement){
  if(!statement)return 0;
  ensureWorkStatementDocuments(statement);
- let added=0;
+ let added=0;dedupeWorkStatementItems(statement);
  const currentItems=(statement.items||[]).filter(item=>!isWorkDocSectionItem(item));
  state.workStatements.filter(source=>source.id!==statement.id&&source.projectId===statement.projectId&&source.companyId===statement.companyId).sort((a,b)=>a.period.localeCompare(b.period)).forEach(source=>{
   ensureWorkStatementDocuments(source);
+  dedupeWorkStatementItems(source);
   (source.items||[]).filter(item=>!isWorkDocSectionItem(item)).forEach(sourceItem=>{
    if(matchingWorkCatalogItem(currentItems,sourceItem))return;
    const item={...clone(sourceItem),id:uid("wi"),currentQty:""};if("currentPriceOverride" in item)item.currentPriceOverride="";
@@ -5903,8 +5951,25 @@ function previousWorkQty(statement,item){
  if(!previous||!old)return 0;
  return workItemCalc(previous,old).totalQty
 }
+function workSectionItems(statement,sectionItem){
+ if(!statement||!sectionItem||isWorkDocSectionItem(sectionItem))return[];
+ const items=(statement.items||[]).filter(item=>!isWorkDocSectionItem(item)),start=items.findIndex(item=>item===sectionItem||item.id===sectionItem.id);
+ if(start<0)return[];
+ const sourceId=workItemSourceId(sectionItem),children=[];
+ for(let index=start+1;index<items.length;index++){
+  const candidate=items[index];
+  if(String(candidate.type||"").toUpperCase()==="D")break;
+  if(sourceId&&workItemSourceId(candidate)!==sourceId)break;
+  children.push(candidate)
+ }
+ return children
+}
+function workSectionCalc(statement,item){
+ const children=workSectionItems(statement,item),calculations=children.map(child=>workItemCalc(statement,child)),sum=key=>workRound(calculations.reduce((total,calc)=>total+Number(calc[key]||0),0),2);
+ return{section:true,sectionCount:children.length,priceOnly:false,contractQty:0,unitPrice:0,contractTotal:sum("contractTotal"),currentQty:0,currentPrice:sum("currentPrice"),previousQty:0,previousPrice:sum("previousPrice"),totalQty:0,totalPrice:sum("totalPrice"),remainingQty:0,remainingPrice:sum("remainingPrice"),difference:sum("difference"),over:calculations.some(calc=>calc.over)}
+}
 function workItemCalc(statement,item){
- if(String(item.type||"").toUpperCase()==="D")return{section:true,priceOnly:false,contractQty:0,unitPrice:0,contractTotal:0,currentQty:0,currentPrice:0,previousQty:0,previousPrice:0,totalQty:0,totalPrice:0,remainingQty:0,remainingPrice:0,difference:0,over:false};
+ if(String(item.type||"").toUpperCase()==="D")return workSectionCalc(statement,item);
  if(isWorkPriceOnlyItem(item)){
   const explicit=String(item.contractTotal??item.currentPriceOverride??"").trim(),
         contractTotal=explicit!==""?parseWorkNumber(explicit):parseWorkNumber(item.currentPriceOverride),
@@ -6059,7 +6124,16 @@ function renderWorkStatements(){
  $("workStatementBody").innerHTML=rows.map(item=>{
   const c=workItemCalc(statement,item),section=c.section,selected=selectedWorkItemIds.has(item.id),needsAttention=workItemNeedsAttention(statement,item);
   const docLabel=workItemSourceLabel(item)||"ZoD",docClass=workBudgetDocClass(docLabel);
-  if(orderMode)return `<tr class="${selected?"work-row-selected":""}" data-work-row="${item.id}"><td><input class="work-row-select" type="checkbox" value="${item.id}" ${selected?"checked":""}></td>${workEditCell(item,"pc")}${workEditCell(item,"description")}${workEditCell(item,"unit")}${workEditCell(item,"contractQty","numeric")}${workEditCell(item,"unitPrice","numeric")}${workCalcCell(c.contractTotal,"order-total-col","money",section)}</tr>`;
+  if(orderMode)return `<tr class="${section?"work-section-row work-section-subtotal":""} ${selected?"work-row-selected":""}" data-work-row="${item.id}"><td><input class="work-row-select" type="checkbox" value="${item.id}" ${selected?"checked":""}></td>${workEditCell(item,"pc")}${workEditCell(item,"description")}${workEditCell(item,"unit")}${section?workCalcCell(0,"numeric","qty",true):workEditCell(item,"contractQty","numeric")}${section?workCalcCell(0,"numeric","money",true):workEditCell(item,"unitPrice","numeric")}${workCalcCell(c.contractTotal,"order-total-col","money",section&&!c.sectionCount)}</tr>`;
+  if(section)return `<tr class="work-section-row work-section-subtotal ${docClass?"work-doc-addendum":"work-doc-zod"} ${selected?"work-row-selected":""}" data-work-row="${item.id}">
+   <td><input class="work-row-select" type="checkbox" value="${item.id}" ${selected?"checked":""}></td>
+   ${workEditCell(item,"pc")}${workEditCell(item,"type")}${workEditCell(item,"code")}${workEditCell(item,"description")}${workEditCell(item,"unit")}
+   ${workCalcCell(0,"numeric","qty",true)}${workCalcCell(0,"numeric","money",true)}${workCalcCell(c.contractTotal,"work-section-total","money",!c.sectionCount)}
+   ${workCalcCell(0,"numeric current-col","qty",true)}${workCalcCell(c.currentPrice,"current-col work-section-total","money",!c.sectionCount)}
+   ${workCalcCell(0,"numeric previous-col","qty",true)}${workCalcCell(c.previousPrice,"previous-col work-section-total","money",!c.sectionCount)}
+   ${workCalcCell(0,"numeric total-col","qty",true)}${workCalcCell(c.totalPrice,"total-col work-section-total","money",!c.sectionCount)}
+   ${workCalcCell(0,"numeric remain-col","qty",true)}${workCalcCell(c.remainingPrice,"remain-col work-section-total","money",!c.sectionCount)}
+  </tr>`;
   return `<tr class="${section?"work-section-row":""} ${section&&docLabel?"work-section-doc":""} ${docClass?"work-doc-addendum":"work-doc-zod"} ${c.over?"work-over":""} ${needsAttention?"work-needs-attention":""} ${selected?"work-row-selected":""}" data-work-row="${item.id}">
    <td><input class="work-row-select" type="checkbox" value="${item.id}" ${selected?"checked":""}></td>
    ${workEditCell(item,"pc")}${workEditCell(item,"type")}${workEditCell(item,"code")}${workEditCell(item,"description")}${workEditCell(item,"unit")}
@@ -6103,8 +6177,9 @@ function scheduleWorkStatementSummary(statement){
 function refreshWorkRowCalculations(statement,item,row){
  if(!row||!item)return;
  const c=workItemCalc(statement,item),cells=row.cells;
- if(isWorkOrderItem(item)){if(cells.length>=7)cells[6].textContent=workMoney(c.contractTotal);scheduleWorkStatementSummary(statement);return}
+ if(isWorkOrderItem(item)){if(cells.length>=7)cells[6].textContent=c.section&&!c.sectionCount?"":workMoney(c.contractTotal);scheduleWorkStatementSummary(statement);return}
  if(cells.length<17)return;
+ if(c.section){[[8,c.contractTotal],[10,c.currentPrice],[12,c.previousPrice],[14,c.totalPrice],[16,c.remainingPrice]].forEach(([index,value])=>cells[index].textContent=c.sectionCount?workMoney(value):"");scheduleWorkStatementSummary(statement);return}
  const totalInput=row.querySelector('[data-work-field="contractTotal"]');
  if(totalInput&&totalInput!==document.activeElement)totalInput.value=item.contractTotal??"";
  cells[8].classList.toggle("work-difference",Math.abs(c.difference)>.011);
@@ -6117,6 +6192,12 @@ function refreshWorkRowCalculations(statement,item,row){
  cells[16].textContent=workMoney(c.remainingPrice);
  row.classList.toggle("work-over",c.over);
  scheduleWorkStatementSummary(statement)
+}
+function refreshWorkSectionCalculations(statement){
+ document.querySelectorAll('#workStatementBody tr.work-section-row[data-work-row]').forEach(row=>{
+  const item=statement.items.find(candidate=>candidate.id===row.dataset.workRow);
+  if(item)refreshWorkRowCalculations(statement,item,row)
+ })
 }
 function updateWorkSelectionUI(statement){
  const checks=[...document.querySelectorAll(".work-row-select[value]")],count=selectedWorkItemIds.size,
@@ -6193,7 +6274,7 @@ function attachWorkTableEvents(statement){
   const fit=()=>{if(inp.tagName==="TEXTAREA"){inp.style.height="auto";inp.style.height=(inp.scrollHeight+2)+"px"}};
   fit();
   inp.onfocus=()=>{beginDirectUndo("Úprava súpisu prác");fit()};
-  inp.oninput=()=>{const item=statement.items.find(x=>x.id===inp.dataset.workItem);if(!item)return;const field=inp.dataset.workField;item[field]=inp.value;if(field==="contractTotal")item.contractTotalAuto=false;if(field==="contractQty"||field==="unitPrice")updateAutomaticWorkTotal(item);const cell=inp.closest("td");if(cell){cell.classList.toggle("work-formula-field",isWorkFormula(inp.value));cell.classList.toggle("work-formula-error",isWorkFormula(inp.value)&&!evalWorkFormula(inp.value).ok)}fit();statement.status="draft";statement.updatedAt=new Date().toISOString();commitDirectState();refreshWorkRowCalculations(statement,item,inp.closest("tr"))};
+  inp.oninput=()=>{const item=statement.items.find(x=>x.id===inp.dataset.workItem);if(!item)return;const field=inp.dataset.workField;item[field]=inp.value;if(field==="contractTotal")item.contractTotalAuto=false;if(field==="contractQty"||field==="unitPrice")updateAutomaticWorkTotal(item);const cell=inp.closest("td");if(cell){cell.classList.toggle("work-formula-field",isWorkFormula(inp.value));cell.classList.toggle("work-formula-error",isWorkFormula(inp.value)&&!evalWorkFormula(inp.value).ok)}fit();statement.status="draft";statement.updatedAt=new Date().toISOString();commitDirectState();refreshWorkRowCalculations(statement,item,inp.closest("tr"));refreshWorkSectionCalculations(statement)};
   inp.onblur=()=>{const v=inp.value.trim(),rerender=inp.dataset.workField==="type",item=statement.items.find(x=>x.id===inp.dataset.workItem);if(isWorkFormula(v)&&!evalWorkFormula(v).ok)toast("Vzorec v súpise nie je platný.");if(item&&inp.dataset.workField!=="currentQty")syncWorkItemsAcrossCompanyMonths(statement,workItemSourceId(item));endDirectUndo();commitDirectState();if(rerender)renderWorkStatements()};
   inp.onpaste=e=>handleWorkGridPaste(e,statement,inp.dataset.workItem,inp.dataset.workField)
  })
@@ -6335,9 +6416,17 @@ if($("moveWorkRowDown"))$("moveWorkRowDown").onclick=()=>moveSelectedWorkItems(1
 $("deleteWorkRow").onclick=()=>{
  const s=getWorkStatement(false),count=selectedWorkItemIds.size;
  if(!s||!count){alert("Označ riadky, ktoré chceš vymazať.");return}
- if(!confirm(`Vymazať označené riadky (${count})?`))return;
- s.items=s.items.filter(item=>!selectedWorkItemIds.has(item.id));s.status="draft";
- selectedWorkItemIds.clear();selectedWorkItemId="";lastWorkSelectionIndex=-1;save(`${count} riadkov bolo vymazaných.`)
+ const selectedItems=s.items.filter(item=>selectedWorkItemIds.has(item.id));
+ if(!selectedItems.length){alert("Označené položky sa v súpise nenašli. Obnov stránku a skús ich označiť znova.");return}
+ if(!confirm(`Vymazať označené položky (${selectedItems.length}) zo všetkých mesiacov tejto firmy?\n\nMesačné množstvá týchto položiek sa tiež odstránia. Ostatné firmy zostanú bez zmeny.`))return;
+ let removed=0,affectedMonths=0;
+ state.workStatements.filter(statement=>statement.projectId===s.projectId&&statement.companyId===s.companyId).forEach(statement=>{
+  const before=statement.items.length;
+  statement.items=statement.items.filter(item=>!selectedItems.some(source=>sameWorkCatalogItem(item,source)));
+  const difference=before-statement.items.length;
+  if(difference){removed+=difference;affectedMonths++;statement.status="draft";statement.updatedAt=new Date().toISOString()}
+ });
+ selectedWorkItemIds.clear();selectedWorkItemId="";lastWorkSelectionIndex=-1;workPreviousIndexCache=new WeakMap();save(`${selectedItems.length} ${selectedItems.length===1?"položka bola vymazaná":"položky boli vymazané"} z ${affectedMonths} ${affectedMonths===1?"mesiaca":"mesiacov"} firmy (${removed} riadkov).`)
 };
 if($("deleteWorkStatement"))$("deleteWorkStatement").onclick=()=>{
  const statement=getWorkStatement(false);
@@ -6550,7 +6639,7 @@ function workExportRows(statement){
  if(isSelectedWorkOrderDocument())return sourceItems.filter(item=>String(item.type||"").toUpperCase()!=="D").map(item=>{const c=workItemCalc(statement,item);return[item.pc,item.description,item.unit,c.contractQty,c.unitPrice,c.contractTotal]});
  return workItemsWithDocumentSections(statement,sourceItems).map(item=>{
   const c=workItemCalc(statement,item),section=String(item.type||"").toUpperCase()==="D",blankQty=c.priceOnly||section;
-  if(section)return[item.pc,item.type,item.code,item.description,item.unit,"","","","","","","","","","",""];
+  if(section)return[item.pc,item.type,item.code,item.description,item.unit,"","",c.sectionCount?c.contractTotal:"","",c.sectionCount?c.currentPrice:"","",c.sectionCount?c.previousPrice:"","",c.sectionCount?c.totalPrice:"","",c.sectionCount?c.remainingPrice:""];
   return[item.pc,item.type,item.code,item.description,item.unit,blankQty?"":c.contractQty,blankQty?"":c.unitPrice,c.contractTotal,blankQty?"":c.currentQty,c.currentPrice,blankQty?"":c.previousQty,c.previousPrice,blankQty?"":c.totalQty,c.totalPrice,blankQty?"":c.remainingQty,c.remainingPrice]
  })
 }
@@ -6626,7 +6715,11 @@ $("exportWorkPdf").onclick=async()=>{
 
  function printRowHtml(item){
   const x=workItemCalc(s,item);
-  if(x.section)return orderMode?`<tr class="section"><td colspan="6">${esc(item.description)}</td></tr>`:`<tr class="section"><td>${esc(item.pc)}</td><td>${esc(item.type)}</td><td>${esc(item.code)}</td><td class="desc" colspan="10">${esc(item.description)}</td></tr>`;
+  if(x.section){
+   if(isWorkDocSectionItem(item))return orderMode?`<tr class="section"><td colspan="6">${esc(item.description)}</td></tr>`:`<tr class="section"><td>${esc(item.pc)}</td><td>${esc(item.type)}</td><td>${esc(item.code)}</td><td class="desc" colspan="11">${esc(item.description)}</td></tr>`;
+   if(orderMode)return`<tr class="section section-subtotal"><td>${esc(item.pc)}</td><td class="desc" colspan="4">${esc(item.description)} <small>(${x.sectionCount} položiek)</small></td><td>${x.sectionCount?workMoney(x.contractTotal):""}</td></tr>`;
+   return`<tr class="section section-subtotal"><td>${esc(item.pc)}</td><td>${esc(item.type)}</td><td>${esc(item.code)}</td><td class="desc">${esc(item.description)} <small>(${x.sectionCount} položiek)</small></td><td></td><td></td><td></td><td>${x.sectionCount?workMoney(x.contractTotal):""}</td><td class="current-col"></td><td class="current-col">${x.sectionCount?workMoney(x.currentPrice):""}</td><td></td><td>${x.sectionCount?workMoney(x.previousPrice):""}</td><td></td><td>${x.sectionCount?workMoney(x.remainingPrice):""}</td></tr>`
+  }
   if(orderMode)return`<tr><td>${esc(item.pc)}</td><td class="desc">${esc(item.description)}</td><td>${esc(item.unit)}</td><td>${workQty(x.contractQty)}</td><td>${workMoney(x.unitPrice)}</td><td>${workMoney(x.contractTotal)}</td></tr>`;
   const q=v=>x.priceOnly?"":workQty(v),m=v=>workMoney(v);
   return`<tr>
