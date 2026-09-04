@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.15";
+const SITE_DESK_APP_VERSION="5.1.16";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -56,6 +56,26 @@ const normalizeStateList=key=>{
  "documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"
 ].forEach(normalizeStateList);
 if(!Array.isArray(state.defects))state.defects=[];
+
+const BACH_WORK_STATEMENTS_CLEANUP="remove-bach-corporation-work-statements-2026-09-04";
+function cleanupBachCorporationWorkStatements(currentState){
+ if(!currentState||!Array.isArray(currentState.companies)||!Array.isArray(currentState.workStatements))return{applied:false,removed:0};
+ if(!currentState.dataCleanupVersions||typeof currentState.dataCleanupVersions!=="object"||Array.isArray(currentState.dataCleanupVersions))currentState.dataCleanupVersions={};
+ if(currentState.dataCleanupVersions[BACH_WORK_STATEMENTS_CLEANUP])return{applied:false,removed:0};
+ const normalizeName=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(),
+       companyIds=new Set(currentState.companies.filter(item=>["bach corporation","bach corporation s r o"].includes(normalizeName(item.name))).map(item=>item.id));
+ if(!companyIds.size)return{applied:false,removed:0};
+ const before=JSON.stringify(currentState),count=currentState.workStatements.length;
+ currentState.workStatements=currentState.workStatements.filter(item=>!companyIds.has(item.companyId));
+ const removed=count-currentState.workStatements.length;
+ if(removed)try{localStorage.setItem(AUTO_BACKUP_KEY,before)}catch{}
+ currentState.dataCleanupVersions[BACH_WORK_STATEMENTS_CLEANUP]={appliedAt:new Date().toISOString(),removed};
+ return{applied:true,removed}
+}
+const initialBachWorkCleanup=cleanupBachCorporationWorkStatements(state);
+if(initialBachWorkCleanup.applied){
+ const serialized=JSON.stringify(state);localStorage.setItem(KEY,serialized);lastCommittedState=serialized
+}
 
 if(state.calendarCleanStartVersion!=="betpres-5.0.83-empty"){
  state.calendarEvents=[];
@@ -621,6 +641,9 @@ let cloudPendingDescription="Synchronizácia údajov";
 let cloudTeamMembers=[];
 let cloudTeamActivity=[];
 let cloudPilotFeedback=[];
+if(initialBachWorkCleanup.removed){
+ cloudLocalDirty=true;cloudConfig.localDirty=true;cloudPendingDescription=`Vymazané súpisy prác Bach corporation (${initialBachWorkCleanup.removed})`;saveCloudConfig()
+}
 
 function loadCloudConfig(){
  try{
@@ -1087,6 +1110,7 @@ async function cloudPull({silent=false}={}){
   ["projects","companies","assignments","billings","materials","purchases","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"].forEach(key=>{
    if(!Array.isArray(state[key]))state[key]=[]
   });
+  const bachCleanup=cleanupBachCorporationWorkStatements(state);
   const serialized=JSON.stringify(state);
   localStorage.setItem(KEY,serialized);
   lastCommittedState=serialized;
@@ -1098,6 +1122,7 @@ async function cloudPull({silent=false}={}){
   saveCloudConfig();
   await cloudLoadTeamContext(remote);
   renderAll();
+  if(bachCleanup.removed)queueCloudPush(`Vymazané súpisy prác Bach corporation (${bachCleanup.removed})`);
   cloudSetQuickStatus("connected",`Cloud v${cloudConfig.lastCloudVersion}`);
   setCloudMessage("cloudSyncMessage",`Cloudové dáta boli načítané. Verzia ${cloudConfig.lastCloudVersion}.`,"success");
   if(!silent)toast("Načítané údaje z cloudu.")
