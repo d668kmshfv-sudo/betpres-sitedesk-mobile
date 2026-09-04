@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.19";
+const SITE_DESK_APP_VERSION="5.1.20";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -5542,9 +5542,7 @@ function addBudgetItemsToStatement(statement,budget,{replace=false}={}){
  if(replace)statement.items=statement.items.filter(x=>workItemSourceId(x)!==docId);
  let added=0;
  (budget.items||[]).forEach(src=>{
-  const exists=statement.items.some(x=>x.budgetItemId===src.id||(
-   workItemSourceId(x)===docId&&String(x.pc||"").trim()===String(src.pc||"").trim()&&String(x.code||"").trim()===String(src.code||"").trim()&&String(x.description||"").trim()===String(src.description||"").trim()
-  ));
+  const exists=statement.items.some(x=>String(x.budgetItemId||"").trim()===String(src.id||"").trim());
   if(exists)return;
   statement.items.push({id:uid("wi"),budgetItemId:src.id,sourceDocId:docId,sourceDocLabel:label,pc:src.pc||"",type:src.type||"K",code:src.code||"",description:src.description||"",unit:src.unit||"",contractQty:src.contractQty||"",unitPrice:src.unitPrice||"",contractTotal:src.contractTotal||"",currentQty:""});
   added++
@@ -5567,20 +5565,13 @@ function addManualRowsToStatement(statement,rows,label,preferredDocId=""){
  return rows.length
 }
 const workCatalogFields=["budgetItemId","sourceDocId","sourceDocLabel","pc","type","code","description","unit","contractQty","unitPrice","contractTotal","contractTotalAuto"];
-function workIdentityPart(value){return String(value??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("sk").replace(/\s+/g," ").trim()}
-function workItemSemanticIdentity(item){
- if(!item||isWorkDocSectionItem(item))return"";
- const pc=workIdentityPart(item.pc),code=workIdentityPart(item.code),description=workIdentityPart(item.description),unit=workIdentityPart(item.unit),type=workIdentityPart(item.type||"K"),doc=workIdentityPart(workItemSourceId(item)||workItemSourceLabel(item));
- if(!pc&&!code&&!description)return"";
- return[doc,type,pc,code,description,unit].join("|")
-}
 function dedupeWorkStatementItems(statement){
  if(!statement||!Array.isArray(statement.items))return 0;
- const byBudget=new Map(),bySemantic=new Map(),unique=[];let removed=0;
+ const seen=new Map(),unique=[];let removed=0;
  statement.items.forEach(item=>{
   if(isWorkDocSectionItem(item)){unique.push(item);return}
-  const budgetKey=String(item.budgetItemId||"").trim(),semanticKey=workItemSemanticIdentity(item),duplicate=(budgetKey&&byBudget.get(budgetKey))||(semanticKey&&bySemantic.get(semanticKey));
-  if(!duplicate){unique.push(item);if(budgetKey)byBudget.set(budgetKey,item);if(semanticKey)bySemantic.set(semanticKey,item);return}
+  const budgetKey=String(item.budgetItemId||"").trim(),itemKey=String(item.id||"").trim(),technicalKey=budgetKey?`budget:${budgetKey}`:(itemKey?`item:${itemKey}`:""),duplicate=technicalKey?seen.get(technicalKey):null;
+  if(!duplicate){unique.push(item);if(technicalKey)seen.set(technicalKey,item);return}
   ["currentQty","currentPriceOverride"].forEach(field=>{if(String(duplicate[field]??"").trim()===""&&String(item[field]??"").trim()!=="")duplicate[field]=item[field]});
   removed++
  });
@@ -5589,16 +5580,14 @@ function dedupeWorkStatementItems(statement){
 }
 function sameWorkCatalogItem(item,source){
  const itemBudget=String(item?.budgetItemId||"").trim(),sourceBudget=String(source?.budgetItemId||"").trim();
- if(itemBudget&&sourceBudget&&itemBudget===sourceBudget)return true;
- const itemIdentity=workItemSemanticIdentity(item),sourceIdentity=workItemSemanticIdentity(source);
- return Boolean(itemIdentity&&sourceIdentity&&itemIdentity===sourceIdentity)
+ if(itemBudget||sourceBudget)return Boolean(itemBudget&&sourceBudget&&itemBudget===sourceBudget);
+ const itemId=String(item?.id||"").trim(),sourceId=String(source?.id||"").trim();
+ return Boolean(itemId&&sourceId&&itemId===sourceId)
 }
 function matchingWorkCatalogItem(items,source){
- const docId=workItemSourceId(source),budgetKey=String(source.budgetItemId||"").trim(),pc=String(source.pc||"").trim(),code=String(source.code||"").trim(),description=String(source.description||"").trim();
- return (budgetKey&&items.find(item=>String(item.budgetItemId||"").trim()===budgetKey))||
-  items.find(item=>workItemSourceId(item)===docId&&((pc||code)&&String(item.pc||"").trim()===pc&&String(item.code||"").trim()===code))||
-  items.find(item=>workItemSourceId(item)===docId&&code&&String(item.code||"").trim()===code&&String(item.description||"").trim()===description)||
-  (()=>{const identity=workItemSemanticIdentity(source);return identity?items.find(item=>workItemSemanticIdentity(item)===identity):null})()||null
+ const budgetKey=String(source.budgetItemId||"").trim(),itemKey=String(source.id||"").trim();
+ if(budgetKey)return items.find(item=>String(item.budgetItemId||"").trim()===budgetKey)||null;
+ return itemKey?items.find(item=>String(item.id||"").trim()===itemKey)||null:null
 }
 function syncWorkItemsAcrossCompanyMonths(sourceStatement,onlyDocId=""){
  if(!sourceStatement)return 0;
@@ -5929,19 +5918,18 @@ function previousWorkStatement(statement){
 function matchingPreviousWorkItem(previous,item){
  if(!previous)return null;
  const index=workPreviousItemIndex(previous);
- const budgetKey=String(item.budgetItemId||"").trim(),pcCodeKey=`${String(item.pc||"").trim()}|${String(item.code||"").trim()}`,codeDescKey=`${String(item.code||"").trim()}|${String(item.description||"").trim()}`;
- return (budgetKey&&index.byBudget.get(budgetKey))||index.byPcCode.get(pcCodeKey)||(String(item.code||"").trim()&&index.byCodeDesc.get(codeDescKey))||null
+ const budgetKey=String(item.budgetItemId||"").trim(),itemKey=String(item.id||"").trim();
+ return budgetKey?(index.byBudget.get(budgetKey)||null):(itemKey?index.byId.get(itemKey)||null:null)
 }
 function workPreviousItemIndex(previous){
- if(!previous)return{byBudget:new Map(),byPcCode:new Map(),byCodeDesc:new Map(),count:0,updatedAt:""};
+ if(!previous)return{byBudget:new Map(),byId:new Map(),count:0,updatedAt:""};
  const cached=workPreviousIndexCache.get(previous),count=(previous.items||[]).length,updatedAt=String(previous.updatedAt||"");
  if(cached&&cached.count===count&&cached.updatedAt===updatedAt)return cached;
- const index={byBudget:new Map(),byPcCode:new Map(),byCodeDesc:new Map(),count,updatedAt};
+ const index={byBudget:new Map(),byId:new Map(),count,updatedAt};
  (previous.items||[]).filter(x=>!isWorkDocSectionItem(x)).forEach(x=>{
-  const budgetKey=String(x.budgetItemId||"").trim(),pcCodeKey=`${String(x.pc||"").trim()}|${String(x.code||"").trim()}`,codeDescKey=`${String(x.code||"").trim()}|${String(x.description||"").trim()}`;
+  const budgetKey=String(x.budgetItemId||"").trim(),itemKey=String(x.id||"").trim();
   if(budgetKey&&!index.byBudget.has(budgetKey))index.byBudget.set(budgetKey,x);
-  if((String(x.pc||"").trim()||String(x.code||"").trim())&&!index.byPcCode.has(pcCodeKey))index.byPcCode.set(pcCodeKey,x);
-  if(String(x.code||"").trim()&&!index.byCodeDesc.has(codeDescKey))index.byCodeDesc.set(codeDescKey,x)
+  if(itemKey&&!index.byId.has(itemKey))index.byId.set(itemKey,x)
  });
  workPreviousIndexCache.set(previous,index);
  return index
