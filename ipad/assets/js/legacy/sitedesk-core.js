@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.22";
+const SITE_DESK_APP_VERSION="5.1.23";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -650,6 +650,8 @@ let cloudSession=loadCloudSession();
 let cloudPushTimer=null;
 let cloudPollTimer=null;
 let cloudPushRunning=false;
+let cloudPullRunning=false;
+let cloudSessionRefreshPromise=null;
 let cloudLastPushBackupAt=0;
 let cloudRemoteCheckRunning=false;
 let cloudLastLocalChangeAt=0;
@@ -719,19 +721,27 @@ function cloudKeyIsSecret(value){
  try{const part=key.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"),payload=JSON.parse(atob(part+"=".repeat((4-part.length%4)%4)));return /service_role|secret/i.test(String(payload.role||""))}catch{return false}
 }
 function assertPublicCloudKey(value){if(cloudKeyIsSecret(value))throw new Error("Toto je tajný Supabase kľúč. Na iPade použi iba Publishable key (sb_publishable_…) alebo verejný anon key.")}
-function cloudAuthHeaders(json=true){
+function cloudAuthHeaders(json=true,includeSession=true){
  const headers={apikey:cloudConfig.key};
- if(cloudSession?.access_token)headers.Authorization=`Bearer ${cloudSession.access_token}`;
+ if(includeSession&&cloudSession?.access_token)headers.Authorization=`Bearer ${cloudSession.access_token}`;
  if(json)headers["Content-Type"]="application/json";
  return headers
 }
 async function cloudFetch(path,options={},requireAuth=true){
  if(!cloudConfigured())throw new Error("Najprv ulož Project URL a publishable/anon key.");
  if(requireAuth)await cloudEnsureSession();
- const response=await fetch(normalizeCloudUrl(cloudConfig.url)+path,{
-  ...options,
-  headers:{...cloudAuthHeaders(options.json!==false),...(options.headers||{})}
- });
+ const requestUrl=normalizeCloudUrl(cloudConfig.url)+path,
+       requestOptions={...options,cache:options.cache||"no-store",headers:{...cloudAuthHeaders(options.json!==false,requireAuth),...(options.headers||{})}};
+ delete requestOptions.json;
+ let response,lastError;
+ for(let attempt=0;attempt<2;attempt++){
+  try{response=await fetch(requestUrl,requestOptions);break}
+  catch(error){lastError=error;if(attempt===0&&navigator.onLine)await new Promise(resolve=>setTimeout(resolve,650))}
+ }
+ if(!response){
+  const detail=String(lastError?.message||lastError||"");
+  throw new Error(navigator.onLine?`Spojenie s cloudom sa prerušilo${detail?` (${detail})`:""}. Skús načítanie ešte raz.`:"iPad je offline. Pripoj ho k internetu a skús načítanie znova.")
+ }
  if(!response.ok){
   let message=`HTTP ${response.status}`;
   try{
@@ -751,14 +761,20 @@ async function cloudEnsureSession(){
  const expiresAt=Number(cloudSession.expires_at||0);
  if(expiresAt&&expiresAt-Date.now()/1000>90)return cloudSession;
  if(!cloudSession.refresh_token)throw new Error("Prihlásenie vypršalo. Prihlás sa znova.");
- const data=await cloudFetch("/auth/v1/token?grant_type=refresh_token",{
-  method:"POST",
-  body:JSON.stringify({refresh_token:cloudSession.refresh_token})
- },false);
- if(!data?.access_token)throw new Error("Prihlásenie sa nepodarilo obnoviť.");
- data.expires_at=Math.floor(Date.now()/1000)+Number(data.expires_in||3600);
- saveCloudSession(data);
- return data
+ if(cloudSessionRefreshPromise)return cloudSessionRefreshPromise;
+ cloudSessionRefreshPromise=(async()=>{
+  const refreshToken=cloudSession.refresh_token,
+        data=await cloudFetch("/auth/v1/token?grant_type=refresh_token",{
+         method:"POST",
+         body:JSON.stringify({refresh_token:refreshToken})
+        },false);
+  if(!data?.access_token)throw new Error("Prihlásenie sa nepodarilo obnoviť.");
+  data.expires_at=Math.floor(Date.now()/1000)+Number(data.expires_in||3600);
+  saveCloudSession(data);
+  return data
+ })();
+ try{return await cloudSessionRefreshPromise}
+ finally{cloudSessionRefreshPromise=null}
 }
 async function cloudSignIn(){
  const email=$("cloudEmail").value.trim(),
@@ -1129,6 +1145,8 @@ async function cloudPush({force=false,silent=false}={}){
  }
 }
 async function cloudPull({silent=false}={}){
+ if(cloudPullRunning)return false;
+ cloudPullRunning=true;
  try{
   cloudSetQuickStatus("syncing","Načítavam cloud");
   await cloudEnsureSession();
@@ -1165,6 +1183,8 @@ async function cloudPull({silent=false}={}){
   setCloudMessage("cloudSyncMessage",error.message,"error");
   if(!silent)toast("Cloudové dáta sa nepodarilo načítať.");
   return false
+ }finally{
+  cloudPullRunning=false
  }
 }
 async function cloudRefreshWorkspaceStatus(){
