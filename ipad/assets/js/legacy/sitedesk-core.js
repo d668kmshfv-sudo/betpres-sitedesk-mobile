@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.20";
+const SITE_DESK_APP_VERSION="5.1.21";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -1134,6 +1134,7 @@ async function cloudPull({silent=false}={}){
   localStorage.setItem(KEY,serialized);
   lastCommittedState=serialized;
   cloudConfig.lastCloudVersion=Number(remote.data_version||0);
+  cloudConfig.fullDataLoadedVersion=Number(remote.data_version||0);
   cloudConfig.lastCloudUpdatedAt=remote.updated_at||"";
   cloudConfig.lastCloudId=remote.id||"";
   cloudLocalDirty=false;
@@ -1145,9 +1146,12 @@ async function cloudPull({silent=false}={}){
   cloudSetQuickStatus("connected",`Cloud v${cloudConfig.lastCloudVersion}`);
   setCloudMessage("cloudSyncMessage",`Cloudové dáta boli načítané. Verzia ${cloudConfig.lastCloudVersion}.`,"success");
   if(!silent)toast("Načítané údaje z cloudu.")
+  return true
  }catch(error){
   cloudSetQuickStatus("conflict","Chyba načítania");
-  setCloudMessage("cloudSyncMessage",error.message,"error")
+  setCloudMessage("cloudSyncMessage",error.message,"error");
+  if(!silent)toast("Cloudové dáta sa nepodarilo načítať.");
+  return false
  }
 }
 async function cloudRefreshWorkspaceStatus(){

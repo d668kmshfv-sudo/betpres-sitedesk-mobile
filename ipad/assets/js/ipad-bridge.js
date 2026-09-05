@@ -5,7 +5,8 @@
     mobileConfig: "betpres-mobile-cloud-v1",
     mobileSession: "betpres-mobile-session-v1",
     desktopConfig: "betpres-stavebna-evidencia-v7-cloud-config",
-    desktopSession: "betpres-stavebna-evidencia-v7-cloud-session"
+    desktopSession: "betpres-stavebna-evidencia-v7-cloud-session",
+    fullCloudRefresh: "betpres-ipad-full-cloud-refresh-5.1.21"
   };
 
   const read = (key, fallback = null) => {
@@ -34,6 +35,7 @@
   function reconcileConfig() {
     const mobile = read(KEYS.mobileConfig, {});
     const desktop = read(KEYS.desktopConfig, {});
+    const needsFullCloudRefresh = localStorage.getItem(KEYS.fullCloudRefresh) !== "done";
     const url = mobile.url || desktop.url || "";
     const key = [mobile.key, desktop.key].find((value) => value && !isSecretKey(value)) || "";
     const workspaceName = mobile.workspaceName || desktop.workspaceName || "Medická – pilot";
@@ -47,7 +49,9 @@
     localStorage.setItem(KEYS.desktopConfig, JSON.stringify({
       ...desktop,
       url, key, workspaceName, autoSync: true,
-      lastCloudVersion: Math.max(Number(desktop.lastCloudVersion || 0), Number(mobile.version || 0)),
+      // Číslo verzie zo starej mobilnej časti nepotvrdzuje, že plné dáta
+      // SiteDesk boli na tomto zariadení naozaj načítané.
+      lastCloudVersion: needsFullCloudRefresh ? 0 : Number(desktop.lastCloudVersion || 0),
       lastCloudId: desktop.lastCloudId || mobile.workspaceId || "",
       currentRole: desktop.currentRole || mobile.role || "none",
       lastEmail: desktop.lastEmail || mobile.email || ""
@@ -60,6 +64,7 @@
       role: mobile.role || desktop.currentRole || "none",
       email: mobile.email || desktop.lastEmail || ""
     }));
+    if (needsFullCloudRefresh) localStorage.setItem(KEYS.fullCloudRefresh, "done");
   }
 
   function reconcileSession() {
@@ -92,7 +97,7 @@
     const badge = document.createElement("div");
     badge.id = "ipadWebBadge";
     badge.className = "ipad-web-badge";
-    badge.innerHTML = '<span>Online · 5.1.20</span>';
+    badge.innerHTML = '<span>Online · 5.1.21</span>';
     document.body.appendChild(badge);
   }
 
