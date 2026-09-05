@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.1.21";
+const SITE_DESK_APP_VERSION="5.1.22";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -643,6 +643,7 @@ const CLOUD_CONFIG_KEY=KEY+"-cloud-config";
 const CLOUD_SESSION_KEY=KEY+"-cloud-session";
 const CLOUD_PRE_PULL_BACKUP_KEY=KEY+"-pre-cloud-pull";
 const CLOUD_PRE_PUSH_BACKUP_KEY=KEY+"-pre-cloud-push";
+const CLOUD_LATEST_REQUEST_KEY=KEY+"-load-latest-cloud";
 const SITE_DESK_MOBILE_URL="https://d668kmshfv-sudo.github.io/betpres-sitedesk-mobile/ipad/";
 let cloudConfig=loadCloudConfig();
 let cloudSession=loadCloudSession();
@@ -657,6 +658,17 @@ let cloudPendingDescription="Synchronizácia údajov";
 let cloudTeamMembers=[];
 let cloudTeamActivity=[];
 let cloudPilotFeedback=[];
+function captureLatestCloudRequest(){
+ const url=new URL(location.href);
+ if(url.searchParams.get("cloud")!=="latest")return false;
+ sessionStorage.setItem(CLOUD_LATEST_REQUEST_KEY,"1");
+ url.searchParams.delete("cloud");
+ history.replaceState({},"",`${url.pathname}${url.search}${url.hash}`);
+ return true
+}
+function latestCloudRequested(){return sessionStorage.getItem(CLOUD_LATEST_REQUEST_KEY)==="1"}
+function clearLatestCloudRequest(){sessionStorage.removeItem(CLOUD_LATEST_REQUEST_KEY)}
+captureLatestCloudRequest();
 if(initialBachWorkCleanup.removed){
  cloudLocalDirty=true;cloudConfig.localDirty=true;cloudPendingDescription=`Vymazané súpisy prác Bach corporation (${initialBachWorkCleanup.removed})`;saveCloudConfig()
 }
@@ -769,7 +781,7 @@ async function cloudSignIn(){
   $("cloudPassword").value="";
   setCloudMessage("cloudAuthMessage","Prihlásenie bolo úspešné. Na tomto zariadení ostaneš prihlásený.","success")
  }catch(error){setCloudMessage("cloudAuthMessage",cloudFriendlyAuthError(error),"error");return}
- try{await cloudRefreshWorkspaceStatus();await cloudLoadTeamContext();await cloudResumeAutomaticSync()}
+ try{await cloudRefreshWorkspaceStatus();await cloudLoadTeamContext();if(latestCloudRequested())await cloudPull();else await cloudResumeAutomaticSync()}
  catch(error){setCloudMessage("cloudSyncMessage",`Prihlásenie je v poriadku, ale pracovný priestor sa zatiaľ nenačítal: ${error.message}`,"error")}
 }
 function cloudFriendlyAuthError(error){const message=String(error?.message||error||"");if(/invalid login credentials/i.test(message))return"Nesprávny e-mail alebo heslo.";if(/email not confirmed/i.test(message))return"E-mail ešte nie je potvrdený. Otvor potvrdzovací e-mail zo Supabase a potom sa prihlás.";if(/failed to fetch|network/i.test(message))return"iPad sa nevie pripojiť k Supabase. Skontroluj internet a Project URL.";return message}
@@ -1145,6 +1157,7 @@ async function cloudPull({silent=false}={}){
   if(bachCleanup.removed)queueCloudPush(`Vymazané súpisy prác Bach corporation (${bachCleanup.removed})`);
   cloudSetQuickStatus("connected",`Cloud v${cloudConfig.lastCloudVersion}`);
   setCloudMessage("cloudSyncMessage",`Cloudové dáta boli načítané. Verzia ${cloudConfig.lastCloudVersion}.`,"success");
+  clearLatestCloudRequest();
   if(!silent)toast("Načítané údaje z cloudu.")
   return true
  }catch(error){
@@ -1166,7 +1179,7 @@ async function cloudRefreshWorkspaceStatus(){
    $("cloudVersionDetail").textContent=`Aktualizované ${new Date(remote.updated_at).toLocaleString("sk-SK")}`;
    if(Number(remote.data_version||0)>Number(cloudConfig.lastCloudVersion||0)){
     cloudSetQuickStatus("conflict","Novšie dáta v cloude");
-    setCloudMessage("cloudSyncMessage","V cloude je novšia verzia. Načítaj ju do počítača.","error")
+    setCloudMessage("cloudSyncMessage","V cloude je novšia verzia. Stlač „Načítať najnovšie dáta z cloudu“.","error")
    }else cloudSetQuickStatus("connected",`Cloud v${remote.data_version||1}`)
   }else{
    cloudConfig.currentRole="none";
@@ -1203,7 +1216,7 @@ function startCloudPolling(){
     if(!cloudLocalDirty)await cloudPull({silent:true});
     else{
      cloudSetQuickStatus("conflict","Konflikt dát");
-     setCloudMessage("cloudSyncMessage","V cloude je novšia verzia a v tomto počítači sú neodoslané zmeny. Najprv rozhodni, ktorú verziu zachovať.","error")
+     setCloudMessage("cloudSyncMessage","V cloude je novšia verzia a v tomto zariadení sú neodoslané zmeny. Ak chceš použiť cloudovú verziu, stlač „Načítať najnovšie dáta z cloudu“. Lokálna záloha sa vytvorí automaticky.","error")
     }
    }
   }catch{}
@@ -1415,7 +1428,7 @@ async function cloudRefreshDefectsForExport(){
         localVersion=Number(cloudConfig.lastCloudVersion||0);
   if(!remote?.data||remoteVersion<=localVersion)return{ok:true,refreshed:false};
   if(cloudLocalDirty){
-   return{ok:false,message:"V mobile sú novšie údaje, ale v počítači sú ešte neodoslané zmeny. Najprv v časti Cloud dokonči synchronizáciu a potom export zopakuj."}
+   return{ok:false,message:"V cloude sú novšie údaje, ale v tomto zariadení sú ešte neodoslané zmeny. Najprv v časti Cloud dokonči synchronizáciu a potom export zopakuj."}
   }
   await cloudPull({silent:true});
   if(Number(cloudConfig.lastCloudVersion||0)<remoteVersion){
@@ -7955,7 +7968,8 @@ async function initializeCloudPilot(){
  if(cloudConfigured()&&cloudSession?.access_token){
   try{
    await cloudEnsureSession();
-   await cloudResumeAutomaticSync();
+   if(latestCloudRequested())await cloudPull();
+   else await cloudResumeAutomaticSync();
    await cloudLoadTeamContext();
    setCloudMessage("cloudAuthMessage","Prihlásenie bolo obnovené. Na tomto zariadení ostávaš prihlásený.","success")
   }catch(error){
@@ -7967,6 +7981,9 @@ async function initializeCloudPilot(){
     setCloudMessage("cloudAuthMessage","Prihlásenie je uložené. Cloud sa obnoví po pripojení k internetu.","")
    }
   }
+ }else if(latestCloudRequested()){
+  setCloudMessage("cloudSyncMessage","Na načítanie najnovších dát sa najprv prihlás. Po prihlásení sa cloudová verzia načíta automaticky.","error");
+  showView("cloud")
  }
 }
 
