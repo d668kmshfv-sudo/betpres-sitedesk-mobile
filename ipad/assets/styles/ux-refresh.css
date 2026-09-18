@@ -92,6 +92,9 @@ body.sitedesk-v3 button:focus-visible,body.sitedesk-v3 input:focus-visible,body.
   outline:3px solid rgba(25,118,185,.28)!important;outline-offset:1px!important
 }
 body.sitedesk-v3 .panel{border-color:var(--ux-line)!important;border-radius:var(--ux-radius)!important;box-shadow:var(--ux-shadow)!important}
+.project-card-manager{min-height:20px;margin:8px 0 10px!important;color:var(--ux-muted)!important;font-size:11px!important}
+.project-card-manager strong{color:var(--ux-text)}
+.project-card-actions{flex-wrap:wrap}.project-card-actions button{min-width:120px}
 .ux-focus-toggle{border-color:#b9d5e8!important;background:#f0f8fd!important;color:#0e5d91!important}
 
 /* Súpis prác — kontext hore, nástroje a tabuľka bez vizuálneho hluku */
