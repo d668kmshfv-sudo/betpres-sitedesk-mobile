@@ -1,0 +1,219 @@
+/* BETPRES SiteDesk 5.2 — jednotné, pokojné a dotykovo prívetivé rozhranie */
+:root{
+  --ux-navy:#0a3158;
+  --ux-navy-2:#114d7d;
+  --ux-blue:#1976b9;
+  --ux-sky:#eaf4fb;
+  --ux-bg:#f3f7fa;
+  --ux-card:#fff;
+  --ux-line:#d6e1e9;
+  --ux-text:#17324a;
+  --ux-muted:#667d90;
+  --ux-success:#20845b;
+  --ux-danger:#b93434;
+  --ux-radius:12px;
+  --ux-shadow:0 7px 24px rgba(13,49,82,.07);
+}
+
+html,body{background:var(--ux-bg)!important;color:var(--ux-text)}
+body.sitedesk-v3 .app-shell{grid-template-columns:248px minmax(0,1fr)!important}
+body.sitedesk-v3 .main{min-width:0;background:var(--ux-bg)}
+
+/* Navigácia */
+body.sitedesk-v3 .site-sidebar{
+  width:248px!important;padding:14px 12px 12px!important;
+  background:linear-gradient(180deg,#092d51 0%,#0a3b67 100%)!important;
+  border-right:1px solid rgba(255,255,255,.08);box-shadow:8px 0 30px rgba(7,33,58,.08)
+}
+body.sitedesk-v3 .site-brand{position:relative;min-height:54px;padding:5px 40px 12px 4px!important;margin-bottom:6px!important}
+body.sitedesk-v3 .site-brand img{max-width:92px!important;max-height:38px!important;object-fit:contain}
+body.sitedesk-v3 .site-brand strong{font-size:13px!important;letter-spacing:.03em}
+body.sitedesk-v3 .site-brand small{font-size:9px!important;opacity:.76}
+.sidebar-collapse{
+  position:absolute;right:0;top:8px;width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important;
+  padding:0!important;border:1px solid rgba(255,255,255,.24)!important;border-radius:9px!important;
+  background:rgba(255,255,255,.09)!important;color:#fff!important;font-size:21px!important;line-height:1!important;box-shadow:none!important
+}
+body.sitedesk-v3 .site-nav{gap:2px!important;overflow-y:auto;scrollbar-width:thin}
+body.sitedesk-v3 .nav-group{margin:0 0 7px!important}
+body.sitedesk-v3 .nav-group-label{padding:4px 10px 3px!important;font-size:8px!important;letter-spacing:.15em!important;color:#98b8d0!important}
+body.sitedesk-v3 .site-nav .nav-btn{
+  min-height:42px!important;margin:1px 0!important;padding:6px 9px!important;gap:9px!important;border-radius:9px!important;
+  font-size:12px!important;font-weight:780!important;align-items:center!important
+}
+body.sitedesk-v3 .site-nav .nav-btn .nav-icon{width:28px!important;height:28px!important;border-radius:8px!important;font-size:14px!important}
+body.sitedesk-v3 .site-nav .nav-btn.active{box-shadow:0 6px 18px rgba(0,0,0,.15)!important}
+body.sitedesk-v3 .site-sidebar-footer{padding:9px 7px 2px!important}
+
+body.nav-compact.sitedesk-v3 .app-shell{grid-template-columns:76px minmax(0,1fr)!important}
+body.nav-compact.sitedesk-v3 .site-sidebar{width:76px!important;padding-left:9px!important;padding-right:9px!important}
+body.nav-compact .site-brand{justify-content:center!important;padding:4px 0 11px!important}
+body.nav-compact .site-brand img{width:54px!important}
+body.nav-compact .site-brand>div,body.nav-compact .nav-group-label,body.nav-compact .site-nav .nav-btn>span:last-child,body.nav-compact .site-sidebar-footer>div:last-child{display:none!important}
+body.nav-compact .sidebar-collapse{position:static!important;margin-left:auto!important;margin-right:auto!important;transform:rotate(180deg)}
+body.nav-compact .site-nav .nav-btn{justify-content:center!important;padding:6px!important}
+body.nav-compact .site-nav .nav-btn .nav-icon{width:34px!important;height:34px!important}
+body.nav-compact .site-sidebar-footer{justify-content:center!important}
+
+/* Horný panel */
+body.sitedesk-v3 .site-topbar{
+  min-height:66px!important;height:66px!important;padding:8px 18px!important;gap:14px!important;
+  background:rgba(255,255,255,.97)!important;border-bottom:1px solid var(--ux-line)!important;box-shadow:0 4px 18px rgba(18,57,89,.05)!important
+}
+.site-topbar-title{min-width:250px!important}
+.site-topbar-title>small{font-size:9px!important;color:var(--ux-muted)!important}
+.project-picker span{font-size:9px!important;color:var(--ux-muted)!important}
+.project-picker select{min-width:270px!important;height:36px!important;padding:6px 34px 6px 10px!important;font-weight:800}
+.site-topbar-actions{gap:7px!important;min-width:0}
+.site-command-button,.cloud-quick-status,.undo-btn{min-height:36px!important;height:36px!important;border-radius:9px!important}
+.site-save-state{white-space:nowrap;font-size:10px!important}
+
+/* Všeobecná hierarchia obrazoviek */
+body.sitedesk-v3 .view{padding:18px 20px 26px!important;max-width:1900px}
+body.sitedesk-v3 .page-title{
+  min-height:58px;margin:0 0 12px!important;padding:9px 12px 9px 16px!important;
+  border:1px solid var(--ux-line);border-radius:var(--ux-radius);background:rgba(255,255,255,.94);box-shadow:var(--ux-shadow)
+}
+body.sitedesk-v3 .page-title:before{left:0!important;top:12px!important;bottom:12px!important;width:4px!important;border-radius:0 4px 4px 0}
+body.sitedesk-v3 .page-title p{margin-bottom:2px!important;font-size:8px!important;letter-spacing:.12em!important}
+body.sitedesk-v3 .page-title h1{font-size:23px!important;line-height:1.08!important;color:var(--ux-navy)!important}
+body.sitedesk-v3 .header-actions{display:flex!important;align-items:center;justify-content:flex-start;gap:6px!important;overflow-x:auto;scrollbar-width:thin}
+body.sitedesk-v3 .header-actions button{flex:0 0 auto;min-height:36px!important;height:36px!important;padding:0 11px!important;font-size:10.5px!important;white-space:nowrap}
+body.sitedesk-v3 button,body.sitedesk-v3 input,body.sitedesk-v3 select,body.sitedesk-v3 textarea{font-family:inherit}
+body.sitedesk-v3 button{transition:background .16s,border-color .16s,transform .08s,box-shadow .16s}
+body.sitedesk-v3 button:active{transform:translateY(1px)}
+body.sitedesk-v3 button:focus-visible,body.sitedesk-v3 input:focus-visible,body.sitedesk-v3 select:focus-visible,body.sitedesk-v3 textarea:focus-visible{
+  outline:3px solid rgba(25,118,185,.28)!important;outline-offset:1px!important
+}
+body.sitedesk-v3 .panel{border-color:var(--ux-line)!important;border-radius:var(--ux-radius)!important;box-shadow:var(--ux-shadow)!important}
+.ux-focus-toggle{border-color:#b9d5e8!important;background:#f0f8fd!important;color:#0e5d91!important}
+
+/* Súpis prác — kontext hore, nástroje a tabuľka bez vizuálneho hluku */
+body.work-focus-mode #workStatements.active{height:calc(100vh - 66px)!important;padding:10px 12px 12px!important}
+body.work-focus-mode #workStatements .page-title{height:56px!important;min-height:56px!important;margin-bottom:7px!important;padding:7px 10px 7px 16px!important;overflow:visible!important}
+body.work-focus-mode #workStatements .page-title h1{font-size:22px!important}
+body.work-focus-mode #workStatements .header-actions{padding-bottom:1px;justify-content:flex-start!important}
+body.work-focus-mode #workStatements .header-actions button{height:34px!important;min-height:34px!important}
+body.work-focus-mode #workStatements .work-header-panel:not(.work-details-collapsed){height:auto!important;max-height:142px!important;padding:10px 12px!important;margin-bottom:7px!important;overflow:auto!important}
+body.work-focus-mode #workStatements .work-header-grid{grid-template-columns:1.3fr 1.25fr .9fr .85fr .65fr repeat(3,.9fr)!important;gap:7px!important}
+body.work-focus-mode #workStatements .work-header-grid label{font-size:9px!important;color:var(--ux-muted)!important}
+body.work-focus-mode #workStatements .work-header-grid input,body.work-focus-mode #workStatements .work-header-grid select,body.work-focus-mode #workStatements .work-header-grid textarea{height:32px!important;min-height:32px!important;border-radius:7px!important}
+body.work-focus-mode #workStatements .work-header-grid .work-scope-field{grid-column:1/-1!important}
+body.work-focus-mode #workStatements .work-invoice-banner{height:50px!important;min-height:50px!important;margin-bottom:7px!important;background:linear-gradient(105deg,#092f56,#0d4d7e)!important;box-shadow:0 8px 20px rgba(8,47,87,.14)!important}
+body.work-focus-mode #workStatements .work-invoice-copy>strong{font-size:21px!important}
+body.work-focus-mode #workStatements .work-actions{
+  min-height:41px!important;max-height:82px!important;margin-bottom:7px!important;padding:4px!important;
+  border:1px solid var(--ux-line);border-radius:10px;background:#fff;overflow:auto!important
+}
+body.work-focus-mode #workStatements .work-actions button,body.work-focus-mode #workStatements .work-actions input,body.work-focus-mode #workStatements .work-actions select{height:32px!important;min-height:32px!important;border-radius:7px!important}
+body.work-focus-mode #workStatements .work-table-panel{border:1px solid #bfcfdb!important;border-radius:10px!important;background:#fff}
+body.work-focus-mode #workStatements .work-sheet-wrap{scrollbar-gutter:stable both-edges}
+body.work-focus-mode #workStatements .work-sheet thead th{position:sticky!important;top:0!important;z-index:8!important;background:#0d3d69!important;color:#fff!important;border-color:#315f85!important}
+body.work-focus-mode #workStatements .work-sheet thead tr:nth-child(2) th{top:29px!important;background:#14527f!important}
+body.work-focus-mode #workStatements .work-sheet tbody tr:nth-child(even) td{background:#f7fafc}
+body.work-focus-mode #workStatements .work-sheet tbody tr:hover td{background:#edf6fc!important}
+body.work-focus-mode #workStatements .work-bottom-grid{gap:10px!important;margin-top:8px!important}
+body.work-focus-mode #workStatements .work-bottom-grid .panel{padding:12px!important;margin:0!important}
+
+/* Smenovky — režimy ako prehľadný prepínač a tabuľka ako hlavný obsah */
+body.workers-focus-mode #workers.active{height:calc(100vh - 66px)!important;padding:10px 12px 12px!important;gap:7px!important}
+body.workers-focus-mode #workers .page-title{height:56px!important;min-height:56px!important;margin:0!important;padding:7px 10px 7px 16px!important;flex-direction:row!important;flex-wrap:nowrap!important}
+body.workers-focus-mode #workers .page-title>div:first-child{width:auto!important;min-width:185px!important;padding:0!important;text-align:left!important}
+body.workers-focus-mode #workers .page-title p{display:none!important}
+body.workers-focus-mode #workers .page-title h1{text-align:left!important;font-size:22px!important;padding:0!important}
+body.workers-focus-mode #workers .page-title .header-actions{justify-content:flex-start!important;overflow-x:auto!important}
+body.workers-focus-mode #workers .header-actions button{height:34px!important;min-height:34px!important}
+body.workers-focus-mode #workers .worker-mode-tabs{
+  display:flex!important;height:50px!important;min-height:50px!important;margin:0!important;padding:5px!important;gap:5px!important;
+  border:1px solid var(--ux-line)!important;border-radius:11px!important;background:#fff!important;box-shadow:none!important;overflow-x:auto!important
+}
+body.workers-focus-mode #workers .worker-mode-tabs button{
+  flex:1 0 155px!important;width:auto!important;min-width:155px!important;height:38px!important;min-height:38px!important;
+  padding:5px 10px!important;gap:7px!important;border-radius:8px!important;justify-content:flex-start!important
+}
+body.workers-focus-mode #workers .worker-mode-tabs button>span{font-size:15px!important}
+body.workers-focus-mode #workers .worker-mode-tabs strong{font-size:10.5px!important;text-align:left}
+body.workers-focus-mode #workers .worker-mode-tabs small{display:none!important}
+body.workers-focus-mode #workers .worker-toolbar{
+  display:flex!important;min-height:48px!important;height:auto!important;margin:0!important;padding:5px 7px!important;gap:6px!important;
+  border:1px solid var(--ux-line)!important;border-radius:10px!important;box-shadow:none!important;overflow-x:auto!important
+}
+body.workers-focus-mode #workers .worker-toolbar label{display:flex!important;align-items:center!important;gap:7px!important;white-space:nowrap}
+body.workers-focus-mode #workers .worker-toolbar input,body.workers-focus-mode #workers .worker-toolbar button{height:36px!important;min-height:36px!important}
+body.workers-focus-mode #workers .worker-note{margin:0!important;padding:7px 10px!important;border-radius:8px!important;font-size:10px!important;line-height:1.3}
+body.workers-focus-mode #workers .worker-inline-actions{margin:0!important;padding:0!important}
+body.workers-focus-mode #workers .worker-panel{border:1px solid #bfd0dd!important;border-radius:10px!important;background:#fff!important;box-shadow:var(--ux-shadow)!important}
+body.workers-focus-mode #workers .worker-table-wrap{scrollbar-gutter:stable both-edges!important}
+body.workers-focus-mode #workers .worker-table thead th{position:sticky!important;top:0!important;z-index:12!important;background:#0d3d69!important;color:#fff!important;border-color:#315f85!important}
+body.workers-focus-mode #workers .worker-table tbody tr:nth-child(even) td:not(.weekend):not(.holiday){background:#f6f9fc!important}
+body.workers-focus-mode #workers .worker-table tbody tr:hover td:not(.weekend):not(.holiday){background:#edf6fc!important}
+body.workers-focus-mode #workers .betpres-timesheet-summary,body.workers-focus-mode #workers .company-hours-summary{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:7px!important;margin:0!important}
+body.workers-focus-mode #workers .betpres-timesheet-summary article,body.workers-focus-mode #workers .company-hours-summary article{min-height:48px!important;padding:7px 11px!important;border:1px solid var(--ux-line)!important;border-radius:9px!important;box-shadow:none!important}
+body.workers-focus-mode #workers .betpres-timesheet-summary strong,body.workers-focus-mode #workers .company-hours-summary strong{font-size:18px!important}
+body.workers-focus-mode #workers .company-hour-switcher,body.workers-focus-mode #workers .company-timesheet-switcher{margin:0!important;padding:8px 10px!important;border-radius:10px!important;box-shadow:none!important}
+body.workers-focus-mode #workers .company-hour-switcher label,body.workers-focus-mode #workers .company-timesheet-switcher label{font-size:9px!important;color:var(--ux-muted)!important}
+body.workers-focus-mode #workers .company-hour-switcher select,body.workers-focus-mode #workers .company-timesheet-switcher select{height:38px!important;font-size:13px!important;font-weight:850}
+
+/* Skutočný pracovný režim: ponechá iba nástroje danej obrazovky a maximum miesta pre tabuľku. */
+body.ux-zen .site-sidebar,body.ux-zen .site-topbar{display:none!important}
+body.ux-zen.sitedesk-v3 .app-shell{display:block!important}
+body.ux-zen .main{height:100vh!important}
+body.ux-zen #workStatements.active,body.ux-zen #workers.active{height:100vh!important;padding:8px!important}
+body.ux-zen .ux-focus-toggle{position:relative;z-index:20;background:#fff3d1!important;border-color:#e6c66a!important;color:#614700!important}
+
+/* iPad a menšie notebooky */
+@media(max-width:1280px){
+  body.sitedesk-v3 .app-shell,body.workers-focus-mode .app-shell,body.work-focus-mode .app-shell{grid-template-columns:210px minmax(0,1fr)!important}
+  body.sitedesk-v3 .site-sidebar{width:210px!important}
+  body.nav-compact.sitedesk-v3 .app-shell{grid-template-columns:72px minmax(0,1fr)!important}
+  body.nav-compact.sitedesk-v3 .site-sidebar{width:72px!important}
+  .site-command-button span:nth-child(2),.site-command-button kbd,.site-save-state,.site-user>div{display:none!important}
+  .project-picker select{min-width:215px!important}
+  body.sitedesk-v3 .page-title{align-items:center!important}
+  body.sitedesk-v3 .header-actions{max-width:68vw!important}
+  body.work-focus-mode #workStatements .work-header-grid{grid-template-columns:repeat(4,minmax(140px,1fr))!important}
+  body.workers-focus-mode #workers .worker-mode-tabs button{flex-basis:175px!important}
+}
+
+@media(max-width:800px){
+  body.sitedesk-v3 .app-shell,body.workers-focus-mode .app-shell,body.work-focus-mode .app-shell{display:block!important}
+  body.sitedesk-v3 .site-sidebar{width:min(286px,86vw)!important}
+  .sidebar-collapse{display:none!important}
+  body.sitedesk-v3 .site-topbar{height:64px!important;min-height:64px!important;padding:8px 10px!important}
+  .site-topbar-title{min-width:0!important;flex:1}
+  .site-topbar-title>small,.site-topbar-actions .site-command-button,.site-topbar-actions .undo-btn,.site-user{display:none!important}
+  .project-picker select{width:100%!important;min-width:0!important;height:42px!important}
+  body.sitedesk-v3 .view{padding:10px!important}
+  body.sitedesk-v3 .page-title,body.work-focus-mode #workStatements .page-title,body.workers-focus-mode #workers .page-title{
+    min-height:54px!important;height:auto!important;padding:8px 8px 8px 14px!important;gap:8px!important;overflow-x:auto!important
+  }
+  body.sitedesk-v3 .page-title>div:first-child{min-width:145px!important}
+  body.sitedesk-v3 .page-title h1{font-size:19px!important}
+  body.sitedesk-v3 .header-actions{display:flex!important;max-width:none!important;overflow-x:auto!important}
+  body.sitedesk-v3 .header-actions button{display:inline-flex!important;min-height:42px!important;height:42px!important;align-items:center}
+  body.sitedesk-v3 .header-actions button.hidden{display:none!important}
+  body.work-focus-mode #workStatements.active,body.workers-focus-mode #workers.active{height:calc(100dvh - 64px)!important;padding:7px!important}
+  body.work-focus-mode #workStatements .work-header-panel:not(.work-details-collapsed){max-height:220px!important}
+  body.work-focus-mode #workStatements .work-header-grid{grid-template-columns:repeat(2,minmax(145px,1fr))!important}
+  body.work-focus-mode #workStatements .work-invoice-side{display:none!important}
+  body.work-focus-mode #workStatements .work-actions{min-height:48px!important}
+  body.workers-focus-mode #workers .worker-mode-tabs{min-height:54px!important;height:54px!important}
+  body.workers-focus-mode #workers .worker-mode-tabs button{flex:0 0 168px!important;height:42px!important;min-height:42px!important}
+  body.workers-focus-mode #workers .worker-toolbar{min-height:52px!important}
+  body.workers-focus-mode #workers .worker-toolbar input,body.workers-focus-mode #workers .worker-toolbar button{height:42px!important;min-height:42px!important}
+  body.workers-focus-mode #workers .betpres-timesheet-summary,body.workers-focus-mode #workers .company-hours-summary{grid-template-columns:repeat(3,minmax(120px,1fr))!important;overflow-x:auto!important}
+  body.workers-focus-mode #workers #companyTimesheetsPanel .company-timesheet-switcher{
+    display:grid!important;grid-template-columns:minmax(0,1fr) 132px!important;align-items:end!important;
+    gap:8px!important;padding:9px!important
+  }
+  body.workers-focus-mode #workers #companyTimesheetsPanel .company-timesheet-switcher>label{
+    flex:none!important;min-width:0!important;width:auto!important;height:auto!important
+  }
+  body.workers-focus-mode #workers #companyTimesheetsPanel .company-timesheet-page-count,
+  body.workers-focus-mode #workers #companyTimesheetsPanel .company-timesheet-page-count input{width:132px!important;min-width:0!important}
+  body.workers-focus-mode #workers #companyTimesheetsPanel .company-timesheet-switcher-actions{grid-column:1/-1!important}
+}
+
+@media print{
+  .sidebar-collapse,.ux-focus-toggle{display:none!important}
+}
