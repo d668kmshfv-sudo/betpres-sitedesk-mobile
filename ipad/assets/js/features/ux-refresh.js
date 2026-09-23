@@ -84,7 +84,7 @@
 
     document.addEventListener("keydown",event=>{
       if(event.key==="Escape"&&body.classList.contains("ux-zen")){event.preventDefault();setZen(false)}
-      if(event.key.toLowerCase()==="f"&&event.ctrlKey&&event.shiftKey&&activeWorkspace()){
+      if(String(event.key||"").toLowerCase()==="f"&&event.ctrlKey&&event.shiftKey&&activeWorkspace()){
         event.preventDefault();setZen(!body.classList.contains("ux-zen"));
       }
     });
