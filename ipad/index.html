@@ -2,11 +2,11 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk Online 5.2.5</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.2.5"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0"><link rel="stylesheet" href="assets/styles/ux-refresh.css?v=5.2.5">
+<meta name="theme-color" content="#0b2b4f"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="SiteDesk"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES SiteDesk Online 5.2.6</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.2.6"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0"><link rel="stylesheet" href="assets/styles/ux-refresh.css?v=5.2.6">
 
 <script src="assets/js/bootstrap/startup-guard.js?v=5.1.0"></script>
-<script src="assets/js/ipad-bridge.js?v=1.2.5"></script>
+<script src="assets/js/ipad-bridge.js?v=1.2.6"></script>
 
 </head>
 <body>
@@ -14,7 +14,7 @@
 <aside class="sidebar site-sidebar" id="sidebar">
  <div class="brand site-brand">
   <img src="assets/images/navigation-logo.png" alt="Betpres">
-    <div><strong>BETPRES</strong><small>SiteDesk Online 5.2.5</small></div>
+    <div><strong>BETPRES</strong><small>SiteDesk Online 5.2.6</small></div>
     <button type="button" class="sidebar-collapse" id="sidebarCollapse" aria-label="Zúžiť bočné menu" aria-expanded="true" title="Zúžiť bočné menu">‹</button>
  </div>
 
@@ -66,7 +66,7 @@
 
  <div class="site-sidebar-footer">
   <div class="site-version-dot"></div>
-      <div><strong>SiteDesk Online 5.2.5</strong><small>Denník · súpisy · smenovky</small></div>
+      <div><strong>SiteDesk Online 5.2.6</strong><small>Denník · súpisy · smenovky</small></div>
  </div>
 </aside>
 <main class="main">
@@ -1361,6 +1361,7 @@
    <input id="billingContractPrice" type="number" min="0" step="0.01" placeholder="Ručne doplň zmluvnú cenu">
    <small class="billing-contract-hint">Po prvom uložení sa pri ďalšej fakturácii firmy predvyplní automaticky.</small>
   </label>
+  <label>Fakturácia podľa dokladu<select id="billingDocument"></select></label>
   <label>Dodatok č.<input id="billingAmendmentNo" placeholder="napr. Dodatok č. 1 alebo 1/2026"></label>
   <div class="database-hint span2">Zmluvná cena a číslo dodatku sa zadávajú ručne. Pri ďalšom mesačnom zázname ich môžeš znovu doplniť alebo nechať prázdne.</div>
   <div class="modal-actions span2"><button type="button" class="ghost" data-close="billingModal">Zrušiť</button><button type="submit">Uložiť</button></div>
@@ -1389,7 +1390,7 @@ Menejpráce | -2 000,00 €"></textarea></label>
   <label>Skutočné dokončenie<input id="acceptanceActualEnd" type="date"></label>
   <label>Cena diela podľa ZoD<input id="acceptanceContractPrice" placeholder="napr. 405 000,00 €"></label>
   <label>Cena dodatkov spolu<input id="acceptanceAdditionsPrice" readonly placeholder="počíta sa z dodatkov"></label>
-  <label>Skutočná cena diela<input id="acceptanceActualPrice" readonly placeholder="ZoD ± dodatky"></label>
+  <label>Skutočne vyfakturované bez DPH<input id="acceptanceActualPrice" readonly placeholder="Súčet fakturácie firmy na stavbe"><small>Súčet všetkých mesiacov, ZoD, objednávok a dodatkov tejto firmy na aktívnej stavbe.</small></label>
   <div class="assignment-info span2 acceptance-calculation-note"><strong>Výpočet ceny:</strong> Skutočná cena diela sa počíta automaticky ako <b>zmluvná cena podľa ZoD ± dodatky</b>. Pri dodatkoch môžeš písať plusové aj mínusové sumy.</div>
   <label>Výsledok<select id="acceptanceResult">
    <option>Prevzaté bez vád</option>
@@ -1717,12 +1718,12 @@ Marek Kováč"></textarea>
 
 <div id="toast" class="toast"></div>
 <script src="assets/js/data/seed-data.js?v=5.1.0"></script><script src="assets/js/data/material-passport-data.js?v=5.1.0"></script><script src="assets/js/vendor/jszip.min.js"></script><script src="assets/js/vendor/exceljs.min.js"></script>
-<script src="assets/js/legacy/sitedesk-core.js?v=5.2.5"></script>
+<script src="assets/js/legacy/sitedesk-core.js?v=5.2.6"></script>
 <script src="assets/js/features/work-spreadsheet.js?v=5.1.0"></script>
-<script src="assets/js/features/work-statement-roundtrip.js?v=5.2.5"></script>
+<script src="assets/js/features/work-statement-roundtrip.js?v=5.2.6"></script>
 <script src="assets/js/features/pdf-preview.js?v=5.1.5"></script>
 <script src="assets/js/features/timesheet-pdf-export.js?v=5.1.9"></script>
 <script src="assets/js/features/mobile-diary-dashboard.js?v=5.1.9"></script>
 <script src="assets/js/features/appearance-settings.js?v=5.1.0"></script>
 <script src="assets/js/features/ai-assistant.js?v=5.1.0"></script>
-<script src="assets/js/features/material-samples.js?v=5.1.0"></script><script src="assets/js/features/ux-refresh.js?v=5.2.5"></script></body></html>
+<script src="assets/js/features/material-samples.js?v=5.1.0"></script><script src="assets/js/features/ux-refresh.js?v=5.2.6"></script></body></html>

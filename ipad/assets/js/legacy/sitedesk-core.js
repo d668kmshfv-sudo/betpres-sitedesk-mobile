@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.5";
+const SITE_DESK_APP_VERSION="5.2.6";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -1953,6 +1953,16 @@ function fillSavedBillingContractPrice(force=false){
  $("billingContractPrice").dataset.autoFilled=saved!==""?"true":"false"
 }
 
+function billingDocumentOptions(companyId){
+ const a=assignment(state.selectedProjectId,companyId);
+ if(!a)return[];
+ return [{id:"base",label:assignmentDocRef(a)},...assignmentOrders(a).map(item=>({id:`order:${item.id}`,label:assignmentOrderLabel(item)})),...assignmentAddenda(a).map(item=>({id:`addendum:${item.id}`,label:assignmentAddendumLabel(item)}))]
+}
+function fillBillingDocuments(record=null){
+ const options=billingDocumentOptions($("billingCompany").value),selected=record?.billingDocumentId||"base";
+ if(record?.billingDocumentLabel&&!options.some(item=>item.id===selected))options.push({id:selected,label:record.billingDocumentLabel});
+ $("billingDocument").innerHTML=options.map(item=>`<option value="${esc(item.id)}" ${item.id===selected?"selected":""}>${esc(item.label)}</option>`).join("")||'<option value="">Bez priradeného dokladu</option>'
+}
 function openBillingEditor(record=null,prefill={}){
  const assignedCompanies=activeAssignments()
   .map(assignment=>company(assignment.companyId))
@@ -1975,6 +1985,7 @@ function openBillingEditor(record=null,prefill={}){
   :savedBillingContractPrice($("billingCompany").value);
  $("billingContractPrice").dataset.autoFilled=!record&&$("billingContractPrice").value!==""?"true":"false";
  $("billingAmendmentNo").value=record?.amendmentNo||"";
+ fillBillingDocuments(record);
  $("billingModal").classList.remove("hidden");
  setTimeout(()=>$("billingCompany").focus(),50)
 }
@@ -2127,8 +2138,9 @@ function formatBillingMonth(value){
 }
 function billingRecordDescription(record){
  const direct=String(record?.description||"").trim();
- if(direct)return direct;
  const parts=[];
+ if(record?.billingDocumentLabel)parts.push(record.billingDocumentLabel);
+ if(direct){parts.push(direct);return parts.join(" · ")}
  if(record?.sourceLabel)parts.push(record.sourceLabel);
  if(Array.isArray(record?.documents)&&record.documents.length)parts.push(record.documents.join(" · "));
  return [...new Set(parts.filter(Boolean))].join(" · ")
@@ -2174,7 +2186,7 @@ function renderBillingTimelineMatrix(projectRows,companies,query="",companyId=""
   const cells=monthKeys.map(month=>{
    const records=recordsByCell.get(`${item.id}::${month}`)||[],
          total=records.reduce((sum,record)=>sum+Number(record.amount||0),0),
-         descriptions=[...new Set(records.map(billingRecordDescription).filter(Boolean))];
+         descriptions=records.map(record=>`${billingRecordDescription(record)||record.amendmentNo||"Fakturácia"}: ${eur.format(Number(record.amount||0))}`);
    companyTotal+=total;
    if(!records.length)return `<td><button type="button" class="billing-matrix-empty" data-billing-matrix-add="1" data-company-id="${item.id}" data-month="${month}" aria-label="Pridať fakturáciu firmy ${esc(item.name)} za ${esc(formatBillingMonth(month))}">+ doplniť</button></td>`;
    const action=records.length===1?`data-billing-matrix-edit="${records[0].id}"`:`data-billing-matrix-detail="1" data-company-id="${item.id}" data-month="${month}"`;
@@ -2282,7 +2294,7 @@ $("billingSearch").onchange=()=>{
  renderBilling()
 };
 $("addBillingBtn").onclick=()=>openBillingEditor();
-$("billingCompany").onchange=()=>fillSavedBillingContractPrice(true);
+$("billingCompany").onchange=()=>{fillSavedBillingContractPrice(true);fillBillingDocuments()};
 $("billingContractPrice").oninput=()=>{
  $("billingContractPrice").dataset.autoFilled="false"
 };
@@ -2299,6 +2311,8 @@ $("billingForm").onsubmit=event=>{
         month:$("billingMonth").value,
         amount:Number($("billingAmount").value||0),
          description:$("billingDescription").value.trim(),
+         billingDocumentId:$("billingDocument").value,
+         billingDocumentLabel:$("billingDocument").selectedOptions[0]?.textContent||"",
         contractPrice:$("billingContractPrice").value===""?"":Number($("billingContractPrice").value),
         amendmentNo:$("billingAmendmentNo").value.trim()
        };
@@ -7822,7 +7836,9 @@ function acceptanceRecalculatePrices(){
  const base=acceptanceNumberValue($("acceptanceContractPrice").value);
  const add=acceptanceAdditionsSum($("acceptanceAdditions")?.value||"");
  if($("acceptanceAdditionsPrice"))$("acceptanceAdditionsPrice").value=acceptanceMoney(add);
- $("acceptanceActualPrice").value=base||add?acceptanceMoney(base+add):""
+ const companyId=$("acceptanceCompany").value;
+ const invoiced=state.billings.filter(record=>record.projectId===state.selectedProjectId&&record.companyId===companyId).reduce((sum,record)=>sum+Number(record.amount||0),0);
+ $("acceptanceActualPrice").value=companyId?acceptanceMoney(invoiced):""
 }
 function acceptanceFillFromAssignment(companyId,force=false){
  const a=assignment(state.selectedProjectId,companyId),c=company(companyId);
