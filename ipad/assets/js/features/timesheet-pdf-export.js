@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.1.9";
+ var APP_VERSION = "5.2.9";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -139,8 +139,8 @@ function splitRows(rows, size) {
    ".company-timesheet-pdf-table thead th{font-size:8.4px}.company-timesheet-pdf-table tbody tr{height:9mm}.company-timesheet-pdf-table tbody td{height:9mm;font-size:9px}.company-timesheet-pdf-table tbody td.name strong{font-size:14px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-timesheet-pdf-table tfoot td{font-size:8.5px}",
   ".company-timesheet-pdf-table .company-time-pdf-stack{min-height:8.7mm}.company-timesheet-pdf-table .company-time-pdf-stack span{min-height:4.3mm}.company-timesheet-pdf-table .company-time-pdf-stack em{font-size:7.4px}",
    ".company-status-table .number{width:3%}.company-status-table .name{width:19%;padding-left:2.4mm!important;padding-right:1.2mm!important}.company-status-table .day{width:2.35%;padding-left:.2mm!important;padding-right:.2mm!important;font-size:6.4px}.company-status-table .sum{width:5.15%}",
-   ".company-status-table th,.company-status-table td{height:4.4mm;padding-top:.15mm;padding-bottom:.15mm}",
-   ".company-status-table tbody td.name strong{font-size:11px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-status-table tbody td:not(.name){font-size:6.8px}.company-status-table tfoot td.name{font-size:8px}",
+   ".company-status-table{height:156mm}.company-status-table thead th,.company-status-table tfoot td{height:5mm;padding-top:.2mm;padding-bottom:.2mm}.company-status-table tbody td{height:var(--status-row-height);padding-top:.2mm;padding-bottom:.2mm}",
+   ".company-status-table tbody td.name strong{font-size:10.5px;line-height:1.1;white-space:normal;overflow-wrap:anywhere}.company-status-table tbody td:not(.name){font-size:8.5px}.company-status-table tfoot td.name{font-size:9px}",
     ".employee-timesheet-table .name{width:46mm}.employee-timesheet-table tbody td.name strong{font-size:11px;line-height:1.12}.employee-timesheet-table tbody td.name small{font-size:7.5px;line-height:1.1;margin-top:.4mm}",
     ".betpres-employee-timesheet-table tbody td{height:8.3mm}.employee-timesheet-table .employee-reward{display:inline-flex;align-items:center;gap:1mm;margin-top:.7mm;padding:.45mm 1.2mm;border:1px solid #8eb6d6;border-radius:1.5mm;background:#e8f3fb;color:#082f61;font-size:6.8px;font-weight:800;line-height:1}.employee-timesheet-table .employee-reward b{font-size:7.4px}",
     ".employee-timesheet-table .thp-stack{display:flex;min-height:5mm;flex-direction:column;align-items:center;justify-content:center;line-height:2.2mm}.employee-timesheet-table .thp-stack .thp-extra{color:#a05c12;font-size:6.1px}",
@@ -181,7 +181,7 @@ function splitRows(rows, size) {
   syncBetpresWorkerRow(month, sheet);
   sortWorkerRows(sheet);
   var allRows = sheet.rows || [];
-  var rowsPerPage = 36;
+  var rowsPerPage = 24;
   var chunks = splitRowsBalanced(allRows, rowsPerPage);
   var info = monthInfo(month);
   var pages = [];
@@ -210,7 +210,8 @@ function splitRows(rows, size) {
     totals += '<td class="' + dayMeta(month, day).className + '">' + html(displayValue(dayTotal || "")) + "</td>";
    }
    totals += '<td class="sum">' + html(displayValue(grand)) + "</td></tr>";
-   var table = '<table class="company-status-table"><thead>' + tableHead(month, "Firma / skupina", false) + "</thead><tbody>" + body + "</tbody><tfoot>" + totals + "</tfoot></table>";
+   var rowHeight = (141 / Math.max(1, rows.length)).toFixed(3);
+   var table = '<table class="company-status-table" style="--status-row-height:' + rowHeight + 'mm"><thead>' + tableHead(month, "Firma / skupina", false) + "</thead><tbody>" + body + "</tbody><tfoot>" + totals + "</tfoot></table>";
    pages.push(page("STAV PRACOVNÍKOV", month, pageIndex + 1, chunks.length, "denný počet osôb", table, allRows.length + " skupín · spolu " + displayValue(grand)));
    rowOffset += rows.length;
   });
