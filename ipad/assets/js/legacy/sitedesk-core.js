@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.4";
+const SITE_DESK_APP_VERSION="5.2.5";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -1814,7 +1814,7 @@ $("projectForm").onsubmit=e=>{
 function activeAssignments(){return state.assignments.filter(a=>a.projectId===state.selectedProjectId)}function masterContact(c,key){return c?.[key]||"—"}
 function companiesViewSignature(){
  const query=$("companySearch")?.value||"",assignments=activeAssignments(),ids=new Set(assignments.map(item=>item.companyId));
- return JSON.stringify([state.selectedProjectId,query,assignments,state.companies.filter(item=>ids.has(item.id))])
+ return JSON.stringify([state.selectedProjectId,query,assignments,state.companies.filter(item=>ids.has(item.id)),state.handovers.filter(item=>item.projectId===state.selectedProjectId)])
 }
 function prepareCompaniesView(){
  const signature=companiesViewSignature();
@@ -1827,7 +1827,11 @@ function assignmentAddenda(item){if(!item)return[];if(!Array.isArray(item.addend
 function assignmentAddendumLabel(item){return `Dodatok č. ${String(item?.number||"").trim()||"—"}`}
 function assignmentOrders(item){if(!item)return[];if(!Array.isArray(item.orders))item.orders=[];return item.orders}
 function assignmentOrderLabel(item){return `Objednávka č. ${String(item?.number||"").trim()||"—"}`}
-function renderCompanies(){const q=$("companySearch").value.trim().toLowerCase();const rows=activeAssignments().map(a=>({a,c:company(a.companyId)})).filter(x=>x.c&&`${x.c.name} ${x.c.ico} ${x.c.contact||""} ${x.a.scope||""} ${assignmentAddenda(x.a).map(d=>`${d.number} ${d.name}`).join(" ")} ${assignmentOrders(x.a).map(d=>`${d.number} ${d.name}`).join(" ")}`.toLowerCase().includes(q));$("companyCount").textContent=`${rows.length} firiem`;$("companyTable").innerHTML=rows.map(({a,c})=>{const addenda=assignmentAddenda(a),orders=assignmentOrders(a);return `<tr><td><strong>${esc(c.name)}</strong></td><td><strong>${esc(assignmentDocRef(a))}</strong>${addenda.length?`<div class="assignment-addenda-chips">${addenda.map(d=>`<span title="${esc(d.name||"")}">${esc(assignmentAddendumLabel(d))} · ${esc(d.name||"Bez názvu")} · ${eur.format(parseWorkNumber(d.price||0))}</span>`).join("")}</div>`:""}${orders.length?`<div class="assignment-addenda-chips assignment-order-chips">${orders.map(d=>`<span title="${esc(d.name||"")}">${esc(assignmentOrderLabel(d))} · ${esc(d.name||"Bez názvu")} · ${eur.format(parseWorkNumber(d.price||0))}</span>`).join("")}</div>`:""}</td><td>${esc(c.address||"—")}</td><td>${esc(c.postalCity||"—")}</td><td>${esc(c.ico||"—")}</td><td>${esc(c.dic||"—")}</td><td>${esc(c.icdph||"—")}</td><td>${esc(masterContact(c,"contact"))}</td><td>${esc(masterContact(c,"phone"))}</td><td><strong>${esc(a.scope||"—")}</strong></td><td><div class="row-actions multi"><button class="warn" data-edit-assignment="${c.id}">Doklad / predmet</button><button class="assignment-addendum-action" data-add-assignment-addendum="${a.id}">+ Dodatok</button><button class="assignment-order-action" data-add-assignment-order="${a.id}">+ Objednávka</button><button class="ghost" data-edit-company="${c.id}">Údaje firmy</button><button data-handover-company="${c.id}">Odovzdanie</button><button class="danger" data-remove-assignment="${c.id}">Odobrať</button></div></td></tr>`}).join("")||`<tr><td colspan="11" style="text-align:center;color:#789;padding:30px">Na tejto stavbe zatiaľ nie sú firmy. Klikni na „Priradiť existujúcu firmu“.</td></tr>`;
+function companyHandoverStatus(companyId){
+ const record=state.handovers.filter(item=>item.projectId===state.selectedProjectId&&item.companyId===companyId).sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")))[0];
+ return record?`<div style="margin-top:6px"><span class="acceptance-status-chip acceptance-status-done">Odovzdané pracovisko</span><small style="display:block;margin-top:4px">${esc(fmtDateISO(record.entryDate||record.date))}</small></div>`:`<div style="margin-top:6px"><span class="acceptance-status-chip acceptance-status-missing">Neodovzdané pracovisko</span></div>`
+}
+function renderCompanies(){const q=$("companySearch").value.trim().toLowerCase();const rows=activeAssignments().map(a=>({a,c:company(a.companyId)})).filter(x=>x.c&&`${x.c.name} ${x.c.ico} ${x.c.contact||""} ${x.a.scope||""} ${assignmentAddenda(x.a).map(d=>`${d.number} ${d.name}`).join(" ")} ${assignmentOrders(x.a).map(d=>`${d.number} ${d.name}`).join(" ")}`.toLowerCase().includes(q));$("companyCount").textContent=`${rows.length} firiem`;$("companyTable").innerHTML=rows.map(({a,c})=>{const addenda=assignmentAddenda(a),orders=assignmentOrders(a);return `<tr><td><strong>${esc(c.name)}</strong>${companyHandoverStatus(c.id)}</td><td><strong>${esc(assignmentDocRef(a))}</strong>${addenda.length?`<div class="assignment-addenda-chips">${addenda.map(d=>`<span title="${esc(d.name||"")}">${esc(assignmentAddendumLabel(d))} · ${esc(d.name||"Bez názvu")} · ${eur.format(parseWorkNumber(d.price||0))}</span>`).join("")}</div>`:""}${orders.length?`<div class="assignment-addenda-chips assignment-order-chips">${orders.map(d=>`<span title="${esc(d.name||"")}">${esc(assignmentOrderLabel(d))} · ${esc(d.name||"Bez názvu")} · ${eur.format(parseWorkNumber(d.price||0))}</span>`).join("")}</div>`:""}</td><td>${esc(c.address||"—")}</td><td>${esc(c.postalCity||"—")}</td><td>${esc(c.ico||"—")}</td><td>${esc(c.dic||"—")}</td><td>${esc(c.icdph||"—")}</td><td>${esc(masterContact(c,"contact"))}</td><td>${esc(masterContact(c,"phone"))}</td><td><strong>${esc(a.scope||"—")}</strong></td><td><div class="row-actions multi"><button class="warn" data-edit-assignment="${c.id}">Doklad / predmet</button><button class="assignment-addendum-action" data-add-assignment-addendum="${a.id}">+ Dodatok</button><button class="assignment-order-action" data-add-assignment-order="${a.id}">+ Objednávka</button><button class="ghost" data-edit-company="${c.id}">Údaje firmy</button><button data-handover-company="${c.id}">Odovzdanie</button><button class="danger" data-remove-assignment="${c.id}">Odobrať</button></div></td></tr>`}).join("")||`<tr><td colspan="11" style="text-align:center;color:#789;padding:30px">Na tejto stavbe zatiaľ nie sú firmy. Klikni na „Priradiť existujúcu firmu“.</td></tr>`;
 document.querySelectorAll("[data-edit-assignment]").forEach(b=>b.onclick=()=>openAssignment(b.dataset.editAssignment));
 document.querySelectorAll("[data-add-assignment-addendum]").forEach(b=>b.onclick=()=>openAssignmentAddendum(b.dataset.addAssignmentAddendum));
 document.querySelectorAll("[data-add-assignment-order]").forEach(b=>b.onclick=()=>openAssignmentOrder(b.dataset.addAssignmentOrder));
@@ -2153,8 +2157,9 @@ function billingProjectPeriod(projectRows){
 function renderBillingTimelineMatrix(projectRows,companies,query="",companyId=""){
  const body=$("billingYearMatrix"),foot=$("billingYearMatrixTotals"),head=$("billingYearMatrixHead"),periodLabel=$("billingMatrixPeriod");
  if(!body||!foot||!head)return;
- const period=billingProjectPeriod(projectRows),monthKeys=billingMonthRange(period.startMonth,period.endMonth);
- if(periodLabel)periodLabel.textContent=`${formatBillingMonth(period.startMonth)} – ${formatBillingMonth(period.endMonth)}`;
+ const p=activeProject()||{},monthKeys=[...new Set([...(Array.isArray(p.billingMonths)?p.billingMonths:[]),...projectRows.map(record=>record.month)].filter(month=>/^\d{4}-(0[1-9]|1[0-2])$/.test(month)))].sort();
+ if(periodLabel)periodLabel.textContent=monthKeys.length?`${monthKeys.length} mesiacov`:"Pridaj prvý mesiac";
+ if(!$("billingAddMonthValue").value)$("billingAddMonthValue").value=todayISO().slice(0,7);
  head.innerHTML=`<tr><th>Firma</th>${monthKeys.map(month=>`<th><span>${esc(monthNames[Number(month.slice(5,7))-1])}</span><small>${esc(month.slice(0,4))}</small></th>`).join("")}<th>Spolu</th></tr>`;
  const visibleCompanies=companies.filter(item=>(!companyId||item.id===companyId)&&(!query||item.name.toLowerCase().includes(query))),
        recordsByCell=new Map();
@@ -2255,7 +2260,13 @@ $("billingCurrentMonth").onclick=()=>{
  $("billingYearFilter").value=todayISO().slice(0,4);
  renderBilling()
 };
-$("billingEditProjectPeriod").onclick=()=>openProjectEditor(state.selectedProjectId);
+$("billingAddMonth").onclick=()=>{
+ const p=activeProject(),month=$("billingAddMonthValue").value;
+ if(!p||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)){toast("Vyber mesiac, ktorý chceš pridať.");return}
+ const existingMonths=new Set([...(p.billingMonths||[]),...state.billings.filter(record=>record.projectId===p.id).map(record=>record.month)]);
+ if(existingMonths.has(month)){toast("Tento mesiac už je v tabuľke.");return}
+ p.billingMonths=[...(p.billingMonths||[]),month].sort();save("Mesiac bol pridaný do fakturácie.")
+};
 $("clearBillingFilters").onclick=()=>{
  $("billingSearch").value="";
  $("billingCompanyFilter").value="";

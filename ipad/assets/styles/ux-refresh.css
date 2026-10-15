@@ -21,6 +21,9 @@
 #billing .billing-year-matrix-head h2{margin:3px 0 0;color:#0b3557}
 #billing .billing-matrix-period{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-width:340px;padding:8px 10px 8px 14px;border:1px solid #bcd1df;border-radius:12px;background:#fff;text-align:right}
 #billing .billing-matrix-period>div{display:grid;gap:3px}
+#billing .billing-matrix-period{flex-wrap:wrap}
+#billing .billing-matrix-period label{display:grid;gap:3px;font-size:10px}
+#billing .billing-matrix-period input{max-width:170px;min-height:36px}
 #billing .billing-matrix-period span{font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#6b8191}
 #billing .billing-matrix-period strong{font-size:15px;color:#0b4d78}
 #billing .billing-matrix-period button{min-height:34px!important;height:34px!important;padding:0 10px!important;white-space:nowrap}
