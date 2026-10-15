@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.9";
+const SITE_DESK_APP_VERSION="5.2.10";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -1241,7 +1241,7 @@ function startCloudPolling(){
    }
   }catch{}
   cloudRemoteCheckRunning=false
- },60000)
+ },15000)
 }
 async function cloudResumeAutomaticSync(){
  if(!cloudConfigured()||!cloudSession?.access_token||!navigator.onLine)return;
@@ -1457,6 +1457,28 @@ async function cloudRefreshDefectsForExport(){
   return{ok:true,refreshed:true}
  }catch(error){
   return{ok:false,message:`Pred exportom sa nepodarilo načítať mobilné údaje z cloudu: ${error.message}`}
+ }
+}
+let defectsRefreshRunning=false,defectsLastRefreshAt=0;
+async function refreshMobileDefects({silent=false}={}){
+ if(defectsRefreshRunning)return;
+ if(!cloudConfigured()||!cloudSession?.access_token){
+  if(!silent)toast("V časti Cloud sa prihlás do rovnakého pracovného priestoru ako v telefóne.");
+  return{ok:false,reason:"not-connected"}
+ }
+ defectsRefreshRunning=true;defectsLastRefreshAt=Date.now();
+ const button=$("refreshMobileDefects");
+ if(button){button.disabled=true;button.textContent="Načítavam vady a fotografie…"}
+ try{
+  const result=await cloudRefreshDefectsForExport();
+  if(!result.ok){if(!silent)toast(result.message);return result}
+  renderDefects();
+  await hydrateCloudDefectPhotos();
+  if(!silent){const count=state.defects.filter(item=>item.projectId===state.selectedProjectId).length;toast(`Načítané vady na stavbe: ${count}. Označ požadované vady a stlač PDF z vybraných.`)}
+  return result
+ }finally{
+  defectsRefreshRunning=false;
+  if(button){button.disabled=false;button.textContent="↻ Načítať z telefónu"}
  }
 }
 
@@ -1768,7 +1790,7 @@ function renderActiveView(id=activeViewId()){
   case "siteMeetings":prepareControlDay();break;
   case "calendar":renderCalendar();break;
   case "mobileDiary":window.renderMobileDiaryPage?.();break;
-  case "defects":renderDefects();break;
+  case "defects":renderDefects();if(Date.now()-defectsLastRefreshAt>15000)void refreshMobileDefects({silent:true});break;
   case "documents":renderDocuments();break;
   case "excelImport":renderExcelPreview();break;
   case "cloud":renderCloudPanel();break;
@@ -7806,6 +7828,7 @@ $("markDefectsSent").onclick=()=>{
  save("Vybrané vady boli označené ako odoslané.")
 };
 $("exportSelectedDefectsPdf").onclick=exportDefectsPdf;
+$("refreshMobileDefects").onclick=()=>refreshMobileDefects();
 
 
 /* BETPRES SiteDesk 5.0.36 – preberacie protokoly */
