@@ -15,6 +15,63 @@
   --ux-shadow:0 7px 24px rgba(13,49,82,.07);
 }
 
+/* Fakturácia – časová os celej stavby */
+#billing .billing-year-matrix-panel{padding:0;overflow:hidden;border:1px solid #c7d8e5;box-shadow:0 12px 30px rgba(14,55,86,.09)}
+#billing .billing-year-matrix-head{padding:18px 20px 14px;margin:0;border-bottom:1px solid #d7e3eb;background:linear-gradient(135deg,#f8fbfd,#edf5fa)}
+#billing .billing-year-matrix-head h2{margin:3px 0 0;color:#0b3557}
+#billing .billing-matrix-period{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-width:340px;padding:8px 10px 8px 14px;border:1px solid #bcd1df;border-radius:12px;background:#fff;text-align:right}
+#billing .billing-matrix-period>div{display:grid;gap:3px}
+#billing .billing-matrix-period span{font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#6b8191}
+#billing .billing-matrix-period strong{font-size:15px;color:#0b4d78}
+#billing .billing-matrix-period button{min-height:34px!important;height:34px!important;padding:0 10px!important;white-space:nowrap}
+#billing .billing-year-matrix-help{padding:10px 20px;border-bottom:1px solid #d7e3eb;background:#fff;color:#597184;font-size:12px;font-weight:700}
+#billing .billing-year-matrix-wrap{max-height:min(66vh,720px);overflow:auto;overscroll-behavior:contain;background:#fff}
+#billing .billing-year-matrix{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:11px;font-variant-numeric:tabular-nums}
+#billing .billing-year-matrix th,#billing .billing-year-matrix td{min-width:132px;height:72px;padding:0;border-right:1px solid #d5e1e9;border-bottom:1px solid #d5e1e9;vertical-align:middle;background:#fff}
+#billing .billing-year-matrix thead th{position:sticky;top:0;z-index:5;height:54px;padding:8px;background:#0b3c65;color:#fff;text-align:center;font-size:11px}
+#billing .billing-year-matrix thead th span,#billing .billing-year-matrix thead th small{display:block}
+#billing .billing-year-matrix thead th small{margin-top:3px;color:#c7deee;font-size:9px}
+#billing .billing-year-matrix th:first-child{position:sticky;left:0;z-index:4;min-width:235px;width:235px;max-width:235px;padding:10px 13px;background:#f1f6f9;text-align:left}
+#billing .billing-year-matrix thead th:first-child{z-index:7;background:#082f52;color:#fff}
+#billing .billing-year-matrix tbody th strong,#billing .billing-year-matrix tbody th small{display:block}
+#billing .billing-year-matrix tbody th strong{color:#123d5c;font-size:12px;line-height:1.25}
+#billing .billing-year-matrix tbody th small{margin-top:4px;color:#6c8190;font-size:9px;line-height:1.25}
+#billing .billing-year-matrix th:last-child,#billing .billing-year-matrix td:last-child{position:sticky;right:0;z-index:4;min-width:145px;width:145px;background:#e6f1f8}
+#billing .billing-year-matrix thead th:last-child{z-index:7;background:#082f52;color:#fff}
+#billing .billing-matrix-cell{position:relative;width:100%;height:100%;display:flex}
+#billing button.billing-matrix-empty,#billing button.billing-matrix-value{width:100%;height:100%;min-height:70px;padding:8px;border:0!important;border-radius:0!important;background:transparent!important;color:#173f5d!important;box-shadow:none!important;text-align:left}
+#billing button.billing-matrix-empty{display:grid;place-items:center;color:#7890a0!important;font-size:10px;font-weight:800}
+#billing button.billing-matrix-empty:hover{background:#eef7fc!important;color:#075f96!important}
+#billing button.billing-matrix-value{padding-right:28px!important}
+#billing button.billing-matrix-value:hover{background:#eef7fc!important}
+#billing button.billing-matrix-value strong,#billing button.billing-matrix-value small{display:block}
+#billing button.billing-matrix-value strong{color:#075681;font-size:12px;white-space:nowrap}
+#billing button.billing-matrix-value small{display:-webkit-box;margin-top:5px;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:#5e7585;font-size:9px;line-height:1.25}
+#billing button.billing-matrix-add{position:absolute;top:5px;right:5px;z-index:2;display:grid;width:22px;height:22px;min-height:22px;padding:0!important;place-items:center;border:1px solid #9fc3d8!important;border-radius:7px!important;background:#fff!important;color:#086395!important;box-shadow:none!important;font-size:14px;line-height:1}
+#billing button.billing-matrix-add:hover{background:#dff1fb!important}
+#billing .billing-matrix-company-total{padding:10px!important;text-align:right;color:#073f66;font-size:13px}
+#billing .billing-year-matrix tfoot th,#billing .billing-year-matrix tfoot td{position:sticky;bottom:0;z-index:5;height:50px;padding:8px 10px;background:#dbeaf4;color:#0a4168;text-align:right;font-size:10px}
+#billing .billing-year-matrix tfoot th:first-child{z-index:8;background:#c9deeb}
+#billing .billing-year-matrix tfoot td:last-child{z-index:8;background:#bfd8e8;font-size:12px}
+#billing .billing-matrix-no-data{padding:30px!important;text-align:center;color:#718693}
+#billing .billing-description{display:block;min-width:170px;max-width:300px;white-space:normal;line-height:1.35;color:#365b71}
+#billing .billing-table{min-width:1180px}
+@media(max-width:900px){
+ #billing .billing-year-matrix-head{align-items:flex-start;gap:10px;padding:14px}
+ #billing .billing-matrix-period{min-width:0;justify-content:space-between;text-align:left}
+ #billing .billing-year-matrix-help{padding:9px 14px}
+ #billing .billing-year-matrix th,#billing .billing-year-matrix td{min-width:118px;height:68px}
+ #billing .billing-year-matrix th:first-child{min-width:190px;width:190px;max-width:190px}
+ #billing .billing-year-matrix th:last-child,#billing .billing-year-matrix td:last-child{min-width:128px;width:128px}
+}
+@media(max-width:600px){
+ #billing .billing-year-matrix-head{display:grid}
+ #billing .billing-year-matrix-wrap{max-height:62vh}
+ #billing .billing-year-matrix th,#billing .billing-year-matrix td{min-width:110px}
+ #billing .billing-year-matrix th:first-child{min-width:168px;width:168px;max-width:168px}
+ #billing .billing-year-matrix th:last-child,#billing .billing-year-matrix td:last-child{min-width:120px;width:120px}
+}
+
 html,body{background:var(--ux-bg)!important;color:var(--ux-text)}
 body.sitedesk-v3 .app-shell{grid-template-columns:248px minmax(0,1fr)!important}
 body.sitedesk-v3 .main{min-width:0;background:var(--ux-bg)}
