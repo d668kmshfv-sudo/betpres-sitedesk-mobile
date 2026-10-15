@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.7";
+const SITE_DESK_APP_VERSION="5.2.8";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -1677,36 +1677,31 @@ async function exportDefectsPdf(){
        pages=[];
  for(const group of groups){
   const pageEntries=[];
-  let textOnly=[];
-  const flushTextOnly=()=>{
-   for(let i=0;i<textOnly.length;i+=3)pageEntries.push(textOnly.slice(i,i+3));
-   textOnly=[]
-  };
+  const allEntries=[];
   group.items.forEach((item,itemIndex)=>{
    const photos=item.photos||[];
-   if(!photos.length){textOnly.push({item,itemNumber:itemIndex+1,photos:[],photoStart:0});return}
-   flushTextOnly();
-   for(let photoStart=0;photoStart<photos.length;photoStart+=8){
-    pageEntries.push([{item,itemNumber:itemIndex+1,photos:photos.slice(photoStart,photoStart+8),photoStart}])
+   const text=String(item.description||""),chunks=text.match(/[\s\S]{1,200}/g)||[""],count=Math.max(chunks.length,Math.ceil(photos.length/4),1);
+   for(let index=0;index<count;index++){
+    allEntries.push({item:{...item,description:chunks[index]||""},itemNumber:itemIndex+1,photos:photos.slice(index*4,index*4+4),photoStart:index*4,continued:index>0})
    }
   });
-  flushTextOnly();
+  for(let index=0;index<allEntries.length;index+=4)pageEntries.push(allEntries.slice(index,index+4));
   pageEntries.forEach((entries,pageIndex)=>{
     pages.push(`<section class="defect-print-page">
      <img class="defect-letterhead-bg" src="${LETTERHEAD_IMAGE}" alt="">
      <div class="defect-letterhead-content">
      <header><div><span class="defect-print-kicker">KONTROLA KVALITY A ODSTRAŇOVANIE VÁD</span><h1>ZOZNAM VÁD A NEDOROBKOV</h1><p>${esc(projectData?.name||"")}</p></div></header>
      <div class="defect-print-company"><span>ZODPOVEDNÁ FIRMA</span><strong>${esc(group.name)}</strong><small>${fmtDateISO(todayISO())} · Strana ${pageIndex+1} / ${pageEntries.length}</small></div>
-    ${entries.map(entry=>{const item=entry.item,photoCount=entry.photos.length,photoColumns=photoCount<=1?1:photoCount<=4?2:photoCount<=6?3:4,totalPhotos=(item.photos||[]).length;return`<article class="defect-print-item ${photoCount?"has-photos":""}">
+    <div class="defect-print-grid">${entries.map(entry=>{const item=entry.item,photoCount=entry.photos.length,photoColumns=2,totalPhotos=(item.photos||[]).length;return`<article class="defect-print-item ${photoCount?"has-photos":""}">
      <div class="defect-print-number">${entry.itemNumber}</div>
      <div class="defect-print-content">
        <div class="defect-print-meta"><strong>${esc(item.number||"")}</strong><span>Typ: ${esc(item.type||"Vada / nedorobok")}</span><span>Termín: ${esc(item.dueDate?fmtDateISO(item.dueDate):"—")}</span>${item.type==="Porušenie BOZP"?"":`<span>Závažnosť: ${esc(item.severity||"")}</span>`}<span>Zodpovedná osoba: ${esc(defectResponsibleName(item))}</span></div>
-      <h2>${esc(item.location||"")}</h2>
+      <h2>${esc(item.location||"")}${entry.continued?" · pokračovanie":""}</h2>
       <p>${esc(item.description||"")}</p>
       ${entry.photoStart?`<div class="defect-photo-continuation">Pokračovanie fotodokumentácie · fotografie ${entry.photoStart+1}–${entry.photoStart+photoCount} z ${totalPhotos}</div>`:""}
       <div class="defect-print-photos" style="--photo-cols:${photoColumns}">${entry.photos.map((photo,photoIndex)=>{const src=photo.dataUrl||remotePhotoSources.get(photo.path)||"",number=entry.photoStart+photoIndex+1;return src?`<figure><img src="${src}" alt="Fotografia vady ${number}"><figcaption>Foto ${number} / ${totalPhotos}</figcaption></figure>`:`<div class="remote-photo-placeholder">Fotografiu sa nepodarilo načítať</div>`}).join("")}</div>
      </div>
-    </article>`}).join("")}
+    </article>`}).join("")}</div>
      </div>
     </section>`)
   })
@@ -1726,11 +1721,11 @@ async function exportDefectsPdf(){
  .defect-print-kicker{display:block;margin-bottom:1.2mm;font-size:7.5px;font-weight:700;letter-spacing:.08em;color:#687d8b}h1{font-size:17px;margin:0;color:#0b2f57}header p{margin:1mm 0 0;font-size:10px;color:#667b89}
  .defect-print-company{display:grid;grid-template-columns:auto 1fr auto;gap:4mm;align-items:center;background:#edf4f8;border:1px solid #cbdbe4;padding:3mm 4mm;margin-bottom:4mm}
  .defect-print-company span,.defect-print-company small{font-size:8px;color:#627786}.defect-print-company strong{font-size:13px}
- .defect-print-item{display:grid;grid-template-columns:9mm 1fr;border:1px solid #bfcdd6;margin-bottom:3mm;page-break-inside:avoid;min-height:48mm}.defect-print-item.has-photos{min-height:0}
- .defect-print-number{background:#0b2f57;color:#fff;font-weight:bold;display:grid;place-items:center}.defect-print-content{padding:3mm}
- .defect-print-meta{display:flex;gap:4mm;flex-wrap:wrap;font-size:8px;color:#607482}.defect-print-meta strong{color:#0b2f57}
+ .defect-print-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3mm;align-items:start}.defect-print-item{display:grid;grid-template-columns:6mm minmax(0,1fr);border:1px solid #bfcdd6;page-break-inside:avoid;min-height:83mm;overflow-wrap:anywhere}
+ .defect-print-number{background:#0b2f57;color:#fff;font-weight:bold;display:grid;place-items:center}.defect-print-content{padding:2mm;min-width:0}
+ .defect-print-meta{display:flex;gap:1mm 2mm;flex-wrap:wrap;font-size:7px;color:#607482}.defect-print-meta strong{color:#0b2f57}
  h2{font-size:12px;margin:2mm 0 1mm}p{font-size:9.5px;line-height:1.35;margin:0 0 2mm}.defect-photo-continuation{font-size:8px;font-weight:700;color:#0b2f57;margin:1mm 0 2mm}.defect-print-photos{display:grid;grid-template-columns:repeat(var(--photo-cols,2),minmax(0,1fr));gap:2mm;align-items:start}
- .defect-print-photos figure{position:relative;margin:0;min-width:0;border:1px solid #cbd5db;border-radius:2mm;overflow:hidden;background:#f3f6f8}.defect-print-photos img{display:block;width:100%;max-height:118mm;aspect-ratio:4/3;object-fit:contain;background:#eef3f6}.defect-print-photos figcaption{position:absolute;right:1mm;bottom:1mm;padding:.7mm 1.2mm;border-radius:1mm;background:rgba(11,47,87,.82);color:#fff;font-size:7px}
+ .defect-print-photos figure{position:relative;margin:0;width:35mm;height:25mm;border:1px solid #cbd5db;border-radius:1mm;overflow:hidden;background:#f3f6f8}.defect-print-photos img{display:block;width:100%;height:100%;object-fit:contain;background:#eef3f6}.defect-print-photos figcaption{position:absolute;right:1mm;bottom:1mm;padding:.5mm 1mm;border-radius:1mm;background:rgba(11,47,87,.82);color:#fff;font-size:6px}
  .remote-photo-placeholder{width:100%;aspect-ratio:4/3;border:1px solid #cbd5db;border-radius:2mm}
  .remote-photo-placeholder{display:grid;place-items:center;color:#789;font-size:8px;background:#f2f5f7}
  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
