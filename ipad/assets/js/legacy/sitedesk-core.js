@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.11";
+const SITE_DESK_APP_VERSION="5.2.12";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -1152,17 +1152,23 @@ async function cloudPush({force=false,silent=false}={}){
   renderCloudPanel()
  }
 }
-async function cloudPull({silent=false}={}){
+async function cloudPull({silent=false,replaceLocal=false}={}){
  if(cloudPullRunning)return false;
+ if(cloudPushRunning)return false;
+ if(directSaveTimer)flushDirectState();
+ const revisionBeforePull=cloudLocalRevision;
  cloudPullRunning=true;
  try{
   cloudSetQuickStatus("syncing","Načítavam cloud");
   await cloudEnsureSession();
   const remote=await cloudGetWorkspace();
   if(!remote?.data)throw new Error("V cloude zatiaľ nie sú uložené žiadne dáta.");
+  if(cloudLocalRevision!==revisionBeforePull||(cloudLocalDirty&&!replaceLocal))throw new Error("V tomto zariadení sú neodoslané zmeny. Načítanie cloudu bolo zastavené, aby sa nestratili.");
+  preserveDefectRecovery();
   localStorage.setItem(CLOUD_PRE_PULL_BACKUP_KEY,JSON.stringify(state));
   const imported=remote.data;
   if(!Array.isArray(imported.projects)||!Array.isArray(imported.companies))throw new Error("Cloudový záznam nemá platný formát SiteDesk.");
+  if(imported.projects.some(project=>project.id===state.selectedProjectId))imported.selectedProjectId=state.selectedProjectId;
   state=imported;
   ["projects","companies","assignments","billings","materials","purchases","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"].forEach(key=>{
    if(!Array.isArray(state[key]))state[key]=[]
@@ -1547,6 +1553,38 @@ function groupedDefects(items){
 function photoPreviewSource(photo){
  return photo?.dataUrl||""
 }
+function defectRecoveryCandidates(){
+ const records=new Map();
+ for(const key of [KEY+"-defect-recovery",AUTO_BACKUP_KEY,CLOUD_PRE_PUSH_BACKUP_KEY,CLOUD_PRE_PULL_BACKUP_KEY]){
+  try{for(const item of JSON.parse(localStorage.getItem(key)||"{}").defects||[]){
+   if(!item.id)continue;
+   const previous=records.get(item.id);
+   if(!previous||String(item.updatedAt||item.createdAt||"")>String(previous.updatedAt||previous.createdAt||""))records.set(item.id,item)
+  }}catch{}
+ }
+ return [...records.values()]
+}
+function preserveDefectRecovery(){
+ const records=new Map(defectRecoveryCandidates().map(item=>[item.id,item]));
+ for(const item of state.defects||[])records.set(item.id,item);
+ if(records.size)localStorage.setItem(KEY+"-defect-recovery",JSON.stringify({defects:[...records.values()]}))
+}
+function openDefectRecovery(){
+ const candidates=defectRecoveryCandidates().filter(item=>item.projectId===state.selectedProjectId&&!state.defects.some(existing=>existing.id===item.id));
+ const dialog=document.createElement("dialog");
+ dialog.style.cssText="width:min(640px,92vw);max-height:85dvh;overflow:auto;border:1px solid #c5d6e6;border-radius:16px;padding:20px;color:#123756";
+ dialog.innerHTML=`<h2>Vady zo zálohy v tomto zariadení</h2><p>Aktuálna stavba: ${esc(activeProject()?.name||"")}. Nájdených chýbajúcich záznamov: ${candidates.length}.</p><p>Vyber iba vady, ktoré chceš vrátiť. Záloha môže obsahovať aj úmyselne odstránené záznamy.</p><div>${candidates.map((item,index)=>`<label style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #ddd"><input type="checkbox" data-recovery-index="${index}" style="width:22px;min-width:22px"><span><strong>${esc(item.number||"")} ${esc(item.location||"")}</strong><br>${esc(item.description||item.type||"Vada")}<br><small>${esc(item.createdAt?.slice(0,10)||"")} · Fotografie: ${(item.photos||[]).length}</small></span></label>`).join("")||"<p>Pre túto stavbu sa v lokálnych zálohách nenašli chýbajúce vady. Skontroluj aj výber stavby a filtre v zozname vád.</p>"}</div><div style="display:flex;gap:12px;margin-top:16px"><button data-restore>Obnoviť vybrané vady</button><button data-close>Zavrieť</button></div>`;
+ dialog.querySelector("[data-restore]").disabled=!candidates.length;
+ dialog.querySelector("[data-close]").onclick=()=>dialog.close();
+ dialog.querySelector("[data-restore]").onclick=()=>{
+  const chosen=[...dialog.querySelectorAll("input:checked")].map(input=>candidates[Number(input.dataset.recoveryIndex)]);
+  if(!chosen.length)return toast("Najprv označ vady na obnovenie.");
+  for(const item of chosen)if(!state.defects.some(existing=>existing.id===item.id))state.defects.push(clone(item));
+  dialog.close();save(`Obnovených vád: ${chosen.length}.`);renderDefects()
+ };
+ dialog.addEventListener("close",()=>dialog.remove());document.body.appendChild(dialog);dialog.showModal()
+}
+$("recoverLocalDefects").onclick=openDefectRecovery;
 function renderDefects(){
  if(!$("defectCompanyGroups"))return;
  [...selectedDefectIds].forEach(id=>{
@@ -7756,7 +7794,7 @@ $("cloudForcePush").onclick=()=>{
  if(confirm("Naozaj prepísať cloud aktuálnymi lokálnymi dátami?"))cloudPush({force:true})
 };
 $("cloudPullData").onclick=()=>{
- if(confirm("Načítať cloudové dáta a nahradiť nimi aktuálne lokálne údaje? Lokálna záloha sa vytvorí automaticky."))cloudPull()
+ if(confirm("Načítať cloudové dáta a nahradiť nimi aktuálne lokálne údaje? Lokálna záloha sa vytvorí automaticky."))cloudPull({replaceLocal:true})
 };
 $("cloudRefreshStatus").onclick=async()=>{await cloudRefreshWorkspaceStatus();await cloudLoadTeamContext()};
 $("teamAddMember").onclick=cloudAddTeamMember;
@@ -8132,6 +8170,7 @@ renderDocuments=function(){
 };
 
 async function initializeCloudPilot(){
+ try{preserveDefectRecovery()}catch{setCloudMessage("cloudSyncMessage","V zariadení je málo miesta na ďalšiu zálohu vád. Existujúce zálohy zostali zachované.","error")}
  const pairing=applyCloudPairingFromUrl();
  const removedSecret=cloudKeyIsSecret(cloudConfig.key)||sessionStorage.getItem("betpres-cloud-secret-removed")==="1";sessionStorage.removeItem("betpres-cloud-secret-removed");if(removedSecret){cloudConfig.key="";saveCloudConfig();try{const mobile=JSON.parse(localStorage.getItem("betpres-mobile-cloud-v1")||"{}");mobile.key="";localStorage.setItem("betpres-mobile-cloud-v1",JSON.stringify(mobile))}catch{}}
  renderCloudPanel();

@@ -94,11 +94,28 @@
 
   function addIpadControls() {
     document.body.classList.add("ipad-web");
+    const phone = matchMedia("(max-width: 767px) and (pointer: coarse)");
+    const setPhoneViewport = () => {
+      document.querySelector('meta[name="viewport"]')?.setAttribute("content", phone.matches
+        ? "width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+        : "width=device-width,initial-scale=1,viewport-fit=cover");
+    };
+    setPhoneViewport();
+    phone.addEventListener("change", setPhoneViewport);
+    for (const event of ["gesturestart", "gesturechange", "gestureend"]) {
+      document.addEventListener(event, e => { if (phone.matches) e.preventDefault(); }, {passive:false});
+    }
+    document.addEventListener("touchmove", e => {
+      if (phone.matches && e.touches.length > 1) e.preventDefault();
+    }, {passive:false});
+    const style = document.createElement("style");
+    style.textContent = "@media(max-width:767px) and (pointer:coarse){html,body{touch-action:pan-x pan-y}input,select,textarea{font-size:16px!important}}";
+    document.head.appendChild(style);
     if (document.getElementById("ipadWebBadge")) return;
     const badge = document.createElement("div");
     badge.id = "ipadWebBadge";
     badge.className = "ipad-web-badge";
-    badge.innerHTML = '<span>Online · 5.2.11</span>';
+    badge.innerHTML = '<span>Online · 5.2.12</span>';
     document.body.appendChild(badge);
   }
 
