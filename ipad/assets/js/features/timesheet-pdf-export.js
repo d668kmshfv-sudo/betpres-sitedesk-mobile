@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.2.9";
+ var APP_VERSION = "5.2.15";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -147,6 +147,10 @@ function splitRows(rows, size) {
    ".employee-timesheet-table tbody tr.hours-row td{border-bottom:1px dashed #8aa2b7}.employee-timesheet-table tbody tr.overtime-row td{height:5.2mm;background:#fff4df!important;color:#754712;border-top:0}.employee-timesheet-table td.sum small{display:block;font-size:5.5px;line-height:1;color:#60778b}.employee-timesheet-table tr.overtime-row td.sum small,.employee-timesheet-table tr.overtime-total td.sum small{color:#9b5c13}.employee-timesheet-table tfoot tr.overtime-total td{background:#ffe7bd!important;color:#6f430f}",
    "tfoot td{background:#d5e6f4;font-weight:800;border-top:1.5px solid #082f61}.empty{height:18mm;text-align:left;padding-left:4mm;color:#6b7c90}",
    "footer{margin-top:auto;min-height:6mm;border-top:1.2px solid #082f61;padding:1.2mm 0 0;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:4mm;font-size:7px;color:#45647d}.footer-app{font-weight:850;color:#244d70}footer>strong{color:#082f61;font-size:8px}footer>span:last-child{text-align:right}",
+   "table{font-size:9px}th,td{border:.2mm solid #9eafc1;padding:0 .4mm}thead th{height:5mm!important;font-size:8.4px!important}tfoot td{height:5mm!important;font-size:9px!important;border-top:.2mm solid #9eafc1}",
+   ".company-timesheet-pdf-table,.employee-timesheet-table{height:156mm}.company-timesheet-pdf-table tbody tr,.company-timesheet-pdf-table tbody td,.employee-timesheet-table tbody tr,.employee-timesheet-table tbody td{height:9.4mm;font-size:9px}.thp-employee-timesheet-table{height:151mm}",
+   "tbody td.name strong,.company-timesheet-pdf-table tbody td.name strong,.employee-timesheet-table tbody td.name strong,.company-status-table tbody td.name strong{font-size:12px;line-height:1.05}.employee-timesheet-table tbody td.name small{font-size:7.5px}.company-status-table tbody td.name strong{line-height:.9;max-height:5.5mm;overflow:hidden}.company-status-table tbody td{height:5.875mm;padding-top:0;padding-bottom:0;font-size:9px!important}.company-status-table tbody td.name{font-size:12px!important}",
+   ".company-timesheet-pdf-table .company-time-pdf-stack{height:9.2mm;min-height:0}.company-timesheet-pdf-table .company-time-pdf-stack span{min-height:0;border-bottom:.2mm solid #9eafc1}.company-timesheet-pdf-table .company-time-pdf-stack span:last-child{border-bottom:0}.company-timesheet-pdf-table .company-time-pdf-stack em,.employee-timesheet-table .thp-stack .thp-extra{font-size:9px}.employee-timesheet-table .thp-stack{line-height:1.2}",
    "@media print{html{zoom:1!important}body{background:#fff}}"
   ].join("");
   return '<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>' + html(title) + "</title><style>" + styles + "</style></head><body>" + pages.join("") + "</body></html>";
@@ -182,7 +186,7 @@ function splitRows(rows, size) {
   sortWorkerRows(sheet);
   var allRows = sheet.rows || [];
   var rowsPerPage = 24;
-  var chunks = splitRowsBalanced(allRows, rowsPerPage);
+  var chunks = splitRows(allRows, rowsPerPage);
   var info = monthInfo(month);
   var pages = [];
   var rowOffset = 0;
@@ -202,6 +206,11 @@ function splitRows(rows, size) {
     }
     body += '<td class="sum">' + html(displayValue(total)) + "</td></tr>";
    });
+   for(var blank=rows.length;blank<rowsPerPage;blank++){
+    body+='<tr class="print-blank"><td></td><td class="name"></td>';
+    for(var blankDay=1;blankDay<=info.days;blankDay++)body+='<td class="'+dayMeta(month,blankDay).className+'"></td>';
+    body+='<td class="sum"></td></tr>';
+   }
     var totals = '<tr><td colspan="2" class="name">Spolu za deň</td>';
    var grand = 0;
    for (var day = 1; day <= info.days; day += 1) {
@@ -210,7 +219,7 @@ function splitRows(rows, size) {
     totals += '<td class="' + dayMeta(month, day).className + '">' + html(displayValue(dayTotal || "")) + "</td>";
    }
    totals += '<td class="sum">' + html(displayValue(grand)) + "</td></tr>";
-   var rowHeight = (141 / Math.max(1, rows.length)).toFixed(3);
+   var rowHeight = (141 / rowsPerPage).toFixed(3);
    var table = '<table class="company-status-table" style="--status-row-height:' + rowHeight + 'mm"><thead>' + tableHead(month, "Firma / skupina", false) + "</thead><tbody>" + body + "</tbody><tfoot>" + totals + "</tfoot></table>";
    pages.push(page("STAV PRACOVNÍKOV", month, pageIndex + 1, chunks.length, "denný počet osôb", table, allRows.length + " skupín · spolu " + displayValue(grand)));
    rowOffset += rows.length;
@@ -222,14 +231,14 @@ function splitRows(rows, size) {
   var isThp = kind === "thp";
   var sheet = isThp ? thpTimesheet(month, true) : betpresTimesheet(month, true);
   var rows = sheet.rows || [];
-  var rowsPerPage = isThp ? 14 : 15;
+  var rowsPerPage = 15;
   var printRows = rows.slice();
-  if (!isThp) {
+  {
    while (!printRows.length || printRows.length % rowsPerPage) {
     printRows.push({ personalNumber: "", name: "", position: "", rewardPercent: "", values: {}, overtime: {}, printBlank: true });
    }
   }
-  var chunks = splitRows(isThp ? rows : printRows, rowsPerPage);
+  var chunks = splitRows(printRows, rowsPerPage);
   var info = monthInfo(month);
   var title = isThp ? "PODSMENOVKA THP" : "PODSMENOVKA BETPRES";
   var pages = [];

@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.14";
+const SITE_DESK_APP_VERSION="5.2.15";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -5246,6 +5246,7 @@ function printSiteMeetingList(){
   return rows||`<tr><td class="n">1</td><td colspan="6">Bez zapísaných úloh.</td></tr>`
  };
 
+ const attendancePageCount=Math.max(1,Math.ceil((record.attendees||[]).length/18));
  const meetingPages=chunks.map((chunk,pageIndex)=>{
   const first=pageIndex===0,
         last=pageIndex===chunks.length-1;
@@ -5255,7 +5256,7 @@ function printSiteMeetingList(){
    <div class="kp-band">
     <span>${esc(record.number||"")}</span>
     <strong>${first?documentTitle:documentTitle+" – POKRAČOVANIE"}</strong>
-    <span>${pageIndex+1} / ${chunks.length+1}</span>
+    <span>${pageIndex+1} / ${chunks.length+attendancePageCount}</span>
    </div>
 
    <main class="kp-content">
@@ -5306,10 +5307,11 @@ function printSiteMeetingList(){
  }).join("");
 
  const attendees=[...(record.attendees||[])];
- while(attendees.length<22)attendees.push(null);
+ while(attendees.length<attendancePageCount*18)attendees.push(null);
 
- const attendanceRows=attendees.map((attendee,index)=>`<tr>
-  <td>${index+1}</td>
+ const attendancePage=Array.from({length:attendancePageCount},(_,attendanceIndex)=>{
+ const attendanceRows=attendees.slice(attendanceIndex*18,(attendanceIndex+1)*18).map((attendee,index)=>`<tr>
+  <td>${attendanceIndex*18+index+1}</td>
   <td>${esc(attendee?.name||"")}</td>
   <td>${esc(attendee?coordinationAttendeeCompany(attendee):"")}</td>
   <td>${esc(attendee?.role||"")}</td>
@@ -5317,12 +5319,12 @@ function printSiteMeetingList(){
   <td></td>
  </tr>`).join("");
 
- const attendancePage=`<section class="kp-page kp-attendance-page">
+ return `<section class="kp-page kp-attendance-page">
   <img class="kp-bg" src="${LETTERHEAD_IMAGE}" alt="">
   <div class="kp-band">
    <span>${esc(record.number||"")}</span>
    <strong>PREZENČNÁ LISTINA – ${isControlDay?"KONTROLNÝ DEŇ":"KOORDINAČNÁ PORADA"}</strong>
-   <span>${chunks.length+1} / ${chunks.length+1}</span>
+   <span>${chunks.length+attendanceIndex+1} / ${chunks.length+attendancePageCount}</span>
   </div>
 
   <main class="kp-content">
@@ -5348,6 +5350,7 @@ function printSiteMeetingList(){
    <div class="kp-export">PDF vytvorené ${esc(exportText)}</div>
   </main>
  </section>`;
+ }).join("");
 
  const w=window.open("","_blank");
  if(!w){alert("Prehliadač zablokoval okno pre tlač. Povoľ vyskakovacie okná.");return}
@@ -5383,7 +5386,7 @@ function printSiteMeetingList(){
   padding:33.5mm 10.2mm 11mm;font-size:10px;overflow:hidden
  }
  .kp-attendance-page .kp-content{
-  display:flex;flex-direction:column;gap:0
+  display:flex;flex-direction:column;gap:0;padding-bottom:34mm
  }
  .kp-meta{
   display:grid;grid-template-columns:1fr 1fr;border:0.25mm solid #465159;
@@ -5445,11 +5448,12 @@ function printSiteMeetingList(){
 
  .kp-bottom-meta{margin-top:2mm}
  .kp-attendance{
-  flex:1 1 auto;height:auto;min-height:0;margin-bottom:4mm
+  flex:0 0 auto;height:196mm;min-height:0;margin-bottom:4mm
  }
  .kp-attendance thead{height:7mm}
- .kp-attendance tbody tr{height:auto}
- .kp-attendance td{height:auto;vertical-align:middle}
+ .kp-attendance tbody tr{height:10.5mm}
+ .kp-attendance td{height:10.5mm;vertical-align:middle}
+ .kp-attendance-page .kp-export{bottom:30mm}
  .kp-export{
   position:absolute;right:10.2mm;bottom:8.5mm;font-size:10px;color:#5a6d79
  }
@@ -6910,7 +6914,7 @@ $("exportWorkXlsx").onclick=async()=>{
  const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});downloadWorkBlob(blob,workFileBase(s)+".xlsx")
 };
 function workItemSummary(statement,key){return workItemsForCurrentDocument(statement).filter(x=>String(x.type||"").toUpperCase()!=="D").reduce((sum,x)=>sum+Number(workItemCalc(statement,x)[key]||0),0)}
-function workItemSummaryQtyDisplay(statement,key){const items=workItemsForCurrentDocument(statement).filter(x=>String(x.type||"").toUpperCase()!=="D"),hasQty=items.some(x=>!isWorkPriceOnlyItem(x));return hasQty?workQty(workItemSummary(statement,key)):""}
+function workItemSummaryQtyDisplay(){return ""}
 $("exportWorkPdf").onclick=async()=>{
  const s=getWorkStatement(false);if(!s)return;
  ensureWorkStatementDates(s);

@@ -172,9 +172,9 @@
   var firstDataRow = 8;
   var lastDataRow = Math.max(firstDataRow, sourceItems.length + 7);
   var summaryRow = sourceItems.length + 8;
-  var summaryValues = padded(["CELKOM (bez DPH)", "", "", "", "", "", "", 0, 0, 0, 0, 0, 0, 0], 18);
+  var summaryValues = padded(["CELKOM (bez DPH)", "", "", "", "", "", "", 0, "", 0, "", 0, "", 0], 18);
   var summaryFormula = function(column){return 'SUMIF(B'+firstDataRow+':B'+lastDataRow+',"<>D",'+column+firstDataRow+':'+column+lastDataRow+')';};
-  var summaryFormulas = {7:summaryFormula("H"),8:summaryFormula("I"),9:summaryFormula("J"),10:summaryFormula("K"),11:summaryFormula("L"),12:summaryFormula("M"),13:summaryFormula("N")};
+  var summaryFormulas = {7:summaryFormula("H"),9:summaryFormula("J"),11:summaryFormula("L"),13:summaryFormula("N")};
   sheetRows.push(rowXml(summaryRow, summaryValues, [13,13,13,13,13,13,13,14,19,14,19,14,19,14,18,18,18,18], summaryFormulas, 25));
   merges.push("A" + summaryRow + ":G" + summaryRow);
 
@@ -298,7 +298,7 @@
   });
   var firstDataRow = 8, lastDataRow = Math.max(firstDataRow, sourceItems.length + 7), summaryRow = sourceItems.length + 8;
   sheet.mergeCells("A" + summaryRow + ":G" + summaryRow); sheet.getCell("A" + summaryRow).value = "CELKOM (bez DPH)";
-  [[8,"H"],[9,"I"],[10,"J"],[11,"K"],[12,"L"],[13,"M"],[14,"N"]].forEach(function (entry) { sheet.getCell(summaryRow, entry[0]).value = { formula:'SUMIF(B'+firstDataRow+':B'+lastDataRow+',"<>D",'+entry[1]+firstDataRow+':'+entry[1]+lastDataRow+')', result: 0 }; });
+  [[8,"H"],[10,"J"],[12,"L"],[14,"N"]].forEach(function (entry) { sheet.getCell(summaryRow, entry[0]).value = { formula:'SUMIF(B'+firstDataRow+':B'+lastDataRow+',"<>D",'+entry[1]+firstDataRow+':'+entry[1]+lastDataRow+')', result: 0 }; });
   sheet.getRow(summaryRow).height = 25; sheet.getRow(summaryRow).eachCell({ includeEmpty: true }, function (cellItem, colNumber) { cellItem.fill = { type: "pattern", pattern: "solid", fgColor: { argb: colNumber === 9 || colNumber === 10 ? green : pale } }; cellItem.font = { name: "Aptos", size: 9, bold: true, color: { argb: "FF173753" } }; cellItem.alignment = { vertical: "middle", horizontal: colNumber >= 8 ? "right" : "left" }; if (colNumber >= 8 && colNumber <= 14) cellItem.numFmt = colNumber % 2 ? "0.000" : "#,##0.00"; });
   sheet.eachRow(function (row) { row.eachCell({ includeEmpty: true }, function (cellItem, colNumber) { if (colNumber <= 14) cellItem.border = { top: { style: "thin", color: { argb: borderColor } }, left: { style: "thin", color: { argb: borderColor } }, bottom: { style: "thin", color: { argb: borderColor } }, right: { style: "thin", color: { argb: borderColor } } }; }); });
   for (var rowNumber = 8; rowNumber <= lastDataRow; rowNumber += 1) sheet.getCell("I" + rowNumber).dataValidation = { type: "decimal", operator: "between", allowBlank: true, showErrorMessage: true, errorTitle: "Neplatné množstvo", error: "Zadaj číslo, napríklad 12,5.", formulae: [-999999999, 999999999] };
