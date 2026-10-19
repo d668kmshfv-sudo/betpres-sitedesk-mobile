@@ -100,7 +100,7 @@
   if(!grid||document.getElementById("dashboardMobileDiaryList"))return;
   var card=document.createElement("article");
   card.className="panel site-focus-card";
-  card.innerHTML='<div class="panel-head"><div><p class="eyebrow">SPOLOČNÉ ÚLOHY</p><h2>Denník z mobilu</h2><small id="mobileDiaryActiveCount">Aktívne zápisy zo stavby</small></div><button class="link-btn" type="button" data-go-mobile-diary>Otvoriť denník</button></div><div id="dashboardMobileDiaryList" class="site-task-list"></div>';
+  card.innerHTML='<div class="panel-head"><div><p class="eyebrow">SPOLOČNÉ ÚLOHY</p><h2>Denník</h2><small id="mobileDiaryActiveCount">Aktívne zápisy zo stavby</small></div><button class="link-btn" type="button" data-go-mobile-diary>Otvoriť denník</button></div><div id="dashboardMobileDiaryList" class="site-task-list"></div>';
   grid.insertBefore(card,grid.firstChild);
   card.querySelector("[data-go-mobile-diary]").onclick=function(){
    if(typeof showView==="function")showView("mobileDiary")
@@ -155,7 +155,7 @@
    box.querySelectorAll("[data-complete-mobile-diary]").forEach(function(button){
     button.onclick=function(){setDiaryItemDone(button.dataset.completeMobileDiary,true)}
    })
-  }catch(error){console.warn("Denník z mobilu sa nepodarilo vykresliť.",error)}
+  }catch(error){console.warn("Denník sa nepodarilo vykresliť.",error)}
  }
  function renderMobileDiaryPage(){
   try{

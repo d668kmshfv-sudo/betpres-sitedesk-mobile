@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.12";
+const SITE_DESK_APP_VERSION="5.2.13";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -523,7 +523,7 @@ function updateSiteDeskSaveState(text="Automaticky uložené",saving=false){
 
 function siteViewLabel(id){
  return({
-  dashboard:"Prehľad stavby",quick:"Rýchle zadávanie",calendar:"Kalendár",mobileDiary:"Denník z mobilu",
+  dashboard:"Prehľad stavby",quick:"Rýchle zadávanie",calendar:"Kalendár",mobileDiary:"Denník",
   workers:"Stav pracovníkov",defects:"Vady a nedorobky",siteMeetings:"Koordinačné porady",controlDays:"Kontrolné dni",billing:"Fakturácia",
   workStatements:"Súpis prác",purchases:"Pasport skladu",concrete:"Betóny",materialSamples:"Vzorkovanie materiálov",documents:"Archív dokumentov",
   handover:"Odovzdanie pracoviska",acceptance:"Preberacie protokoly",
