@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.10";
+const SITE_DESK_APP_VERSION="5.2.11";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -705,8 +705,10 @@ function loadCloudSession(){
 }
 function saveCloudSession(session){
  cloudSession=session||null;
- if(cloudSession)localStorage.setItem(CLOUD_SESSION_KEY,JSON.stringify(cloudSession));
- else localStorage.removeItem(CLOUD_SESSION_KEY);
+ for(const key of [CLOUD_SESSION_KEY,"betpres-mobile-session-v1"]){
+  if(cloudSession){const value=JSON.stringify(cloudSession);if(localStorage.getItem(key)!==value)localStorage.setItem(key,value)}
+  else localStorage.removeItem(key)
+ }
  renderCloudPanel()
 }
 function normalizeCloudUrl(value){
@@ -762,7 +764,9 @@ async function cloudEnsureSession(){
  if(expiresAt&&expiresAt-Date.now()/1000>90)return cloudSession;
  if(!cloudSession.refresh_token)throw new Error("Prihlásenie vypršalo. Prihlás sa znova.");
  if(cloudSessionRefreshPromise)return cloudSessionRefreshPromise;
- cloudSessionRefreshPromise=(async()=>{
+ const refresh=async()=>{
+  const stored=loadCloudSession();
+  if(stored?.access_token){cloudSession=stored;if(Number(stored.expires_at||0)-Date.now()/1000>90)return stored}
   const refreshToken=cloudSession.refresh_token,
         data=await cloudFetch("/auth/v1/token?grant_type=refresh_token",{
          method:"POST",
@@ -772,7 +776,9 @@ async function cloudEnsureSession(){
   data.expires_at=Math.floor(Date.now()/1000)+Number(data.expires_in||3600);
   saveCloudSession(data);
   return data
- })();
+ };
+ cloudSessionRefreshPromise=navigator.locks?.request
+  ?navigator.locks.request("betpres-session-refresh",refresh):refresh();
  try{return await cloudSessionRefreshPromise}
  finally{cloudSessionRefreshPromise=null}
 }
@@ -825,7 +831,7 @@ async function cloudSignUp(){
 }
 async function cloudSignOut(){
  try{
-  if(cloudSession?.access_token)await cloudFetch("/auth/v1/logout",{method:"POST"},true)
+  if(cloudSession?.access_token)await cloudFetch("/auth/v1/logout?scope=local",{method:"POST"},true)
  }catch{}
  saveCloudSession(null);
  cloudTeamMembers=[];
@@ -1049,7 +1055,7 @@ async function cloudUploadPhoto(record,photo,workspaceId,folder="defects"){
 async function cloudPrepareState(workspaceId){
  const cloudData=typeof structuredClone==="function"?structuredClone(state):clone(state);
  let localStateChanged=false;
- for(const defect of state.defects||[]){
+ for(const defect of (state.defects||[]).map(item=>({...item,photos:[...(item.photos||[])]}))){
   const cloudDefect=cloudData.defects.find(item=>item.id===defect.id);
   if(!cloudDefect)continue;
   cloudDefect.photos=Array.isArray(cloudDefect.photos)?cloudDefect.photos:[];
@@ -1061,12 +1067,13 @@ async function cloudPrepareState(workspaceId){
    delete cloudPhoto.dataUrl
   }
  }
- for(const entry of state.mobileDiary||[]){
+ for(const entry of (state.mobileDiary||[]).map(item=>({...item,photos:[...(item.photos||[])]}))){
   const cloudEntry=cloudData.mobileDiary.find(item=>item.id===entry.id);
   if(!cloudEntry)continue;
   cloudEntry.photos=Array.isArray(cloudEntry.photos)?cloudEntry.photos:[];
   for(let index=0;index<(entry.photos||[]).length;index++){
    const localPhoto=entry.photos[index],cloudPhoto=cloudEntry.photos[index];
+   if(!cloudPhoto)continue;
    if(localPhoto.dataUrl&&!localPhoto.path){await cloudUploadPhoto(entry,localPhoto,workspaceId,"diary");localStateChanged=true}
    if(localPhoto.path)cloudPhoto.path=localPhoto.path;
    delete cloudPhoto.dataUrl
@@ -1108,6 +1115,7 @@ async function cloudPush({force=false,silent=false}={}){
    return
   }
 
+  const revisionAtStart=cloudLocalRevision;
   const cloudData=await cloudPrepareState(remote.id),
         result=await cloudRpc("sitedesk_save_workspace",{
          p_workspace_id:remote.id,
@@ -1128,10 +1136,10 @@ async function cloudPush({force=false,silent=false}={}){
   cloudConfig.lastCloudUpdatedAt=saveResult.updated_at||now;
   cloudConfig.lastCloudId=remote.id;
   cloudPendingDescription="Synchronizácia údajov";
-  cloudLocalDirty=false;
-  cloudConfig.localDirty=false;
+  cloudLocalDirty=cloudLocalRevision!==revisionAtStart;
+  cloudConfig.localDirty=cloudLocalDirty;
   saveCloudConfig();
-  cloudSetQuickStatus("connected",`Cloud v${cloudConfig.lastCloudVersion}`);
+  cloudSetQuickStatus(cloudLocalDirty?"syncing":"connected",cloudLocalDirty?"Čakajú ďalšie zmeny":`Cloud v${cloudConfig.lastCloudVersion}`);
   setCloudMessage("cloudSyncMessage",`Dáta boli uložené. Cloudová verzia ${cloudConfig.lastCloudVersion}.`,"success");
   await cloudLoadTeamContext({...remote,data_version:cloudConfig.lastCloudVersion,updated_at:cloudConfig.lastCloudUpdatedAt});
   if(!silent)toast("Cloudová synchronizácia dokončená.")
@@ -1213,7 +1221,9 @@ async function cloudRefreshWorkspaceStatus(){
  }
  renderCloudPanel()
 }
+let cloudLocalRevision=0;
 function queueCloudPush(description=""){
+ cloudLocalRevision++;
  cloudLastLocalChangeAt=Date.now();
  cloudLocalDirty=true;
  cloudConfig.localDirty=true;
@@ -1238,8 +1248,8 @@ function startCloudPolling(){
      cloudSetQuickStatus("conflict","Konflikt dát");
      setCloudMessage("cloudSyncMessage","V cloude je novšia verzia a v tomto zariadení sú neodoslané zmeny. Ak chceš použiť cloudovú verziu, stlač „Načítať najnovšie dáta z cloudu“. Lokálna záloha sa vytvorí automaticky.","error")
     }
-   }
-  }catch{}
+   }else if(remote&&cloudLocalDirty)await cloudPush({silent:true});
+  }catch(error){cloudSetQuickStatus("conflict",navigator.onLine?"Spojenie sa obnovuje":"Offline – zmeny uložené");setCloudMessage("cloudSyncMessage",error.message,"error")}
   cloudRemoteCheckRunning=false
  },15000)
 }
@@ -8137,13 +8147,13 @@ async function initializeCloudPilot(){
    setCloudMessage("cloudAuthMessage","Prihlásenie bolo obnovené. Na tomto zariadení ostávaš prihlásený.","success")
   }catch(error){
    const message=String(error?.message||error||"");
-   if(/invalid.*refresh|refresh.*invalid|token.*expired|not authorized|unauthorized|HTTP 401|HTTP 403/i.test(message)){
-    saveCloudSession(null);
+   if(/invalid.*refresh|refresh.*invalid|refresh.*not found/i.test(message)){
     setCloudMessage("cloudAuthMessage","Prihlásenie vypršalo. Prihlás sa znova.","error")
    }else{
     setCloudMessage("cloudAuthMessage","Prihlásenie je uložené. Cloud sa obnoví po pripojení k internetu.","")
    }
   }
+  startCloudPolling();
  }else if(latestCloudRequested()){
   setCloudMessage("cloudSyncMessage","Na načítanie najnovších dát sa najprv prihlás. Po prihlásení sa cloudová verzia načíta automaticky.","error");
   showView("cloud")

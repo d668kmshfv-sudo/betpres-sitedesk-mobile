@@ -36,9 +36,10 @@
     const mobile = read(KEYS.mobileConfig, {});
     const desktop = read(KEYS.desktopConfig, {});
     const needsFullCloudRefresh = localStorage.getItem(KEYS.fullCloudRefresh) !== "done";
-    const url = mobile.url || desktop.url || "";
-    const key = [mobile.key, desktop.key].find((value) => value && !isSecretKey(value)) || "";
-    const workspaceName = mobile.workspaceName || desktop.workspaceName || "Medická – pilot";
+    if (desktop.url && desktop.key && !isSecretKey(desktop.key)) return;
+    const url = desktop.url || mobile.url || "";
+    const key = [desktop.key, mobile.key].find((value) => value && !isSecretKey(value)) || "";
+    const workspaceName = desktop.workspaceName || mobile.workspaceName || "Medická – pilot";
     if (!key && (mobile.key || desktop.key)) {
       localStorage.setItem(KEYS.desktopConfig, JSON.stringify({ ...desktop, key: "" }));
       localStorage.setItem(KEYS.mobileConfig, JSON.stringify({ ...mobile, key: "" }));
@@ -74,8 +75,8 @@
     const freshest = sessions[0];
     if (!freshest) return null;
     const value = JSON.stringify(freshest);
-    localStorage.setItem(KEYS.mobileSession, value);
-    localStorage.setItem(KEYS.desktopSession, value);
+    if (localStorage.getItem(KEYS.mobileSession) !== value) localStorage.setItem(KEYS.mobileSession, value);
+    if (localStorage.getItem(KEYS.desktopSession) !== value) localStorage.setItem(KEYS.desktopSession, value);
     if (typeof window.siteDeskAdoptCloudSession === "function") {
       window.siteDeskAdoptCloudSession(freshest);
     }
@@ -97,7 +98,7 @@
     const badge = document.createElement("div");
     badge.id = "ipadWebBadge";
     badge.className = "ipad-web-badge";
-    badge.innerHTML = '<span>Online · 5.2.10</span>';
+    badge.innerHTML = '<span>Online · 5.2.11</span>';
     document.body.appendChild(badge);
   }
 
