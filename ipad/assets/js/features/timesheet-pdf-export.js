@@ -103,7 +103,7 @@ function splitRows(rows, size) {
  }
 
  function exportFooter(summary) {
-  return '<footer><span class="footer-app">BETPRES SiteDesk ' + APP_VERSION + '</span><strong>' + html(summary || "") + '</strong><span>Interný výkaz stavby</span></footer>';
+  return '<footer><span class="footer-app">BETPRES APP ' + APP_VERSION + '</span><strong>' + html(summary || "") + '</strong><span>Interný výkaz stavby</span></footer>';
  }
 
  function page(title, month, pageNumber, pageCount, detail, table, summary) {

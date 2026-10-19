@@ -51,7 +51,7 @@
       ...desktop,
       url, key, workspaceName, autoSync: true,
       // Číslo verzie zo starej mobilnej časti nepotvrdzuje, že plné dáta
-      // SiteDesk boli na tomto zariadení naozaj načítané.
+      // BETPRES APP boli na tomto zariadení naozaj načítané.
       lastCloudVersion: needsFullCloudRefresh ? 0 : Number(desktop.lastCloudVersion || 0),
       lastCloudId: desktop.lastCloudId || mobile.workspaceId || "",
       currentRole: desktop.currentRole || mobile.role || "none",
@@ -115,7 +115,7 @@
     const badge = document.createElement("div");
     badge.id = "ipadWebBadge";
     badge.className = "ipad-web-badge";
-    badge.innerHTML = '<span>Online · 5.2.13</span>';
+    badge.innerHTML = '<span>Online · 5.2.14</span>';
     document.body.appendChild(badge);
   }
 

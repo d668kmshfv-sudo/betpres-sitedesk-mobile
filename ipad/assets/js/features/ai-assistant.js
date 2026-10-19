@@ -137,7 +137,7 @@
      <button class="site-ai-scrim" id="siteAiScrim" type="button" aria-label="Zavrieť AI pomocníka"></button>
      <aside class="site-ai-drawer" role="dialog" aria-modal="true" aria-labelledby="siteAiTitle">
       <header class="site-ai-header">
-       <div class="site-ai-brand"><img src="assets/images/navigation-logo.png" alt="BETPRES"><div><small>BETPRES SITEDESK</small><h2 id="siteAiTitle">AI pomocník</h2></div></div>
+       <div class="site-ai-brand"><img src="assets/images/navigation-logo.png" alt="BETPRES"><div><small>BETPRES APP</small><h2 id="siteAiTitle">AI pomocník</h2></div></div>
        <button class="site-ai-close" id="closeAiAssistant" type="button" aria-label="Zavrieť">×</button>
       </header>
       <div class="site-ai-project"><span>Aktívna stavba</span><strong id="siteAiProjectName">—</strong><small id="siteAiConnectionState">Kontrolujem pripojenie…</small></div>

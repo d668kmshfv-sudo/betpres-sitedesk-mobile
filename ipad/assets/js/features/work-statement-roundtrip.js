@@ -189,7 +189,7 @@
    '<sheetData>' + sheetRows.join("") + '</sheetData><mergeCells count="' + merges.length + '">' + merges.map(function (range) { return '<mergeCell ref="' + range + '"/>'; }).join("") + '</mergeCells>' +
    '<sheetProtection sheet="1" objects="1" scenarios="1" formatCells="1" formatColumns="1" formatRows="1" insertColumns="1" insertRows="1" deleteColumns="1" deleteRows="1" selectLockedCells="1"/>' +
    dataValidation + '<pageMargins left="0.25" right="0.25" top="0.45" bottom="0.45" header="0.2" footer="0.2"/><pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/>' +
-   '<headerFooter><oddHeader>&amp;C&amp;B' + xml(companyData && companyData.name || "") + '</oddHeader><oddFooter>&amp;LBETPRES SiteDesk&amp;CStrana &amp;P / &amp;N&amp;R' + xml(formatBillingMonth(statement.period)) + '</oddFooter></headerFooter>' + drawingTag + '</worksheet>';
+   '<headerFooter><oddHeader>&amp;C&amp;B' + xml(companyData && companyData.name || "") + '</oddHeader><oddFooter>&amp;LBETPRES APP&amp;CStrana &amp;P / &amp;N&amp;R' + xml(formatBillingMonth(statement.period)) + '</oddFooter></headerFooter>' + drawingTag + '</worksheet>';
 
   var contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' + (logo ? '<Default Extension="png" ContentType="image/png"/><Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : "") + '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>';
   zip.file("[Content_Types].xml", contentTypes);
@@ -211,8 +211,8 @@
   var projectData = activeProject(), companyData = company(statement.companyId), selectedDoc = selectedWorkDocument();
   var sourceItems = workItemsForCurrentDocument(statement).filter(function (item) { return String(item.type || "").toUpperCase() !== "D"; });
   var workbook = new window.ExcelJS.Workbook();
-  workbook.creator = "BETPRES SiteDesk"; workbook.company = "BETPRES, s.r.o."; workbook.created = new Date(); workbook.modified = new Date(); workbook.calcProperties.fullCalcOnLoad = true;
-  var sheet = workbook.addWorksheet("Súpis objednávky", { views: [{ state: "frozen", ySplit: 6, activeCell: "D7", showGridLines: false }], pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.3, right: 0.3, top: 0.45, bottom: 0.45, header: 0.2, footer: 0.2 } }, headerFooter: { oddHeader: "&C&B" + (companyData && companyData.name || ""), oddFooter: "&LBETPRES SiteDesk&CStrana &P / &N&R" + formatBillingMonth(statement.period) } });
+  workbook.creator = "BETPRES APP"; workbook.company = "BETPRES, s.r.o."; workbook.created = new Date(); workbook.modified = new Date(); workbook.calcProperties.fullCalcOnLoad = true;
+  var sheet = workbook.addWorksheet("Súpis objednávky", { views: [{ state: "frozen", ySplit: 6, activeCell: "D7", showGridLines: false }], pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.3, right: 0.3, top: 0.45, bottom: 0.45, header: 0.2, footer: 0.2 } }, headerFooter: { oddHeader: "&C&B" + (companyData && companyData.name || ""), oddFooter: "&LBETPRES APP&CStrana &P / &N&R" + formatBillingMonth(statement.period) } });
   [8,58,10,16,16,18,2,2,2,2].forEach(function (width, index) { sheet.getColumn(index + 1).width = width; if (index >= 6) sheet.getColumn(index + 1).hidden = true; });
   sheet.mergeCells("A1:F1"); sheet.mergeCells("A2:C2"); sheet.mergeCells("D2:F2"); sheet.mergeCells("A3:C3"); sheet.mergeCells("D3:F3"); sheet.mergeCells("A4:F4");
   sheet.getCell("A1").value = "SÚPIS PRÁC K OBJEDNÁVKE";
@@ -242,7 +242,7 @@
   var projectData = activeProject(), companyData = company(statement.companyId), assignmentData = assignment(statement.projectId, statement.companyId);
   var documentShort = assignmentDocShort(assignmentData), sourceItems = workItemsWithDocumentSections(statement, workItemsForCurrentDocument(statement));
   var workbook = new window.ExcelJS.Workbook();
-  workbook.creator = "BETPRES SiteDesk";
+  workbook.creator = "BETPRES APP";
   workbook.company = "BETPRES, s.r.o.";
   workbook.created = new Date();
   workbook.modified = new Date();
@@ -250,7 +250,7 @@
   var sheet = workbook.addWorksheet("Súpis prác", {
    views: [{ state: "frozen", ySplit: 7, activeCell: "I8", showGridLines: false }],
    pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.25, right: 0.25, top: 0.45, bottom: 0.45, header: 0.2, footer: 0.2 } },
-   headerFooter: { oddHeader: "&C&B" + (companyData && companyData.name || ""), oddFooter: "&LBETPRES SiteDesk&CStrana &P / &N&R" + formatBillingMonth(statement.period) },
+   headerFooter: { oddHeader: "&C&B" + (companyData && companyData.name || ""), oddFooter: "&LBETPRES APP&CStrana &P / &N&R" + formatBillingMonth(statement.period) },
    properties: { defaultRowHeight: 20 }
   });
   var widths = [6,6,18,62,7,14,14,14,14,14,14,14,14,14,2,2,2,2];

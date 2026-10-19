@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.13";
+const SITE_DESK_APP_VERSION="5.2.14";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -1167,7 +1167,7 @@ async function cloudPull({silent=false,replaceLocal=false}={}){
   preserveDefectRecovery();
   localStorage.setItem(CLOUD_PRE_PULL_BACKUP_KEY,JSON.stringify(state));
   const imported=remote.data;
-  if(!Array.isArray(imported.projects)||!Array.isArray(imported.companies))throw new Error("Cloudový záznam nemá platný formát SiteDesk.");
+  if(!Array.isArray(imported.projects)||!Array.isArray(imported.companies))throw new Error("Cloudový záznam nemá platný formát BETPRES APP.");
   if(imported.projects.some(project=>project.id===state.selectedProjectId))imported.selectedProjectId=state.selectedProjectId;
   state=imported;
   ["projects","companies","assignments","billings","materials","purchases","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"].forEach(key=>{
@@ -1348,7 +1348,7 @@ function renderCloudPanel(){
   <article class="team-activity-item">
    <header><strong>${esc(item.display_name||item.user_email||"Používateľ")}</strong><time>${new Date(item.created_at).toLocaleString("sk-SK")}</time></header>
    <p>${esc(item.description||item.action||"Cloudová zmena")}</p>
-   <small>Verzia ${item.data_version||"—"} · ${esc(item.module||"SiteDesk")}</small>
+   <small>Verzia ${item.data_version||"—"} · ${esc(item.module||"BETPRES APP")}</small>
   </article>`).join(""):`<div class="team-empty">Zatiaľ bez cloudovej histórie.</div>`;
 
  $("pilotFeedbackList").innerHTML=cloudPilotFeedback.length?cloudPilotFeedback.map(item=>`
@@ -1739,7 +1739,7 @@ async function exportDefectsPdf(){
  await Promise.all(remotePaths.map(async path=>remotePhotoSources.set(path,await cloudPhotoObjectUrl(path))));
  const failedPhotos=remotePaths.filter(path=>!remotePhotoSources.get(path));
  if(failedPhotos.length){
-  alert(`PDF sa nevytvorilo, pretože ${failedPhotos.length===1?"fotografiu":"fotografie"} sa nepodarilo stiahnuť z cloudu. Skontroluj internet a prihlásenie do SiteDesk Cloud, stlač synchronizáciu a export zopakuj.`);
+  alert(`PDF sa nevytvorilo, pretože ${failedPhotos.length===1?"fotografiu":"fotografie"} sa nepodarilo stiahnuť z cloudu. Skontroluj internet a prihlásenie do BETPRES APP Cloud, stlač synchronizáciu a export zopakuj.`);
   return{ok:false,reason:"cloud-photo-unavailable",failedPhotos:failedPhotos.length}
  }
  const groups=groupedDefects(selected),
@@ -2569,7 +2569,7 @@ function renderWorkers(){
   liveHeader.innerHTML=`
    <div class="worker-brand-card compact-worker-card">
     <div class="worker-brand-title-block">
-      <div class="worker-brand-kicker">BETPRES SiteDesk · Stav pracovníkov</div>
+      <div class="worker-brand-kicker">BETPRES APP · Stav pracovníkov</div>
       <h2>Stav pracovníkov – ${esc(p?.name||"Stavba")}</h2>
       <div class="worker-brand-meta">
        <span>Mesiac <strong>${esc(monthLabel)}</strong></span>
@@ -4025,7 +4025,7 @@ function exportCompanyHourTimesheetPdf(rowId){
   const part=workers.slice(pageIndex*rowsPerPage,(pageIndex+1)*rowsPerPage);
   const body=part.map((worker,i)=>{let total=0,html=`<tr><td class="num">${pageIndex*rowsPerPage+i+1}</td><td class="name">${esc(worker.name||"")}</td>`;for(let day=1;day<=days;day++){const v=worker.values?.[day],cls=dayClass(day);total+=attendanceHours(v);html+=`<td class="${cls}">${esc(formatWorkHoursCell(v))}</td>`}html+=`<td class="sum">${formatWorkHoursCell(total)}</td><td class="amount">${eur.format(workRound(total*rate,2))}</td></tr>`;return html}).join("");
   let totals=`<tr><td class="sumLabel" colspan="2">Spolu za deň</td>`;for(let day=1;day<=days;day++){totals+=`<td class="${dayClass(day)}">${formatWorkHoursCell(companyHourDayTotal(row,day))}</td>`}totals+=`<td class="sum">${formatWorkHoursCell(hours)}</td><td class="amount">${eur.format(amount)}</td></tr>`;
-  pages.push(`<section class="page"><div class="blue-head"><div class="logoText">Betpres</div><div><h1>HODINOVÁ SMENOVKA – ${esc(companyName)}</h1><p>${esc(projectData?.name||"")}</p></div><div class="pageNo">${pageIndex+1} / ${pageCount}</div></div><div class="meta-row"><span><strong>Stavba:</strong> ${esc(projectData?.name||"")}</span><span><strong>Mesiac:</strong> ${monthLabel}</span><span><strong>Sadzba:</strong> ${eur.format(rate)}/h</span><span><strong>Vytvorené:</strong> ${created}</span></div><div class="legend"><span><i class="weekendBox"></i> víkend</span><span><i class="holidayBox"></i> sviatok</span><span>${esc(row.description||"Hodinové práce podľa smenovky")}</span></div><table><thead>${tableHead()}</thead><tbody>${body}</tbody><tfoot>${totals}</tfoot></table><footer><span>BETPRES SiteDesk 5.0.39</span><span>${esc(companyName)} · ${formatWorkHoursCell(hours)} h · ${eur.format(amount)} bez DPH</span></footer></section>`)
+  pages.push(`<section class="page"><div class="blue-head"><div class="logoText">Betpres</div><div><h1>HODINOVÁ SMENOVKA – ${esc(companyName)}</h1><p>${esc(projectData?.name||"")}</p></div><div class="pageNo">${pageIndex+1} / ${pageCount}</div></div><div class="meta-row"><span><strong>Stavba:</strong> ${esc(projectData?.name||"")}</span><span><strong>Mesiac:</strong> ${monthLabel}</span><span><strong>Sadzba:</strong> ${eur.format(rate)}/h</span><span><strong>Vytvorené:</strong> ${created}</span></div><div class="legend"><span><i class="weekendBox"></i> víkend</span><span><i class="holidayBox"></i> sviatok</span><span>${esc(row.description||"Hodinové práce podľa smenovky")}</span></div><table><thead>${tableHead()}</thead><tbody>${body}</tbody><tfoot>${totals}</tfoot></table><footer><span>BETPRES APP 5.0.39</span><span>${esc(companyName)} · ${formatWorkHoursCell(hours)} h · ${eur.format(amount)} bez DPH</span></footer></section>`)
  }
  const w=window.open("","_blank");
  if(!w){alert("Prehliadač zablokoval okno pre PDF. Povoľ vyskakovacie okná.");return}
@@ -7776,7 +7776,7 @@ $("importCloudConnection").onchange=event=>{
    saveCloudConfig();
    renderCloudPanel();
    toast("Pripojenie bolo importované.")
-  }catch{alert("Súbor nie je platné pripojenie BETPRES SiteDesk.")}
+  }catch{alert("Súbor nie je platné pripojenie BETPRES APP.")}
  };
  reader.readAsText(file);
  event.target.value=""
@@ -7879,7 +7879,7 @@ $("exportSelectedDefectsPdf").onclick=exportDefectsPdf;
 $("refreshMobileDefects").onclick=()=>refreshMobileDefects();
 
 
-/* BETPRES SiteDesk 5.0.36 – preberacie protokoly */
+/* BETPRES APP 5.0.36 – preberacie protokoly */
 function acceptanceNumberValue(value){
  const raw=String(value||"").replace(/€/g,"").replace(/bez DPH/gi,"").replace(/\s+/g,"").replace(/,/g,".");
  const matches=raw.match(/[+-]?\d+(?:\.\d+)?/g);
@@ -8018,7 +8018,7 @@ printAcceptance=function(id){
 };
 
 
-/* BETPRES SiteDesk 5.0.36 – finálne polia a export preberacieho protokolu */
+/* BETPRES APP 5.0.36 – finálne polia a export preberacieho protokolu */
 const acceptanceDefaultWarrantyText="Za akosť Diela je 60 mesiacov. Záručná doba začína plynúť odo dňa odovzdania celej stavby Objednávateľom Investorovi.";
 const acceptanceDefaultClientStatement="Prípadné požiadavky investora budú riešené formou reklamácie v záruke.";
 const acceptanceDefaultSupplierStatement="Bez výhrad";

@@ -1,4 +1,4 @@
-// BETPRES SiteDesk – spoločný denník úloh pre počítač a mobil
+// BETPRES APP – spoločný denník úloh pre počítač a mobil
 (function(){
  "use strict";
 

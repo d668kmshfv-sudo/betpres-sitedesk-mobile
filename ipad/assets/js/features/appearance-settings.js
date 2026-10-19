@@ -1,4 +1,4 @@
-// BETPRES SiteDesk – používateľské nastavenie vzhľadu
+// BETPRES APP – používateľské nastavenie vzhľadu
 (function(){
  "use strict";
  var KEY="betpres-sitedesk-appearance-v1";

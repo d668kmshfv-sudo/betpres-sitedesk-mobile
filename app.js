@@ -151,7 +151,7 @@
  function renderProjectSelect(){
   ensureProject();
   const select=$("projectSelect");
-  select.innerHTML=app.data.projects.length?app.data.projects.map(item=>`<option value="${esc(item.id)}" ${item.id===app.projectId?"selected":""}>${esc(item.name)}</option>`).join(""):`<option value="">Najprv pripoj SiteDesk Cloud</option>`;
+  select.innerHTML=app.data.projects.length?app.data.projects.map(item=>`<option value="${esc(item.id)}" ${item.id===app.projectId?"selected":""}>${esc(item.name)}</option>`).join(""):`<option value="">Najprv pripoj BETPRES APP Cloud</option>`;
   select.disabled=!app.data.projects.length
  }
 
@@ -630,7 +630,7 @@
   try{
    await ensureSession();
    for(let attempt=0;attempt<2;attempt++){
-    const remote=await getWorkspace();if(!remote?.data)throw new Error("Pracovný priestor neobsahuje údaje SiteDesk.");app.config.workspaceId=remote.id;
+    const remote=await getWorkspace();if(!remote?.data)throw new Error("Pracovný priestor neobsahuje údaje BETPRES APP.");app.config.workspaceId=remote.id;
     const roleResult=await rpc("sitedesk_current_role",{p_workspace_id:remote.id}),role=Array.isArray(roleResult)?roleResult[0]:roleResult;app.config.role=role||"none";
     if(!app.queue.length){app.data=normalizeData(clone(remote.data));app.config.version=Number(remote.data_version||0);saveSnapshot();saveConfig();break}
     if(!["owner","editor"].includes(role))throw new Error("Tento účet má prístup iba na čítanie. Mobilné zmeny ostali v telefóne.");
@@ -639,7 +639,7 @@
     if(saved?.success){app.data=merged;app.queue=[];app.config.version=Number(saved.data_version||Number(remote.data_version)+1);saveSnapshot();saveQueue();saveConfig();break}
     if(attempt===1)throw new Error("Cloud sa medzitým zmenil. Skús synchronizáciu znova.")
    }
-   connectionLabel("online",`Cloud v${app.config.version}`);renderProjectSelect();renderRoute();renderSettings();if(!silent)toast("SiteDesk je synchronizovaný.")
+   connectionLabel("online",`Cloud v${app.config.version}`);renderProjectSelect();renderRoute();renderSettings();if(!silent)toast("BETPRES APP je synchronizovaný.")
   }catch(error){connectionLabel("offline",app.queue.length?`${app.queue.length} čaká`:"Chyba cloudu");setCloudMessage(error.message,"error");if(!silent)toast(error.message)}finally{app.syncRunning=false;$("syncButton").classList.remove("syncing")}
  }
  function autoSync(){
@@ -679,7 +679,7 @@
   }})
  }
 
- function openInstallHelp(){showSheet({eyebrow:"INŠTALÁCIA NA IPHONE A IPAD",title:"Pridať SiteDesk na plochu",html:`<div class="sheet-form"><p class="form-note"><b>1.</b> Túto stránku otvor v aplikácii Safari.</p><p class="form-note"><b>2.</b> Stlač ikonu Zdieľať (štvorec so šípkou nahor).</p><p class="form-note"><b>3.</b> Vyber „Pridať na plochu“ a potvrď „Pridať“.</p><p class="form-note"><b>4.</b> SiteDesk sa zobrazí medzi aplikáciami a na iPade sa automaticky otvorí v širokom tabletovom režime.</p><button class="primary-button full" id="closeInstallHelp" type="button">Rozumiem</button></div>`,onReady:()=>$("closeInstallHelp").onclick=closeSheet})}
+ function openInstallHelp(){showSheet({eyebrow:"INŠTALÁCIA NA IPHONE A IPAD",title:"Pridať BETPRES APP na plochu",html:`<div class="sheet-form"><p class="form-note"><b>1.</b> Túto stránku otvor v aplikácii Safari.</p><p class="form-note"><b>2.</b> Stlač ikonu Zdieľať (štvorec so šípkou nahor).</p><p class="form-note"><b>3.</b> Vyber „Pridať na plochu“ a potvrď „Pridať“.</p><p class="form-note"><b>4.</b> BETPRES APP sa zobrazí medzi aplikáciami a na iPade sa automaticky otvorí v širokom tabletovom režime.</p><button class="primary-button full" id="closeInstallHelp" type="button">Rozumiem</button></div>`,onReady:()=>$("closeInstallHelp").onclick=closeSheet})}
 
  function wireEvents(){
   qa("[data-route]").forEach(button=>button.addEventListener("click",()=>route(button.dataset.route)));
@@ -696,7 +696,7 @@
   $("compactToggle").onchange=()=>{app.appearance.compact=$("compactToggle").checked;saveAppearance();applyAppearance()};
   $("resetAppearance").onclick=()=>{app.appearance={theme:"system",fontScale:"1",contrast:45,compact:false};saveAppearance();applyAppearance();toast("BETPRES vzhľad bol obnovený.")};
   $("connectionForm").onsubmit=async event=>{event.preventDefault();app.config.url=normalizeUrl($("cloudUrl").value);app.config.key=$("cloudKey").value.trim();app.config.workspaceName=$("workspaceName").value.trim()||"Medická – pilot";app.config.email=$("cloudEmail").value.trim();saveConfig();setCloudMessage("Prihlasujem…");try{await signIn(app.config.email,$("cloudPassword").value);$("cloudPassword").value="";setCloudMessage("Prihlásenie bolo úspešné. Mobil si ho zapamätá aj po zatvorení aplikácie.","success");await sync();renderSettings()}catch(error){setCloudMessage(error.message,"error")}};
-  $("connectionFile").onchange=async event=>{const file=event.target.files?.[0];if(!file)return;try{const data=JSON.parse(await file.text());if(data.type!=="BETPRES_SITEDESK_CONNECTION"||!data.url||!data.publishableKey)throw new Error();app.config.url=normalizeUrl(data.url);app.config.key=String(data.publishableKey);app.config.workspaceName=data.workspaceName||"Medická – pilot";app.config.email=String(data.email||"");saveConfig();renderSettings();setCloudMessage("Pripojenie bolo načítané. Zadaj heslo iba prvýkrát.","success")}catch{setCloudMessage("Súbor nie je platné pripojenie BETPRES SiteDesk.","error")}};
+  $("connectionFile").onchange=async event=>{const file=event.target.files?.[0];if(!file)return;try{const data=JSON.parse(await file.text());if(data.type!=="BETPRES_SITEDESK_CONNECTION"||!data.url||!data.publishableKey)throw new Error();app.config.url=normalizeUrl(data.url);app.config.key=String(data.publishableKey);app.config.workspaceName=data.workspaceName||"Medická – pilot";app.config.email=String(data.email||"");saveConfig();renderSettings();setCloudMessage("Pripojenie bolo načítané. Zadaj heslo iba prvýkrát.","success")}catch{setCloudMessage("Súbor nie je platné pripojenie BETPRES APP.","error")}};
   $("signOutButton").onclick=()=>{app.session=null;app.config.role="none";saveSession();saveConfig();renderSettings();connectionLabel("offline",app.queue.length?`${app.queue.length} čaká`:"Offline");toast("Mobil bol odhlásený.")};
   $("installHelpButton").onclick=openInstallHelp;
   document.addEventListener("keydown",event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){event.preventDefault();openQuickOpen();return}if(event.key==="Escape"){if(!$("bottomSheet").hidden)closeSheet();else if(app.focusMode)setFocusMode(false)}});

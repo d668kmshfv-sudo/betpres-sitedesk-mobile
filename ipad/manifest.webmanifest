@@ -1,6 +1,6 @@
 {
-  "name": "BETPRES SiteDesk Online",
-  "short_name": "SiteDesk",
+  "name": "BETPRES APP",
+  "short_name": "BETPRES APP",
   "description": "Online stavebná evidencia BETPRES pre notebook, iPad a iPhone",
   "start_url": "./",
   "scope": "./",
