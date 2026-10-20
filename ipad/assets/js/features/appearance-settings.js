@@ -14,7 +14,7 @@
   root.classList.toggle("sitedesk-compact",Boolean(settings.compact));
   root.classList.toggle("sitedesk-high-contrast",Number(settings.contrast)>=68);
   root.classList.toggle("sitedesk-solid-header",!settings.transparentHeader);
-  var meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=isDark()?"#0c1724":"#0b2b4f";
+var meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=isDark()?"#1c1c1e":"#f2f2f7";
   document.querySelectorAll("[data-desktop-theme]").forEach(function(button){button.classList.toggle("active",button.dataset.desktopTheme===settings.theme)});
   var font=document.getElementById("desktopFontScale"),contrast=document.getElementById("desktopContrast"),output=document.getElementById("desktopContrastValue"),compact=document.getElementById("desktopCompact"),transparent=document.getElementById("desktopTransparentHeader");
   if(font)font.value=settings.fontScale;if(contrast)contrast.value=String(settings.contrast);if(output)output.value=String(settings.contrast);if(compact)compact.checked=Boolean(settings.compact);if(transparent)transparent.checked=Boolean(settings.transparentHeader)

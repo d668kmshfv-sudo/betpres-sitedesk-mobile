@@ -2,17 +2,26 @@
    Loaded last so the production features and print templates stay intact. */
 
 :root{
-  --apple-accent:#0a65a8;
-  --apple-accent-strong:#064a7d;
-  --apple-accent-soft:#e7f3fb;
-  --apple-ink:#14283a;
-  --apple-secondary:#617486;
-  --apple-tertiary:#81909d;
-  --apple-canvas:#f4f7fa;
-  --apple-surface:rgba(255,255,255,.86);
+  --apple-blue:#007aff;
+  --apple-blue-dark:#0062cc;
+  --apple-indigo:#5856d6;
+  --apple-purple:#af52de;
+  --apple-teal:#00a6c7;
+  --apple-green:#34c759;
+  --apple-orange:#ff9500;
+  --apple-red:#ff3b30;
+  --apple-yellow:#ffcc00;
+  --apple-accent:var(--apple-blue);
+  --apple-accent-strong:var(--apple-blue-dark);
+  --apple-accent-soft:#e8f3ff;
+  --apple-ink:#1c1c1e;
+  --apple-secondary:#636366;
+  --apple-tertiary:#8e8e93;
+  --apple-canvas:#f2f2f7;
+  --apple-surface:rgba(255,255,255,.84);
   --apple-surface-solid:#fff;
-  --apple-line:rgba(50,72,92,.14);
-  --apple-line-strong:rgba(42,66,87,.22);
+  --apple-line:rgba(60,60,67,.16);
+  --apple-line-strong:rgba(60,60,67,.25);
   --apple-radius-control:12px;
   --apple-radius-card:20px;
   --apple-radius-sheet:26px;
@@ -35,8 +44,9 @@ html{
 }
 body.sitedesk-v3{
   background:
-    radial-gradient(circle at 92% 2%,rgba(37,132,196,.08),transparent 26rem),
-    linear-gradient(180deg,#f8fafc 0,var(--apple-canvas) 24rem)!important;
+    radial-gradient(circle at 92% 0,rgba(0,122,255,.11),transparent 27rem),
+    radial-gradient(circle at 68% 18%,rgba(88,86,214,.055),transparent 23rem),
+    linear-gradient(180deg,#fafaff 0,var(--apple-canvas) 25rem)!important;
   color:var(--apple-ink)!important;
 }
 ::selection{background:rgba(10,101,168,.18)}
@@ -53,8 +63,8 @@ body.sitedesk-v3{
 
 body.sitedesk-v3 .site-sidebar{
   background:
-    radial-gradient(circle at 25% -5%,rgba(74,153,210,.30),transparent 18rem),
-    linear-gradient(180deg,rgba(8,42,73,.985),rgba(7,50,85,.97))!important;
+    radial-gradient(circle at 18% -4%,rgba(10,132,255,.46),transparent 20rem),
+    linear-gradient(180deg,rgba(30,30,32,.99),rgba(22,22,24,.985) 58%,rgba(11,36,58,.99))!important;
   border-right:1px solid rgba(255,255,255,.12)!important;
   box-shadow:10px 0 36px rgba(8,38,65,.09)!important;
 }
@@ -83,16 +93,16 @@ body.sitedesk-v3 .site-nav .nav-btn:hover{
   color:#fff!important;background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.05)!important;
 }
 body.sitedesk-v3 .site-nav .nav-btn.active{
-  color:#082d4e!important;
-  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(238,247,253,.94))!important;
-  border-color:rgba(255,255,255,.68)!important;
-  box-shadow:0 8px 22px rgba(1,23,41,.20),inset 0 1px 0 #fff!important;
+  color:#fff!important;
+  background:linear-gradient(180deg,#1688ff,var(--apple-blue))!important;
+  border-color:rgba(255,255,255,.20)!important;
+  box-shadow:0 9px 24px rgba(0,90,196,.34),inset 0 1px 0 rgba(255,255,255,.28)!important;
 }
 body.sitedesk-v3 .site-nav .nav-btn .nav-icon{
   flex:0 0 29px;width:29px!important;height:29px!important;border-radius:9px!important;
   background:rgba(255,255,255,.09)!important;color:inherit!important;
 }
-body.sitedesk-v3 .site-nav .nav-btn.active .nav-icon{background:rgba(10,101,168,.11)!important;color:var(--apple-accent)!important}
+body.sitedesk-v3 .site-nav .nav-btn.active .nav-icon{background:rgba(255,255,255,.18)!important;color:#fff!important}
 body.sitedesk-v3 .sidebar-collapse{
   border-radius:11px!important;background:rgba(255,255,255,.10)!important;
   transition:background-color .16s linear,border-color .16s linear!important;
@@ -105,7 +115,7 @@ body.sitedesk-v3 .site-sidebar-footer{
 body.sitedesk-v3 .site-topbar{
   min-height:70px!important;height:70px!important;
   padding:calc(8px + var(--apple-safe-top)) max(18px,var(--apple-safe-right)) 8px 18px!important;
-  background:rgba(249,251,253,.76)!important;
+  background:rgba(248,248,250,.76)!important;
   border-bottom:1px solid rgba(255,255,255,.78)!important;
   box-shadow:0 1px 0 rgba(42,67,89,.08),0 10px 34px rgba(18,49,74,.055)!important;
   -webkit-backdrop-filter:blur(26px) saturate(175%)!important;
@@ -124,7 +134,7 @@ body.sitedesk-v3 .project-picker select{
   border-color:rgba(53,79,99,.16)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important;
 }
 body.sitedesk-v3 .site-save-state{color:var(--apple-secondary)!important}
-body.sitedesk-v3 .avatar{background:linear-gradient(145deg,#e5f2fb,#cfe6f6)!important;color:#075889!important;box-shadow:inset 0 0 0 1px rgba(10,101,168,.10)}
+body.sitedesk-v3 .avatar{background:linear-gradient(145deg,#e8f3ff,#d5e9ff)!important;color:#0062cc!important;box-shadow:inset 0 0 0 1px rgba(0,122,255,.12)}
 
 body.sitedesk-v3 .view{padding:22px 24px 48px!important;max-width:1880px!important}
 body.sitedesk-v3 .page-title{
@@ -134,7 +144,12 @@ body.sitedesk-v3 .page-title{
   box-shadow:0 1px 0 rgba(55,79,98,.08),0 9px 28px rgba(19,52,78,.045)!important;
   -webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);
 }
-body.sitedesk-v3 .page-title:before{background:var(--apple-accent)!important;border-radius:999px!important;width:4px!important}
+body.sitedesk-v3 .page-title:before{background:var(--apple-blue)!important;border-radius:999px!important;width:4px!important;box-shadow:0 0 12px rgba(0,122,255,.30)}
+body.sitedesk-v3 #billing .page-title:before{background:var(--apple-green)!important;box-shadow:0 0 12px rgba(52,199,89,.28)}
+body.sitedesk-v3 #workStatements .page-title:before{background:var(--apple-indigo)!important;box-shadow:0 0 12px rgba(88,86,214,.28)}
+body.sitedesk-v3 #defects .page-title:before{background:var(--apple-red)!important;box-shadow:0 0 12px rgba(255,59,48,.26)}
+body.sitedesk-v3 #mobileDiary .page-title:before{background:var(--apple-teal)!important;box-shadow:0 0 12px rgba(0,166,199,.26)}
+body.sitedesk-v3 #calendar .page-title:before{background:var(--apple-purple)!important;box-shadow:0 0 12px rgba(175,82,222,.25)}
 body.sitedesk-v3 .page-title p,
 body.sitedesk-v3 .panel-head p,
 body.sitedesk-v3 .modal-head p{
@@ -152,8 +167,19 @@ body.sitedesk-v3 .panel{
 }
 body.sitedesk-v3 .panel-head h2,body.sitedesk-v3 .panel h2{color:var(--apple-ink)!important;letter-spacing:-.016em!important;font-weight:740!important}
 body.sitedesk-v3 .site-kpi{border-radius:18px!important;background:rgba(255,255,255,.84)!important;box-shadow:0 0 0 1px rgba(44,69,89,.07),0 10px 28px rgba(19,52,78,.055)!important}
-body.sitedesk-v3 .site-kpi-icon{border-radius:13px!important;background:var(--apple-accent-soft)!important;color:var(--apple-accent)!important}
-body.sitedesk-v3 .site-hero{border-radius:24px!important;box-shadow:0 18px 42px rgba(6,42,73,.16)!important}
+body.sitedesk-v3 .site-kpi-icon{border-radius:13px!important;background:var(--apple-accent-soft)!important;color:var(--apple-blue)!important}
+body.sitedesk-v3 .site-kpi:nth-child(1){border-top-color:rgba(0,122,255,.46)!important}
+body.sitedesk-v3 .site-kpi:nth-child(1) .site-kpi-icon{background:#e8f3ff!important;color:var(--apple-blue)!important}
+body.sitedesk-v3 .site-kpi:nth-child(2) .site-kpi-icon{background:#efefff!important;color:var(--apple-indigo)!important}
+body.sitedesk-v3 .site-kpi:nth-child(3) .site-kpi-icon{background:#fff0ef!important;color:var(--apple-red)!important}
+body.sitedesk-v3 .site-kpi:nth-child(4) .site-kpi-icon{background:#eaf9ee!important;color:#248a3d!important}
+body.sitedesk-v3 .site-kpi:nth-child(5) .site-kpi-icon{background:#e6f8fb!important;color:var(--apple-teal)!important}
+body.sitedesk-v3 .site-kpi:nth-child(6) .site-kpi-icon{background:#f7edfc!important;color:var(--apple-purple)!important}
+body.sitedesk-v3 .site-hero{
+  border-radius:24px!important;
+  background:linear-gradient(135deg,#09477e 0%,#007aff 72%,#5856d6 150%)!important;
+  box-shadow:0 18px 44px rgba(0,91,191,.22)!important
+}
 body.sitedesk-v3 .site-hero-actions button{border-radius:15px!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 
 /* Controls: immediate press feedback is driven by apple-motion.js. */
@@ -164,13 +190,13 @@ body.sitedesk-v3 .file-btn{
   transition:background-color .14s linear,border-color .14s linear,color .14s linear,box-shadow .18s linear!important;
 }
 body.sitedesk-v3 button:not(.nav-btn):not(.link-btn):not(.close):not(.ghost):not(.ui-secondary):not(.ui-info):not(.ui-danger){
-  background:linear-gradient(180deg,#0c6caf,#07598f)!important;border:1px solid rgba(3,70,113,.58)!important;
-  box-shadow:0 1px 0 rgba(255,255,255,.20) inset,0 5px 14px rgba(7,82,132,.16)!important;
+  background:linear-gradient(180deg,#1688ff,var(--apple-blue))!important;border:1px solid #006ee6!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.24) inset,0 6px 16px rgba(0,122,255,.20)!important;
 }
-body.sitedesk-v3 button.ui-primary{background:linear-gradient(180deg,#0c6caf,#07598f)!important;border-color:#07598f!important}
+body.sitedesk-v3 button.ui-primary{background:linear-gradient(180deg,#1688ff,var(--apple-blue))!important;border-color:#006ee6!important}
 body.sitedesk-v3 button.ghost,
 body.sitedesk-v3 button.ui-secondary{
-  background:rgba(255,255,255,.80)!important;border-color:rgba(44,70,91,.17)!important;color:#24516d!important;
+  background:rgba(255,255,255,.80)!important;border-color:rgba(60,60,67,.18)!important;color:#3a3a3c!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.92)!important;
 }
 body.sitedesk-v3 button:hover:not(:disabled){filter:none!important}
@@ -191,7 +217,7 @@ body.sitedesk-v3 textarea{
 body.sitedesk-v3 input:focus,
 body.sitedesk-v3 select:focus,
 body.sitedesk-v3 textarea:focus{
-  border-color:rgba(10,101,168,.62)!important;background:#fff!important;box-shadow:0 0 0 4px rgba(10,101,168,.105)!important;
+  border-color:rgba(0,122,255,.68)!important;background:#fff!important;box-shadow:0 0 0 4px rgba(0,122,255,.12)!important;
 }
 body.sitedesk-v3 .table-wrap,
 body.sitedesk-v3 .worker-table-wrap,
@@ -202,6 +228,27 @@ body.sitedesk-v3 .work-sheet-wrap{
 body.sitedesk-v3 th{font-weight:780!important;letter-spacing:.045em!important}
 body.sitedesk-v3 tbody tr{transition:background-color .12s linear!important}
 body.sitedesk-v3 .chip,body.sitedesk-v3 .status-badge{border-radius:999px!important}
+body.sitedesk-v3 .status-open,body.sitedesk-v3 .acceptance-status-warn{background:#fff3e2!important;color:#a05a00!important;border-color:#ffd39a!important}
+body.sitedesk-v3 .status-progress{background:#e8f3ff!important;color:#0062cc!important;border-color:#b9dcff!important}
+body.sitedesk-v3 .status-done,body.sitedesk-v3 .acceptance-status-done{background:#eaf9ee!important;color:#248a3d!important;border-color:#b9e9c5!important}
+body.sitedesk-v3 .acceptance-status-missing{background:#fff0ef!important;color:#d70015!important;border-color:#ffc6c2!important}
+body.sitedesk-v3 .link-btn{color:var(--apple-blue)!important}
+body.sitedesk-v3 .site-version-dot{background:var(--apple-green)!important;box-shadow:0 0 0 4px rgba(52,199,89,.15)!important}
+
+/* Strong wayfinding inside the densest work screens. */
+body.work-focus-mode #workStatements .work-invoice-banner{background:linear-gradient(105deg,#403db5,#5856d6 58%,#007aff)!important;box-shadow:0 9px 24px rgba(88,86,214,.20)!important}
+body.work-focus-mode #workStatements .work-sheet thead th{background:#3f3dac!important;border-color:#6967d0!important}
+body.work-focus-mode #workStatements .work-sheet thead tr:nth-child(2) th{background:#5452c2!important}
+body.workers-focus-mode #workers .worker-mode-tabs button.active{background:linear-gradient(180deg,#1688ff,#007aff)!important;border-color:#007aff!important;box-shadow:0 8px 20px rgba(0,122,255,.22)!important}
+body.workers-focus-mode #workers .worker-table thead th{background:#0062cc!important;border-color:#3488e5!important}
+body.sitedesk-v3 #billing .billing-year-matrix thead th{background:#248a3d!important}
+body.sitedesk-v3 #billing .billing-year-matrix thead th:first-child,
+body.sitedesk-v3 #billing .billing-year-matrix thead th:last-child{background:#1f7535!important}
+body.sitedesk-v3 .appearance-saved{background:#eaf9ee!important;border-color:#b9e9c5!important;color:#248a3d!important}
+body.sitedesk-v3 .desktop-theme-choices>button.active{border-color:var(--apple-blue)!important;box-shadow:0 0 0 4px rgba(0,122,255,.12)!important}
+body.sitedesk-v3 .desktop-theme-preview{background:#f2f2f7!important}
+body.sitedesk-v3 .desktop-theme-preview:before,
+body.sitedesk-v3 .preview-sidebar{background:linear-gradient(180deg,#242426,#171719 65%,#0b2c48)!important}
 
 /* Modal material. Transform/opacity values are controlled by the spring engine. */
 body.sitedesk-v3 .modal{
