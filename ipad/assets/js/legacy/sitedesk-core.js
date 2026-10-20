@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.2.15";
+const SITE_DESK_APP_VERSION="5.3.3";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -19,15 +19,22 @@ function siteDeskOpenDb(){
  });
  return siteDeskDbPromise
 }
-function siteDeskSaveDbSnapshot(serialized){
+function siteDeskSaveDbSnapshot(serialized,snapshotKey=KEY){
  if(!serialized)return;
  siteDeskOpenDb().then(db=>{
   if(!db)return;
   try{
    const tx=db.transaction(SITE_DESK_SNAPSHOT_STORE,"readwrite");
-   tx.objectStore(SITE_DESK_SNAPSHOT_STORE).put({key:KEY,value:serialized,version:SITE_DESK_APP_VERSION,updatedAt:new Date().toISOString()})
+   tx.objectStore(SITE_DESK_SNAPSHOT_STORE).put({key:snapshotKey,value:serialized,version:SITE_DESK_APP_VERSION,updatedAt:new Date().toISOString()})
   }catch{}
  })
+}
+function siteDeskStoreRecoverySnapshot(snapshotKey,serialized){
+ let storedLocally=false;
+ try{localStorage.setItem(snapshotKey,serialized);storedLocally=true}
+ catch(error){console.warn("BETPRES – lokálna záloha sa presúva do IndexedDB:",error?.name||error)}
+ siteDeskSaveDbSnapshot(serialized,snapshotKey);
+ return storedLocally
 }
 function siteDeskRestoreDbSnapshotIfNeeded(){
  try{if(localStorage.getItem(KEY))return}catch{}
@@ -697,8 +704,10 @@ function loadCloudConfig(){
   }catch{return{url:"",key:"",workspaceName:"Medická – pilot",autoSync:true,lastCloudVersion:0,lastCloudUpdatedAt:"",lastCloudId:"",localDirty:false,currentRole:"none",displayName:"",lastEmail:"",deviceId:uid("device")}}
 }
 function saveCloudConfig(){
- localStorage.setItem(KEY+"-device-id",cloudConfig.deviceId);
- localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(cloudConfig))
+ try{
+  localStorage.setItem(KEY+"-device-id",cloudConfig.deviceId);
+  localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(cloudConfig))
+ }catch(error){console.warn("BETPRES – nastavenie cloudu sa nepodarilo zapísať do localStorage:",error?.name||error)}
 }
 function loadCloudSession(){
  try{return JSON.parse(localStorage.getItem(CLOUD_SESSION_KEY)||"null")}catch{return null}
@@ -1072,8 +1081,9 @@ async function cloudPrepareState(workspaceId){
   for(let index=0;index<(defect.photos||[]).length;index++){
    const localPhoto=defect.photos[index],
          cloudPhoto=cloudDefect.photos[index];
-   if(localPhoto.dataUrl&&!localPhoto.path){await cloudUploadPhoto(defect,localPhoto,workspaceId,"defects");localStateChanged=true}
-   if(localPhoto.path)cloudPhoto.path=localPhoto.path;
+   const localPreview=localPhoto.dataUrl||"";
+   if(localPreview&&!localPhoto.path){await cloudUploadPhoto(defect,localPhoto,workspaceId,"defects");localStateChanged=true}
+   if(localPhoto.path){cloudPhoto.path=localPhoto.path;if(localPreview){defectPhotoUrlCache.set(localPhoto.path,localPreview);delete localPhoto.dataUrl;localStateChanged=true}}
    delete cloudPhoto.dataUrl
   }
  }
@@ -1096,6 +1106,54 @@ async function cloudPrepareState(workspaceId){
  }
  return cloudData
 }
+function cloudLocalDefectChanges(remoteDefects){
+ const remoteById=new Map((Array.isArray(remoteDefects)?remoteDefects:[]).filter(item=>item?.id).map(item=>[item.id,item]));
+ return(state.defects||[]).filter(localItem=>{
+  if(!localItem?.id)return false;
+  const remoteItem=remoteById.get(localItem.id);
+  return!remoteItem||cloudDefectMergeStamp(localItem)>cloudDefectMergeStamp(remoteItem)
+ })
+}
+async function cloudPrepareDefectPatch(remote,workspaceId){
+ const cloudData=clone(remote.data||{});
+ if(!Array.isArray(cloudData.defects))cloudData.defects=[];
+ const changes=cloudLocalDefectChanges(cloudData.defects),cloudIndex=new Map(cloudData.defects.map((item,index)=>[item.id,index]));
+ for(const localDefect of changes){
+  const cloudDefect=clone(localDefect);cloudDefect.photos=Array.isArray(cloudDefect.photos)?cloudDefect.photos:[];
+  for(let index=0;index<(localDefect.photos||[]).length;index++){
+   const localPhoto=localDefect.photos[index],cloudPhoto=cloudDefect.photos[index];
+   if(!cloudPhoto)continue;
+   const localPreview=localPhoto.dataUrl||"";
+   if(localPreview&&!localPhoto.path)await cloudUploadPhoto(localDefect,localPhoto,workspaceId,"defects");
+   if(localPhoto.path){cloudPhoto.path=localPhoto.path;if(localPreview){defectPhotoUrlCache.set(localPhoto.path,localPreview);delete localPhoto.dataUrl}}
+   delete cloudPhoto.dataUrl
+  }
+  const existingIndex=cloudIndex.get(localDefect.id);
+  if(existingIndex===undefined){cloudIndex.set(localDefect.id,cloudData.defects.length);cloudData.defects.push(cloudDefect)}
+  else cloudData.defects[existingIndex]=cloudDefect
+ }
+ return{cloudData,changes}
+}
+async function cloudPushDefectPatch(initialRemote){
+ let remote=initialRemote;
+ for(let attempt=0;attempt<2;attempt++){
+  const prepared=await cloudPrepareDefectPatch(remote,remote.id);
+  if(!prepared.changes.length)return{saved:false,count:0};
+  const result=await cloudRpc("sitedesk_save_workspace",{
+   p_workspace_id:remote.id,
+   p_expected_version:Number(remote.data_version||0),
+   p_data:prepared.cloudData,
+   p_device_id:cloudConfig.deviceId,
+   p_description:`Mobilné vady · ${prepared.changes.length} zmien`
+  }),saveResult=Array.isArray(result)?result[0]:result;
+  if(saveResult?.success){
+   const serialized=JSON.stringify(state);lastCommittedState=serialized;siteDeskSchedulePersist(serialized,{backup:false});
+   return{saved:true,count:prepared.changes.length,dataVersion:Number(saveResult.data_version||Number(remote.data_version||0)+1),updatedAt:saveResult.updated_at||new Date().toISOString()}
+  }
+  if(attempt===0){remote=await cloudGetWorkspace();if(!remote?.data)break}
+ }
+ return{saved:false,count:0}
+}
 async function cloudPush({force=false,silent=false}={}){
  if(cloudPushRunning)return;
  cloudPushRunning=true;
@@ -1104,7 +1162,7 @@ async function cloudPush({force=false,silent=false}={}){
   await cloudEnsureSession();
   const nowMs=Date.now();
   if(nowMs-cloudLastPushBackupAt>5*60*1000){
-   localStorage.setItem(CLOUD_PRE_PUSH_BACKUP_KEY,lastCommittedState||JSON.stringify(state));
+   siteDeskStoreRecoverySnapshot(CLOUD_PRE_PUSH_BACKUP_KEY,lastCommittedState||JSON.stringify(state));
    cloudLastPushBackupAt=nowMs
   }
   let remote=await cloudGetWorkspace();
@@ -1120,6 +1178,14 @@ async function cloudPush({force=false,silent=false}={}){
   if(force&&role!=="owner")throw new Error("Nútené prepísanie môže použiť iba vlastník.");
 
   if(!force&&Number(remote.data_version||0)>Number(cloudConfig.lastCloudVersion||0)){
+   const defectPatch=await cloudPushDefectPatch(remote);
+   if(defectPatch.saved){
+    cloudConfig.lastCloudId=remote.id;cloudConfig.lastCloudUpdatedAt=defectPatch.updatedAt;saveCloudConfig();
+    cloudSetQuickStatus("conflict","Mobilné vady odoslané");
+    setCloudMessage("cloudSyncMessage",`Mobilné vady boli bezpečne odoslané (${defectPatch.count}). Ostatné novšie dáta v cloude zostali zachované; pred ďalšou prácou ich načítaj do zariadenia.`,"success");
+    if(!silent)toast(`Mobilné vady boli odoslané: ${defectPatch.count}.`);
+    return
+   }
    cloudSetQuickStatus("conflict","Konflikt dát");
    setCloudMessage("cloudSyncMessage","Cloud obsahuje novšiu verziu. Najprv načítaj aktuálne dáta. Tvoje lokálne údaje zostali zachované.","error");
    return
@@ -1155,8 +1221,9 @@ async function cloudPush({force=false,silent=false}={}){
   if(!silent)toast("Cloudová synchronizácia dokončená.")
  }catch(error){
   cloudSetQuickStatus("conflict","Chyba cloudu");
-  setCloudMessage("cloudSyncMessage",error.message,"error");
-  if(!silent)toast("Synchronizácia zlyhala.")
+  const detail=String(error?.message||error||"Neznáma chyba cloudu.");
+  setCloudMessage("cloudSyncMessage",detail,"error");
+  if(!silent)toast(`Synchronizácia zlyhala: ${detail}`)
  }finally{
   cloudPushRunning=false;
   renderCloudPanel()
@@ -1175,7 +1242,7 @@ async function cloudPull({silent=false,replaceLocal=false}={}){
   if(!remote?.data)throw new Error("V cloude zatiaľ nie sú uložené žiadne dáta.");
   if(cloudLocalRevision!==revisionBeforePull||(cloudLocalDirty&&!replaceLocal))throw new Error("V tomto zariadení sú neodoslané zmeny. Načítanie cloudu bolo zastavené, aby sa nestratili.");
   preserveDefectRecovery();
-  localStorage.setItem(CLOUD_PRE_PULL_BACKUP_KEY,JSON.stringify(state));
+  siteDeskStoreRecoverySnapshot(CLOUD_PRE_PULL_BACKUP_KEY,JSON.stringify(state));
   const imported=remote.data;
   if(!Array.isArray(imported.projects)||!Array.isArray(imported.companies))throw new Error("Cloudový záznam nemá platný formát BETPRES APP.");
   if(imported.projects.some(project=>project.id===state.selectedProjectId))imported.selectedProjectId=state.selectedProjectId;
@@ -1465,6 +1532,32 @@ async function hydrateCloudDefectPhotos(){
  }
 }
 
+function cloudDefectMergeStamp(item){
+ const value=Date.parse(item?.updatedAt||item?.createdAt||"");
+ return Number.isFinite(value)?value:0
+}
+function mergeRemoteDefectsIntoLocal(remoteDefects){
+ if(!Array.isArray(remoteDefects))return{added:0,updated:0,changed:false};
+ const localById=new Map((state.defects||[]).filter(item=>item?.id).map(item=>[item.id,item]));
+ let added=0,updated=0;
+ for(const remoteItem of remoteDefects){
+  if(!remoteItem?.id)continue;
+  const localItem=localById.get(remoteItem.id);
+  if(!localItem){
+   const incoming=clone(remoteItem);state.defects.push(incoming);localById.set(incoming.id,incoming);added++;continue
+  }
+  const remoteStamp=cloudDefectMergeStamp(remoteItem),localStamp=cloudDefectMergeStamp(localItem);
+  if(remoteStamp<localStamp)continue;
+  const incoming=JSON.stringify(remoteItem),current=JSON.stringify(localItem);
+  if(incoming!==current){Object.assign(localItem,clone(remoteItem));updated++}
+ }
+ const changed=Boolean(added||updated);
+ if(changed){
+  const serialized=JSON.stringify(state);lastCommittedState=serialized;siteDeskSchedulePersist(serialized,{backup:true});preserveDefectRecovery()
+ }
+ return{added,updated,changed}
+}
+
 async function cloudRefreshDefectsForExport(){
  if(!cloudConfigured()||!cloudSession?.access_token)return{ok:true,refreshed:false};
  try{
@@ -1472,9 +1565,18 @@ async function cloudRefreshDefectsForExport(){
   const remote=await cloudGetWorkspace(),
         remoteVersion=Number(remote?.data_version||0),
         localVersion=Number(cloudConfig.lastCloudVersion||0);
-  if(!remote?.data||remoteVersion<=localVersion)return{ok:true,refreshed:false};
+  if(!remote?.data)return{ok:true,refreshed:false};
+  if(remoteVersion<=localVersion){
+   const merged=mergeRemoteDefectsIntoLocal(remote.data.defects);
+   return{ok:true,refreshed:merged.changed,...merged}
+  }
   if(cloudLocalDirty){
-   return{ok:false,message:"V cloude sú novšie údaje, ale v tomto zariadení sú ešte neodoslané zmeny. Najprv v časti Cloud dokonči synchronizáciu a potom export zopakuj."}
+   const merged=mergeRemoteDefectsIntoLocal(remote.data.defects);
+   if(merged.changed){
+    setCloudMessage("cloudSyncMessage",`Mobilné vady boli bezpečne doplnené (${merged.added} nových, ${merged.updated} aktualizovaných). Ostatné lokálne zmeny zostali zachované.`,"success");
+    return{ok:true,refreshed:true,partial:true,...merged}
+   }
+   return{ok:false,message:"V cloude sú novšie údaje, ale v tomto zariadení sú ešte neodoslané zmeny. Mobilné vady už boli skontrolované; ostatné dáta synchronizuj v časti Cloud."}
   }
   await cloudPull({silent:true});
   if(Number(cloudConfig.lastCloudVersion||0)<remoteVersion){
@@ -1577,7 +1679,7 @@ function defectRecoveryCandidates(){
 function preserveDefectRecovery(){
  const records=new Map(defectRecoveryCandidates().map(item=>[item.id,item]));
  for(const item of state.defects||[])records.set(item.id,item);
- if(records.size)localStorage.setItem(KEY+"-defect-recovery",JSON.stringify({defects:[...records.values()]}))
+ if(records.size)siteDeskStoreRecoverySnapshot(KEY+"-defect-recovery",JSON.stringify({defects:[...records.values()]}))
 }
 function openDefectRecovery(){
  const candidates=defectRecoveryCandidates().filter(item=>item.projectId===state.selectedProjectId&&!state.defects.some(existing=>existing.id===item.id));
