@@ -2,11 +2,11 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f2f2f7"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BETPRES APP"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES APP 5.3.1</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0"><link rel="stylesheet" href="assets/styles/ux-refresh.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/apple-design.css?v=5.3.1">
+<meta name="theme-color" content="#f2f2f7"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BETPRES APP"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES APP 5.3.2</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0"><link rel="stylesheet" href="assets/styles/ux-refresh.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/apple-design.css?v=5.3.2"><link rel="stylesheet" href="assets/styles/mobile-worker-entry.css?v=5.3.2">
 
 <script src="assets/js/bootstrap/startup-guard.js?v=5.1.0"></script>
-<script src="assets/js/ipad-bridge.js?v=1.2.15"></script>
+<script src="assets/js/ipad-bridge.js?v=5.3.2"></script>
 
 </head>
 <body>
@@ -14,7 +14,7 @@
 <aside class="sidebar site-sidebar" id="sidebar">
  <div class="brand site-brand">
   <img src="assets/images/navigation-logo.png" alt="Betpres">
-    <div><strong>BETPRES</strong><small>BETPRES APP 5.3.1</small></div>
+    <div><strong>BETPRES</strong><small>BETPRES APP 5.3.2</small></div>
     <button type="button" class="sidebar-collapse" id="sidebarCollapse" aria-label="Zúžiť bočné menu" aria-expanded="true" title="Zúžiť bočné menu">‹</button>
  </div>
 
@@ -65,7 +65,7 @@
 
  <div class="site-sidebar-footer">
   <div class="site-version-dot"></div>
-      <div><strong>BETPRES APP 5.3.1</strong><small>Denník · súpisy · smenovky</small></div>
+      <div><strong>BETPRES APP 5.3.2</strong><small>Denník · súpisy · smenovky</small></div>
  </div>
 </aside>
 <main class="main">
@@ -601,6 +601,7 @@
 
  <div class="worker-toolbar panel">
   <label>Mesiac<input type="month" id="workerMonth"></label>
+   <button type="button" id="openMobileWorkerDay" class="worker-company-action">Zadať počty podľa dňa</button>
   <button class="ghost" id="workerPrevMonth">← Predchádzajúci</button>
   <button class="ghost" id="workerNextMonth">Nasledujúci →</button>
   <button class="ghost worker-company-action" id="carryWorkerCompanies" title="Doplní chýbajúce firmy z predchádzajúceho mesiaca bez prenosu počtov pracovníkov">↩ Preniesť firmy z minulého mesiaca</button>
@@ -998,17 +999,19 @@
 
   <article class="panel">
    <div class="panel-head"><div><p class="eyebrow">2. PRIHLÁSENIE</p><h2>Používateľ BETPRES APP</h2></div></div>
-   <div class="form-grid">
-    <label class="span2">Meno používateľa<input id="cloudDisplayName" autocomplete="name" placeholder="napr. Peter Baláž"></label>
-    <label class="span2">E-mail<input id="cloudEmail" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
-    <label class="span2">Heslo<input id="cloudPassword" type="password" autocomplete="current-password"></label>
-   </div>
-   <div class="cloud-button-row">
-    <button id="cloudSignIn">Prihlásiť</button>
-    <button class="ghost" id="cloudSignUp">Vytvoriť účet</button>
-    <button class="danger hidden" id="cloudSignOut">Odhlásiť</button>
-   </div>
-   <div id="cloudAuthMessage" class="cloud-message">Na tomto zariadení ostaneš prihlásený aj po zatvorení aplikácie. Heslo sa neukladá; uloží sa iba obnoviteľná prihlasovacia relácia.</div>
+   <form id="cloudAuthForm" autocomplete="on" method="post" action="./" data-form-type="login">
+    <div class="form-grid">
+     <label class="span2">Meno používateľa<input id="cloudDisplayName" name="name" autocomplete="name" placeholder="napr. Peter Baláž"></label>
+     <label class="span2">E-mail<input id="cloudEmail" name="username" type="email" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" required></label>
+     <label class="span2">Heslo<input id="cloudPassword" name="password" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go" required></label>
+    </div>
+    <div class="cloud-button-row">
+     <button id="cloudSignIn" type="submit">Prihlásiť</button>
+     <button class="ghost" id="cloudSignUp" type="button">Vytvoriť účet</button>
+     <button class="danger hidden" id="cloudSignOut" type="button">Odhlásiť</button>
+    </div>
+    <div id="cloudAuthMessage" class="cloud-message">Na tomto zariadení ostaneš prihlásený aj po zatvorení aplikácie. E-mail a heslo môže bezpečne doplniť iCloud Kľúčenka alebo správca hesiel telefónu.</div>
+   </form>
   </article>
  </div>
 
@@ -1579,6 +1582,18 @@ Certifikáty"></textarea></label>
  </form>
 </div></div>
 
+<div class="modal hidden" id="mobileWorkerDayModal"><div class="modal-card mobile-worker-day-card">
+ <div class="modal-head"><div><p>RÝCHLE ZADÁVANIE PRACOVNÍKOV</p><h2 id="mobileWorkerDayTitle">Vybraný deň</h2><small id="mobileWorkerDayNote">Pracovný deň</small></div><button class="close" data-close="mobileWorkerDayModal">×</button></div>
+ <div class="mobile-worker-day-toolbar">
+  <button type="button" class="ghost" id="mobileWorkerPrevDay" aria-label="Predchádzajúci deň">‹</button>
+  <label class="mobile-worker-date-field">Vybraný deň<input type="date" id="mobileWorkerDate"></label>
+  <button type="button" class="ghost" id="mobileWorkerNextDay" aria-label="Nasledujúci deň">›</button>
+ </div>
+ <div class="mobile-worker-day-summary"><div class="mobile-worker-day-total"><span>Spolu na stavbe</span><strong id="mobileWorkerDayTotal">0</strong></div><small id="mobileWorkerDayFilled">0 firiem vyplnených</small></div>
+ <div class="mobile-worker-day-list" id="mobileWorkerDayList"></div>
+ <div class="modal-actions mobile-worker-day-actions"><button type="button" id="mobileWorkerDone">Hotovo</button></div>
+</div></div>
+
 <div class="modal hidden" id="workerCompanyModal"><div class="modal-card"><div class="modal-head"><div><p>STAV PRACOVNÍKOV</p><h2>Pridať firmu alebo skupinu</h2></div><button class="close" data-close="workerCompanyModal">×</button></div>
 <form id="workerCompanyForm" class="form-grid">
  <label class="span2">Firma zo spoločnej databázy
@@ -1719,7 +1734,7 @@ Marek Kováč"></textarea>
 
 <div id="toast" class="toast"></div>
 <script src="assets/js/data/seed-data.js?v=5.1.0"></script><script src="assets/js/data/material-passport-data.js?v=5.1.0"></script><script src="assets/js/vendor/jszip.min.js"></script><script src="assets/js/vendor/exceljs.min.js"></script>
-<script src="assets/js/legacy/sitedesk-core.js?v=5.2.15"></script>
+<script src="assets/js/legacy/sitedesk-core.js?v=5.3.2"></script>
 <script src="assets/js/features/work-spreadsheet.js?v=5.1.0"></script>
 <script src="assets/js/features/work-statement-roundtrip.js?v=5.2.15"></script>
 <script src="assets/js/features/pdf-preview.js?v=5.1.5"></script>
@@ -1727,4 +1742,4 @@ Marek Kováč"></textarea>
 <script src="assets/js/features/mobile-diary-dashboard.js?v=5.2.15"></script>
 <script src="assets/js/features/appearance-settings.js?v=5.3.1"></script>
 <script src="assets/js/features/ai-assistant.js?v=5.2.15"></script>
-<script src="assets/js/features/material-samples.js?v=5.2.15"></script><script src="assets/js/features/ux-refresh.js?v=5.2.15"></script><script src="assets/js/features/apple-motion.js?v=5.3.0"></script></body></html>
+<script src="assets/js/features/material-samples.js?v=5.2.15"></script><script src="assets/js/features/ux-refresh.js?v=5.2.15"></script><script src="assets/js/features/apple-motion.js?v=5.3.0"></script><script src="assets/js/features/mobile-worker-entry.js?v=5.3.2"></script></body></html>

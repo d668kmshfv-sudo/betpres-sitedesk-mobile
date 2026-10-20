@@ -782,7 +782,16 @@ async function cloudEnsureSession(){
  try{return await cloudSessionRefreshPromise}
  finally{cloudSessionRefreshPromise=null}
 }
-async function cloudSignIn(){
+async function offerCloudCredentialStorage(email,password,displayName){
+ if(!window.isSecureContext||typeof window.PasswordCredential!=="function"||!navigator.credentials?.store)return false;
+ try{
+  const credential=new PasswordCredential({id:email,name:displayName||email,password});
+  await navigator.credentials.store(credential);
+  return true
+ }catch{return false}
+}
+async function cloudSignIn(event){
+ event?.preventDefault?.();
  const email=$("cloudEmail").value.trim(),
        password=$("cloudPassword").value,
        displayName=$("cloudDisplayName").value.trim();
@@ -800,8 +809,9 @@ async function cloudSignIn(){
   cloudConfig.autoSync=true;
   saveCloudConfig();
   if(displayName)await cloudUpdateOwnProfile(displayName);
+  const offeredPasswordSave=await offerCloudCredentialStorage(email,password,displayName);
   $("cloudPassword").value="";
-  setCloudMessage("cloudAuthMessage","Prihlásenie bolo úspešné. Na tomto zariadení ostaneš prihlásený.","success")
+  setCloudMessage("cloudAuthMessage",offeredPasswordSave?"Prihlásenie bolo úspešné. Správca hesiel telefónu dostal bezpečnú ponuku uložiť tieto údaje.":"Prihlásenie bolo úspešné. Na tomto zariadení ostaneš prihlásený a prehliadač môže údaje ponúknuť pri ďalšom prihlásení.","success")
  }catch(error){setCloudMessage("cloudAuthMessage",cloudFriendlyAuthError(error),"error");return}
  try{await cloudRefreshWorkspaceStatus();await cloudLoadTeamContext();if(latestCloudRequested())await cloudPull();else await cloudResumeAutomaticSync()}
  catch(error){setCloudMessage("cloudSyncMessage",`Prihlásenie je v poriadku, ale pracovný priestor sa zatiaľ nenačítal: ${error.message}`,"error")}
@@ -2599,7 +2609,7 @@ function renderWorkers(){
         holiday=slovakHoliday(date),
         key=dateKey(date),
         cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
-  head+=`<th class="${cls}" title="${esc(holiday||"")}"><span class="worker-day-no">${day}</span><span class="worker-day-name">${names[date.getDay()]}</span>${holiday?`<span class="worker-holiday-name">${esc(holiday)}</span>`:""}</th>`
+   head+=`<th class="${cls}" title="${esc(holiday||"")}"><button type="button" class="worker-day-open" data-worker-open-day="${day}" aria-label="Zadať počty pracovníkov pre deň ${day}"><span class="worker-day-no">${day}</span><span class="worker-day-name">${names[date.getDay()]}</span>${holiday?`<span class="worker-holiday-name">${esc(holiday)}</span>`:""}</button></th>`
  }
  head+="</tr>";
  $("workerHead").innerHTML=head;
@@ -7789,9 +7799,8 @@ $("testCloudConnection").onclick=testCloudConnection;
 $("pairMobileDevice").onclick=openMobilePairing;
 $("copyMobilePairingLink").onclick=copyMobilePairingLink;
 $("openMobilePairingLink").onclick=()=>window.open($("mobilePairingLink").value,"_blank","noopener");
-$("cloudSignIn").onclick=cloudSignIn;
+$("cloudAuthForm").addEventListener("submit",cloudSignIn);
 $("cloudSignUp").onclick=cloudSignUp;
-[$("cloudEmail"),$("cloudPassword")].filter(Boolean).forEach(input=>input.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();cloudSignIn()}}));
 $("cloudSignOut").onclick=cloudSignOut;
 $("cloudPushData").onclick=()=>cloudPush();
 $("cloudForcePush").onclick=()=>{
