@@ -1,0 +1,95 @@
+/* BETPRES 5.6 — Apple-style calendar for desktop and touch. */
+@media screen{
+  body.sitedesk-v3 #calendar{--cal-red:#ff3b30;--cal-blue:#0a84ff;--cal-ink:#1d1d1f;--cal-secondary:#6e6e73;--cal-line:rgba(60,60,67,.14)}
+  body.sitedesk-v3 .apple-calendar-shell{overflow:hidden;border:1px solid var(--cal-line);border-radius:24px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03),0 16px 42px rgba(28,45,62,.07)}
+  body.sitedesk-v3 .simple-calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0!important;padding:16px 18px!important;border:0!important;border-bottom:1px solid var(--cal-line)!important;border-radius:0!important;background:rgba(250,250,252,.88)!important;box-shadow:none!important;-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%)}
+  .apple-calendar-heading{display:grid;gap:2px;min-width:0}.apple-calendar-heading h2{margin:0;color:var(--cal-ink);font-size:clamp(1.35rem,2vw,1.8rem);line-height:1.08;font-weight:760;letter-spacing:-.035em}.apple-calendar-heading span{color:var(--cal-secondary);font-size:.72rem;font-weight:650}
+  .apple-calendar-controls{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+  body.sitedesk-v3 .apple-calendar-controls button{min-width:44px;min-height:40px!important;padding:8px 13px!important;border-radius:12px!important;background:#fff!important;border:1px solid var(--cal-line)!important;color:var(--cal-ink)!important;box-shadow:none!important}
+  body.sitedesk-v3 .apple-calendar-controls .apple-calendar-arrow{width:42px!important;padding:0!important;font-size:1.55rem!important;font-weight:430!important;line-height:1!important}
+  .apple-calendar-picker{position:relative;display:grid!important;gap:2px!important;min-width:150px}.apple-calendar-picker span{position:absolute;z-index:1;left:11px;top:5px;color:var(--cal-secondary);font-size:.52rem;font-weight:760;text-transform:uppercase;letter-spacing:.07em;pointer-events:none}
+  body.sitedesk-v3 .apple-calendar-picker input{height:44px!important;min-height:44px!important;padding:17px 9px 3px!important;border-radius:12px!important;background:#fff!important;font-size:.76rem!important;font-weight:700!important}
+  .apple-calendar-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;align-items:stretch;min-height:690px}
+  body.sitedesk-v3 .simple-calendar-panel{min-width:0;margin:0!important;padding:0!important;overflow:hidden!important;border:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important}
+  body.sitedesk-v3 .simple-calendar-panel .calendar-weekdays,body.sitedesk-v3 .simple-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));min-width:0!important;width:100%;border:0!important;border-radius:0!important;background:#fff!important}
+  body.sitedesk-v3 .simple-calendar-panel .calendar-weekdays{border-bottom:1px solid var(--cal-line)!important}
+  body.sitedesk-v3 .simple-calendar-panel .calendar-weekdays span{padding:10px 6px;border:0!important;background:#fff!important;color:var(--cal-secondary);font-size:.62rem;font-weight:700;letter-spacing:.035em;text-transform:none}
+  body.sitedesk-v3 .simple-calendar-panel .calendar-weekdays span:nth-child(6),body.sitedesk-v3 .simple-calendar-panel .calendar-weekdays span:nth-child(7){color:var(--cal-red)}
+  body.sitedesk-v3 #calendarGrid .calendar-day{position:relative;min-width:0;min-height:108px;padding:7px 7px 6px;border:0!important;border-right:1px solid var(--cal-line)!important;border-bottom:1px solid var(--cal-line)!important;background:#fff!important;color:var(--cal-ink)!important;overflow:hidden;cursor:pointer;outline:0;touch-action:pan-y}
+  body.sitedesk-v3 #calendarGrid .calendar-day:nth-child(7n){border-right:0!important}
+  body.sitedesk-v3 #calendarGrid .calendar-day:nth-last-child(-n+7){border-bottom:0!important}
+  body.sitedesk-v3 #calendarGrid .calendar-day:hover{background:#f7faff!important;box-shadow:none!important}
+  body.sitedesk-v3 #calendarGrid .calendar-day:focus-visible{z-index:2;box-shadow:inset 0 0 0 3px rgba(10,132,255,.34)!important}
+  body.sitedesk-v3 #calendarGrid .calendar-day.selected{background:#f3f8fc!important}
+  body.sitedesk-v3 #calendarGrid .calendar-day.outside{background:#fafafa!important;color:#aeaeb2!important}
+  .calendar-day-number{height:27px;margin:0 0 3px!important;display:flex!important;align-items:center!important;justify-content:flex-end!important}
+  .calendar-day-number:after{display:none!important}
+  .calendar-day-number span{width:27px;height:27px;display:grid;place-items:center;border-radius:50%;color:inherit;font-size:.76rem;font-weight:650;font-variant-numeric:tabular-nums}
+  .calendar-day.weekend:not(.today):not(.selected) .calendar-day-number span{color:var(--cal-red)}
+  .calendar-day.selected .calendar-day-number span{background:var(--cal-blue);color:#fff;font-weight:760}
+  .calendar-day.today .calendar-day-number span{background:var(--cal-red);color:#fff;font-weight:780}
+  .calendar-day.outside .calendar-day-number span{opacity:.48}
+  body.sitedesk-v3 .simple-calendar-grid .calendar-event-entry{position:relative;margin:3px 0}
+  body.sitedesk-v3 .simple-calendar-grid .calendar-event-chip{display:block;width:100%;min-height:26px!important;margin:0!important;padding:5px 22px 5px 7px!important;border:0!important;border-radius:7px!important;text-align:left!important;font-size:.62rem!important;line-height:1.2!important;font-weight:680!important;letter-spacing:0!important;white-space:nowrap!important;text-overflow:ellipsis;overflow:hidden;box-shadow:none!important}
+  .calendar-event-chip .calendar-event-dot{display:none}
+  body.sitedesk-v3 .simple-calendar-grid .calendar-event-chip small{display:block;margin-top:2px;font-size:.52rem!important;font-weight:620!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.78}
+  body.sitedesk-v3 .calendar-event-remove{right:3px;width:19px!important;height:19px!important;min-height:19px!important;background:rgba(255,255,255,.88)!important;border:0!important;color:#8e1b16!important;box-shadow:none!important}
+  .calendar-day-dots{display:none}
+
+  .apple-calendar-agenda{min-width:0;padding:0 16px 22px;border-left:1px solid var(--cal-line);background:#f7f7fa}
+  .apple-calendar-agenda-head{position:sticky;z-index:3;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 -16px 12px;padding:16px;background:rgba(247,247,250,.9);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%)}
+  .apple-calendar-agenda-head>div{min-width:0}.apple-calendar-agenda-head span{display:block;margin-bottom:4px;color:var(--cal-secondary);font-size:.55rem;font-weight:760;letter-spacing:.09em}.apple-calendar-agenda-head h3{margin:0;color:var(--cal-ink);font-size:1.02rem;line-height:1.15;font-weight:740;letter-spacing:-.02em;text-transform:capitalize}.apple-calendar-agenda-head small{display:block;margin-top:4px;color:var(--cal-secondary);font-size:.65rem;font-weight:620}
+  body.sitedesk-v3 .apple-calendar-agenda-head button{width:42px!important;height:42px!important;min-height:42px!important;padding:0!important;border-radius:50%!important;background:var(--cal-blue)!important;border-color:var(--cal-blue)!important;font-size:1.55rem!important;font-weight:430!important;box-shadow:0 6px 16px rgba(10,132,255,.2)!important}
+  .apple-calendar-agenda-list{display:grid;gap:9px}
+  .apple-calendar-agenda-item{position:relative;overflow:hidden;border:1px solid var(--cal-line);border-radius:15px;background:#fff;box-shadow:0 5px 16px rgba(20,42,60,.04)}
+  .apple-calendar-agenda-item:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--event-color)}
+  body.sitedesk-v3 #calendar .apple-calendar-agenda-item button.apple-calendar-agenda-open{display:grid!important;justify-items:start!important;width:100%!important;min-height:76px!important;padding:12px 40px 12px 15px!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--cal-ink)!important;text-align:left!important;box-shadow:none!important}
+  .apple-calendar-agenda-open .apple-calendar-agenda-time{color:var(--event-color);font-size:.62rem;font-weight:760}.apple-calendar-agenda-open strong{margin-top:3px;font-size:.82rem;line-height:1.25}.apple-calendar-agenda-open small{margin-top:3px;color:var(--cal-secondary);font-size:.62rem;font-weight:620}.apple-calendar-agenda-open p{margin:6px 0 0;color:var(--cal-secondary);font-size:.64rem;line-height:1.35;font-weight:520}
+  body.sitedesk-v3 #calendar .apple-calendar-agenda-item button.apple-calendar-agenda-delete{position:absolute;z-index:2;right:7px;top:7px;width:30px!important;height:30px!important;min-height:30px!important;padding:0!important;border:0!important;border-radius:50%!important;background:#eeeef2!important;color:#6e6e73!important;font-size:1.05rem!important;box-shadow:none!important}
+  .apple-calendar-empty{display:grid;justify-items:center;padding:50px 18px;text-align:center;color:var(--cal-secondary)}.apple-calendar-empty>span{width:54px;height:54px;display:grid;place-items:center;margin-bottom:12px;border:2px solid #d1d1d6;border-radius:50%;font-size:2rem;line-height:1}.apple-calendar-empty strong{color:var(--cal-ink);font-size:.9rem}.apple-calendar-empty p{max-width:220px;margin:6px 0 16px;font-size:.72rem;line-height:1.4}.apple-calendar-empty button{min-height:42px!important}
+
+  body.sitedesk-v3 #calendarEventModal .modal-card{width:min(660px,100%)}
+  body.sitedesk-v3 .calendar-color-control{border-color:var(--cal-line);border-radius:14px;background:#f2f2f7}
+  body.sitedesk-v3 .calendar-color-control input[type="color"]{width:52px;height:42px;min-height:42px!important;border:0!important;border-radius:10px!important}
+  body.sitedesk-v3 .calendar-color-control span{min-height:42px;border-radius:10px;font-size:.72rem;font-weight:720}
+  .calendar-color-presets{display:flex;align-items:center;gap:10px;margin-top:9px}
+  body.sitedesk-v3 .calendar-color-presets button{width:34px!important;height:34px!important;min-height:34px!important;padding:0!important;border:3px solid #fff!important;border-radius:50%!important;background:var(--preset)!important;box-shadow:0 0 0 1px rgba(60,60,67,.18)!important}
+  body.sitedesk-v3 .calendar-color-presets button:nth-child(1){--preset:#ff3b30}body.sitedesk-v3 .calendar-color-presets button:nth-child(2){--preset:#ff9500}body.sitedesk-v3 .calendar-color-presets button:nth-child(3){--preset:#34c759}body.sitedesk-v3 .calendar-color-presets button:nth-child(4){--preset:#0a84ff}body.sitedesk-v3 .calendar-color-presets button:nth-child(5){--preset:#5e5ce6}body.sitedesk-v3 .calendar-color-presets button:nth-child(6){--preset:#af52de}
+  body.sitedesk-v3 .calendar-color-presets button.active{box-shadow:0 0 0 3px rgba(10,132,255,.28)!important}
+}
+
+@media screen and (max-width:1100px){.apple-calendar-layout{grid-template-columns:minmax(0,1fr) 270px}.apple-calendar-picker{display:none!important}}
+
+@media screen and (max-width:800px){
+  body.sitedesk-v3 #calendar{padding-left:.55rem!important;padding-right:.55rem!important}
+  body.sitedesk-v3 #calendar .page-title{margin-bottom:.35rem!important}
+  body.sitedesk-v3 #calendar .page-title .header-actions{display:none!important}
+  body.sitedesk-v3 .apple-calendar-shell{border-radius:20px}
+  body.sitedesk-v3 .simple-calendar-toolbar{align-items:flex-start;padding:14px 13px 12px!important}
+  .apple-calendar-heading h2{font-size:1.35rem}.apple-calendar-heading span{font-size:.66rem}
+  .apple-calendar-controls{gap:5px}.apple-calendar-controls #calendarToday{order:-1;padding:7px 11px!important}.apple-calendar-controls .apple-calendar-arrow{width:38px!important;min-width:38px!important;height:38px!important;min-height:38px!important}
+  .apple-calendar-layout{display:block;min-height:0}
+  body.sitedesk-v3 .simple-calendar-panel .calendar-weekdays span{padding:9px 2px 6px;font-size:.58rem}
+  body.sitedesk-v3 #calendarGrid .calendar-day{min-height:52px;padding:4px 1px;border:0!important;background:#fff!important;overflow:visible}
+  body.sitedesk-v3 #calendarGrid .calendar-day:hover{background:#fff!important}
+  body.sitedesk-v3 #calendarGrid .calendar-day.selected{background:#fff!important}
+  body.sitedesk-v3 #calendarGrid .calendar-day.outside{background:#fff!important}
+  .calendar-day-number{height:32px;margin:0!important;justify-content:center!important}.calendar-day-number span{width:32px;height:32px;font-size:.72rem}
+  body.sitedesk-v3 .simple-calendar-grid .calendar-event-entry{display:none}
+  .calendar-day-dots{height:7px;display:flex;align-items:center;justify-content:center;gap:2px}.calendar-day-dots i{width:4px;height:4px;border-radius:50%}
+  .calendar-day.outside .calendar-day-dots{opacity:.35}
+  .apple-calendar-agenda{padding:0 12px 18px;border-top:1px solid var(--cal-line);border-left:0;background:#f5f5f7}
+  .apple-calendar-agenda-head{margin:0 -12px 10px;padding:14px 13px;background:rgba(245,245,247,.92)}
+  .apple-calendar-agenda-head h3{font-size:1rem}
+  .apple-calendar-agenda-list{gap:8px}
+  body.sitedesk-v3 #calendar .apple-calendar-agenda-item button.apple-calendar-agenda-open{min-height:78px!important;padding:12px 44px 12px 15px!important}
+  body.sitedesk-v3 #calendar .apple-calendar-agenda-item button.apple-calendar-agenda-delete{width:34px!important;height:34px!important;min-height:34px!important}
+  .apple-calendar-empty{padding:32px 16px}
+  body.sitedesk-v3 #calendarEventModal .calendar-color-presets{justify-content:space-between}
+}
+
+@media screen and (max-width:370px){.apple-calendar-heading h2{font-size:1.12rem}.apple-calendar-controls #calendarToday{display:none}.calendar-day-number span{width:30px;height:30px}.apple-calendar-controls .apple-calendar-arrow{width:36px!important;min-width:36px!important}}
+
+@media(prefers-reduced-transparency:reduce){body.sitedesk-v3 .simple-calendar-toolbar,.apple-calendar-agenda-head{background:#fff!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
+@media(prefers-contrast:more){body.sitedesk-v3 .apple-calendar-shell,body.sitedesk-v3 .apple-calendar-agenda-item{border-color:#636366}.calendar-day.selected .calendar-day-number span{outline:2px solid #000;outline-offset:2px}}
+@media print{body.sitedesk-v3 .apple-calendar-agenda,body.sitedesk-v3 .simple-calendar-toolbar{display:none!important}.apple-calendar-layout{display:block}.apple-calendar-shell{border:0!important;box-shadow:none!important}}

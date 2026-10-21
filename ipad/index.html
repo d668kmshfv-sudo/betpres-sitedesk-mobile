@@ -2,11 +2,11 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f5f7"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BETPRES APP"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES APP 5.5.1</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0"><link rel="stylesheet" href="assets/styles/ux-refresh.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/apple-design.css?v=5.3.2"><link rel="stylesheet" href="assets/styles/mobile-worker-entry.css?v=5.5.1"><link rel="stylesheet" href="assets/styles/operations-refresh.css?v=5.4.0"><link rel="stylesheet" href="assets/styles/apple-system-5.5.css?v=5.5.1">
+<meta name="theme-color" content="#f5f5f7"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BETPRES APP"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES APP 5.6.0</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0"><link rel="stylesheet" href="assets/styles/ux-refresh.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/apple-design.css?v=5.3.2"><link rel="stylesheet" href="assets/styles/mobile-worker-entry.css?v=5.6.0"><link rel="stylesheet" href="assets/styles/operations-refresh.css?v=5.4.0"><link rel="stylesheet" href="assets/styles/apple-system-5.5.css?v=5.5.1"><link rel="stylesheet" href="assets/styles/apple-calendar.css?v=5.6.0"><link rel="stylesheet" href="assets/styles/mobile-work-statements.css?v=5.6.0">
 
-<script src="assets/js/bootstrap/startup-guard.js?v=5.1.0"></script>
-<script src="assets/js/ipad-bridge.js?v=5.5.1"></script>
+<script src="assets/js/bootstrap/startup-guard.js?v=5.6.0"></script>
+<script src="assets/js/ipad-bridge.js?v=5.6.0"></script>
 
 </head>
 <body>
@@ -14,7 +14,7 @@
 <aside class="sidebar site-sidebar" id="sidebar">
  <div class="brand site-brand">
   <img src="assets/images/navigation-logo.png" alt="Betpres">
-    <div><strong>BETPRES</strong><small>BETPRES APP 5.5.1</small></div>
+    <div><strong>BETPRES</strong><small>BETPRES APP 5.6.0</small></div>
     <button type="button" class="sidebar-collapse" id="sidebarCollapse" aria-label="Zúžiť bočné menu" aria-expanded="true" title="Zúžiť bočné menu">‹</button>
  </div>
 
@@ -65,7 +65,7 @@
 
  <div class="site-sidebar-footer">
   <div class="site-version-dot"></div>
-      <div><strong>BETPRES APP 5.5.1</strong><small>Denník · súpisy · smenovky</small></div>
+      <div><strong>BETPRES APP 5.6.0</strong><small>Denník · súpisy · smenovky</small></div>
  </div>
 </aside>
 <main class="main">
@@ -448,6 +448,8 @@
    </table>
   </div>
  </article>
+
+ <section class="mobile-work-items" id="mobileWorkItems" aria-label="Položky súpisu prác"></section>
 
  <div class="work-bottom-grid">
   <article class="panel work-summary-card">
@@ -889,18 +891,26 @@
   <div><p>PLÁNOVANIE STAVBY</p><h1>Kalendár</h1></div>
   <div class="header-actions"><button class="ghost danger-outline" id="clearCalendarEvents">Vymazať kalendár</button><button id="addCalendarEvent">+ Nová udalosť</button></div>
  </div>
- <div class="calendar-toolbar panel simple-calendar-toolbar">
-  <button class="ghost" id="calendarPrev">←</button>
-  <label>Mesiac<input id="calendarMonth" type="month"></label>
-  <button class="ghost" id="calendarToday">Dnes</button>
-  <button class="ghost" id="calendarNext">→</button>
- </div>
- <article class="panel calendar-panel simple-calendar-panel">
-  <div class="calendar-weekdays">
-   <span>Po</span><span>Ut</span><span>St</span><span>Št</span><span>Pi</span><span>So</span><span>Ne</span>
+ <section class="apple-calendar-shell" aria-label="Kalendár stavby">
+  <header class="calendar-toolbar simple-calendar-toolbar">
+   <div class="apple-calendar-heading"><h2 id="calendarMonthTitle">Mesiac</h2><span id="calendarMonthSummary">Bez udalostí</span></div>
+   <div class="apple-calendar-controls">
+    <button class="ghost apple-calendar-arrow" id="calendarPrev" aria-label="Predchádzajúci mesiac">‹</button>
+    <button class="ghost" id="calendarToday">Dnes</button>
+    <button class="ghost apple-calendar-arrow" id="calendarNext" aria-label="Nasledujúci mesiac">›</button>
+    <label class="apple-calendar-picker"><span>Vybrať mesiac</span><input id="calendarMonth" type="month"></label>
+   </div>
+  </header>
+  <div class="apple-calendar-layout">
+   <article class="calendar-panel simple-calendar-panel">
+    <div class="calendar-weekdays" aria-hidden="true">
+     <span>Po</span><span>Ut</span><span>St</span><span>Št</span><span>Pi</span><span>So</span><span>Ne</span>
+    </div>
+    <div id="calendarGrid" class="calendar-grid simple-calendar-grid" role="grid" aria-label="Mesačný kalendár"></div>
+   </article>
+   <aside class="apple-calendar-agenda" id="calendarAgenda" aria-live="polite"></aside>
   </div>
-  <div id="calendarGrid" class="calendar-grid simple-calendar-grid"></div>
- </article>
+ </section>
 </section>
 
 
@@ -1579,17 +1589,26 @@ Certifikáty"></textarea></label>
   <label class="span2">Názov udalosti
    <input id="calendarEventTitle" required placeholder="napr. Nástup fasádnikov, stretnutie, betonáž">
   </label>
-  <label>Čas
+   <label>Začiatok
    <input id="calendarEventStart" type="time">
   </label>
-  <label>Firma
+   <label>Koniec
+    <input id="calendarEventEnd" type="time">
+   </label>
+   <label class="span2">Firma
    <select id="calendarEventCompany"><option value="">Bez firmy</option></select>
   </label>
+   <label class="span2">Miesto
+    <input id="calendarEventLocation" placeholder="napr. Stavenisko, objekt A, kancelária">
+   </label>
   <label class="span2">Farba udalosti
    <div class="calendar-color-control">
-    <input id="calendarEventColor" type="color" value="#2563eb" aria-label="Farba udalosti">
+     <input id="calendarEventColor" type="color" value="#0a84ff" aria-label="Farba udalosti">
     <span id="calendarEventColorPreview">Ukážka udalosti</span>
    </div>
+    <div class="calendar-color-presets" aria-label="Rýchly výber farby">
+     <button type="button" data-calendar-color="#ff3b30" aria-label="Červená"></button><button type="button" data-calendar-color="#ff9500" aria-label="Oranžová"></button><button type="button" data-calendar-color="#34c759" aria-label="Zelená"></button><button type="button" data-calendar-color="#0a84ff" aria-label="Modrá"></button><button type="button" data-calendar-color="#5e5ce6" aria-label="Indigová"></button><button type="button" data-calendar-color="#af52de" aria-label="Fialová"></button>
+    </div>
   </label>
   <label class="span2">Poznámka
    <textarea id="calendarEventNote" rows="4"></textarea>
@@ -1761,7 +1780,7 @@ Marek Kováč"></textarea>
 
 <div id="toast" class="toast"></div>
 <script src="assets/js/data/seed-data.js?v=5.1.0"></script><script src="assets/js/data/material-passport-data.js?v=5.1.0"></script><script src="assets/js/vendor/jszip.min.js"></script><script src="assets/js/vendor/exceljs.min.js"></script>
-<script src="assets/js/legacy/sitedesk-core.js?v=5.5.1"></script>
+<script src="assets/js/legacy/sitedesk-core.js?v=5.6.0"></script>
 <script src="assets/js/features/work-spreadsheet.js?v=5.1.0"></script>
 <script src="assets/js/features/work-statement-roundtrip.js?v=5.2.15"></script>
 <script src="assets/js/features/pdf-preview.js?v=5.1.5"></script>
@@ -1769,4 +1788,4 @@ Marek Kováč"></textarea>
 <script src="assets/js/features/mobile-diary-dashboard.js?v=5.2.15"></script>
 <script src="assets/js/features/appearance-settings.js?v=5.3.1"></script>
 <script src="assets/js/features/ai-assistant.js?v=5.2.15"></script>
-<script src="assets/js/features/material-samples.js?v=5.2.15"></script><script src="assets/js/features/ux-refresh.js?v=5.2.15"></script><script src="assets/js/features/apple-motion.js?v=5.5.1"></script><script src="assets/js/features/mobile-worker-entry.js?v=5.5.1"></script></body></html>
+<script src="assets/js/features/material-samples.js?v=5.2.15"></script><script src="assets/js/features/ux-refresh.js?v=5.2.15"></script><script src="assets/js/features/apple-motion.js?v=5.6.0"></script><script src="assets/js/features/mobile-worker-entry.js?v=5.6.0"></script><script src="assets/js/features/apple-calendar.js?v=5.6.0"></script></body></html>

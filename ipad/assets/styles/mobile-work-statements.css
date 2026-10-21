@@ -1,0 +1,68 @@
+/* Mobile card editor for Súpis prác — no horizontal spreadsheet scrolling. */
+.mobile-work-items{display:none}
+
+@media(max-width:800px){
+ body.work-focus-mode #workStatements.active{height:auto!important;min-height:calc(100dvh - 64px)!important;overflow:visible!important;padding:8px!important}
+ body.work-focus-mode #workStatements .work-table-panel{display:none!important}
+ body.work-focus-mode #workStatements .mobile-work-items{display:grid;gap:12px;margin:10px 0 14px}
+ body.work-focus-mode #workStatements .work-paste-tip{display:none!important}
+ body.work-focus-mode #workStatements .work-actions{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  min-height:0!important;max-height:none!important;overflow:visible!important;gap:8px!important;padding:8px!important
+ }
+ body.work-focus-mode #workStatements .work-actions>*{min-width:0!important;width:100%!important;margin:0!important}
+ body.work-focus-mode #workStatements #addWorkRow,
+ body.work-focus-mode #workStatements .work-search-control,
+ body.work-focus-mode #workStatements .work-filter-control,
+ body.work-focus-mode #workStatements .work-exchange-open{grid-column:1/-1}
+ body.work-focus-mode #workStatements .work-spacer,body.work-focus-mode #workStatements .work-visible-count{display:none!important}
+ body.work-focus-mode #workStatements .work-actions button,
+ body.work-focus-mode #workStatements .work-actions input,
+ body.work-focus-mode #workStatements .work-actions select{height:46px!important;min-height:46px!important;padding:8px 10px!important;font-size:13px!important;white-space:normal!important}
+ body.work-focus-mode #workStatements #pasteWorkRows,
+ body.work-focus-mode #workStatements #copyWorkRow,
+ body.work-focus-mode #workStatements #moveWorkRowUp,
+ body.work-focus-mode #workStatements #moveWorkRowDown,
+ body.work-focus-mode #workStatements #refreshPreviousWork,
+ body.work-focus-mode #workStatements #workExchangeOpen,
+ body.work-focus-mode #workStatements #exportWorkPdf,
+ body.work-focus-mode #workStatements #exportWorkCsv,
+ body.work-focus-mode #workStatements #workExcelBar{display:none!important}
+ body.work-focus-mode #workStatements #deleteWorkRow{grid-column:1/-1}
+ body.work-focus-mode #workStatements #deleteWorkRow:disabled{display:none!important}
+
+ .mobile-work-empty{padding:28px 18px;border:1px solid rgba(60,60,67,.16);border-radius:20px;background:#fff;text-align:center;color:#636366;font-weight:650}
+ .mobile-work-section{padding:12px 15px;border-radius:15px;background:#3f3dac;color:#fff;box-shadow:0 9px 24px rgba(63,61,172,.16)}
+ .mobile-work-section strong{display:block;font-size:15px;line-height:1.3}.mobile-work-section small{display:block;margin-top:3px;color:rgba(255,255,255,.72)}
+ .mobile-work-card{position:relative;display:grid;gap:13px;padding:15px;border:1px solid rgba(60,60,67,.14);border-radius:20px;background:#fff;box-shadow:0 8px 24px rgba(26,43,56,.08);overflow:hidden}
+ .mobile-work-card:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:#0a84ff}
+ .mobile-work-card.work-over:before,.mobile-work-card.work-needs-attention:before{background:#ff9f0a}
+ .mobile-work-card.work-row-selected{box-shadow:0 0 0 3px rgba(10,132,255,.16),0 9px 28px rgba(26,43,56,.1)}
+ .mobile-work-card-head{display:flex;align-items:center;gap:9px;min-width:0}
+ .mobile-work-select{appearance:none;width:25px!important;height:25px!important;min-height:25px!important;flex:0 0 25px;border:2px solid #8e8e93!important;border-radius:8px!important;background:#fff!important}
+ .mobile-work-select:checked{border-color:#0a84ff!important;background:#0a84ff!important;box-shadow:inset 0 0 0 5px #fff!important}
+ .mobile-work-card-code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:780;color:#3f3dac}
+ .mobile-work-card-source{margin-left:auto;padding:4px 8px;border-radius:999px;background:#f2f2f7;color:#636366;font-size:10px;font-weight:750;white-space:nowrap}
+ .mobile-work-field{display:grid;gap:6px;min-width:0}.mobile-work-field>span{font-size:11px;font-weight:760;color:#6e6e73}
+ body.sitedesk-v3 .mobile-work-field textarea,body.sitedesk-v3 .mobile-work-field input{
+  width:100%!important;min-width:0!important;margin:0!important;border-radius:13px!important;background:#f7f7fa!important;color:#1c1c1e!important
+ }
+ body.sitedesk-v3 .mobile-work-description textarea{min-height:84px!important;padding:12px!important;font-size:15px!important;line-height:1.35!important;resize:vertical}
+ .mobile-work-current{display:grid;grid-template-columns:minmax(0,1fr) minmax(116px,.72fr);gap:10px;padding:12px;border-radius:16px;background:#edf6ff}
+ body.sitedesk-v3 .mobile-work-current input{height:58px!important;min-height:58px!important;background:#fff!important;border:2px solid rgba(10,132,255,.34)!important;text-align:center!important;font-size:24px!important;font-weight:800!important;font-variant-numeric:tabular-nums}
+ .mobile-work-current-total{display:grid;align-content:center;gap:4px}.mobile-work-current-total span{font-size:10px;font-weight:750;color:#55758e}.mobile-work-current-total strong{font-size:18px;color:#0a548c;font-variant-numeric:tabular-nums}
+ .mobile-work-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .mobile-work-metrics>div{min-width:0;padding:9px 7px;border-radius:12px;background:#f2f2f7}.mobile-work-metrics span{display:block;font-size:9px;font-weight:740;color:#6e6e73}.mobile-work-metrics strong{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:#1c1c1e;font-variant-numeric:tabular-nums}
+ .mobile-work-details{border-top:1px solid rgba(60,60,67,.12);padding-top:10px}.mobile-work-details summary{cursor:pointer;list-style:none;color:#0a548c;font-size:13px;font-weight:760}.mobile-work-details summary::-webkit-details-marker{display:none}.mobile-work-details summary:after{content:"⌄";float:right;font-size:18px;transition:transform .2s ease}.mobile-work-details[open] summary:after{transform:rotate(180deg)}
+ .mobile-work-details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.mobile-work-details-grid .mobile-work-wide{grid-column:1/-1}
+ body.sitedesk-v3 .mobile-work-details-grid input{height:46px!important;min-height:46px!important;padding:9px!important;font-size:14px!important}
+ .mobile-work-warning{margin:0;padding:9px 11px;border-radius:11px;background:#fff3e2;color:#9a5b00;font-size:11px;font-weight:700}
+ body.work-focus-mode #workStatements .work-bottom-grid{grid-template-columns:1fr!important}
+}
+
+@media(max-width:390px){
+ .mobile-work-current{grid-template-columns:1fr}.mobile-work-current-total{text-align:center}
+ .mobile-work-details-grid{grid-template-columns:1fr}.mobile-work-details-grid .mobile-work-wide{grid-column:auto}
+}
+
+@media(prefers-reduced-motion:reduce){.mobile-work-details summary:after{transition:none}}

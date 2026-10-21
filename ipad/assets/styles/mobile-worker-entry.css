@@ -3,11 +3,16 @@
 .mobile-worker-category-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px 12px;border-bottom:1px solid var(--apple-line);background:#fff}
 #mobileWorkerDayModal .mobile-worker-category-tabs button{min-height:40px!important;padding:7px 5px!important;border-radius:12px!important;background:#eef1f5!important;color:#62656c!important;box-shadow:none!important;font-size:11px!important}
 #mobileWorkerDayModal .mobile-worker-category-tabs button.active{background:#0a548c!important;color:#fff!important;box-shadow:0 4px 12px rgba(10,84,140,.18)!important}
-.mobile-worker-attendance-card{grid-template-columns:minmax(0,1fr) 92px!important}
+.mobile-worker-attendance-card{
+ grid-template-columns:minmax(0,1fr) 92px!important;grid-template-rows:auto auto!important;
+ grid-template-areas:"person attendance" "codes codes"!important;align-items:start!important;row-gap:12px!important
+}
+.mobile-worker-attendance-card .mobile-worker-company{grid-area:person!important;min-width:0!important;align-self:start!important}
+.mobile-worker-attendance-card .mobile-worker-attendance-input{grid-area:attendance!important;align-self:start!important}
 .mobile-worker-attendance-input{display:grid;justify-items:center;gap:3px}
 body.sitedesk-v3 .mobile-worker-attendance-input input{width:88px!important;height:58px!important;min-height:58px!important;padding:4px 6px!important;border:2px solid rgba(60,60,67,.18)!important;border-radius:16px!important;text-align:center!important;font-size:25px!important;font-weight:790!important;font-variant-numeric:tabular-nums}
 .mobile-worker-attendance-input small{color:var(--apple-secondary);font-size:9px;font-weight:700}
-.mobile-worker-code-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%}
+.mobile-worker-code-row{grid-area:codes!important;grid-column:auto!important;position:static!important;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%;clear:both}
 #mobileWorkerDayModal .mobile-worker-code-row button{min-height:40px!important;padding:6px!important;border-radius:12px!important;background:#eef1f5!important;color:#5f636b!important;box-shadow:none!important}
 #mobileWorkerDayModal .mobile-worker-code-row button.active{background:#0a548c!important;color:#fff!important}
 .mobile-worker-company-hours-group{display:grid;gap:8px}
@@ -38,7 +43,7 @@ body.sitedesk-v3 .mobile-worker-attendance-input input.is-invalid{border-color:#
 .mobile-worker-manage-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 16px;border-bottom:1px solid var(--apple-line);background:#fff}
 #mobileWorkerDayModal .mobile-worker-manage-row button{min-height:42px!important;padding:8px 13px!important;border-radius:13px!important;color:#0a548c!important;white-space:nowrap!important}
 .mobile-worker-manage-row small{color:var(--apple-secondary);font-size:10px;font-weight:650;text-align:right}
-.mobile-worker-day-list{display:grid;gap:10px;padding:14px 16px 104px;max-height:min(62vh,650px);overflow:auto;overscroll-behavior:contain;background:#f2f2f7}
+.mobile-worker-day-list{display:grid;grid-auto-rows:max-content;align-content:start;gap:10px;padding:14px 16px 104px;max-height:min(62vh,650px);overflow:auto;overscroll-behavior:contain;background:#f2f2f7}
 .mobile-worker-card{
   min-height:84px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 13px;
   border:1px solid rgba(60,60,67,.14);border-radius:18px;background:#fff;box-shadow:0 6px 18px rgba(20,42,60,.055)

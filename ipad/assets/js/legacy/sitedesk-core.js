@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.5.1";
+const SITE_DESK_APP_VERSION="5.6.0";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -331,7 +331,7 @@ try{
 }catch(migrationError){
  console.error("Betpres – chyba migrácie starších údajov:",migrationError)
 }
-let purchasePage=1;const PURCHASE_PAGE_SIZE=150;let zoom=.76;let selectedWorkerMonth=todayMonthValue();let selectedWorkerMode="companies";const workerRenderSignatures=new Map();let lastCompaniesViewSignature="";let selectedCompanyHourRowId="";let selectedCompanyTimesheetRowId="";let selectedDefectIds=new Set();let editingDefectId="";let pendingDefectPhotos=[];const defectPhotoUrlCache=new Map();let selectedControlDayDate=nextTuesdayISO(todayISO());let selectedCoordinationKind="coordination";let selectedCalendarMonth=todayMonthValue();let selectedWorkCompanyId="";let selectedWorkPeriod=todayMonthValue();let selectedWorkDocFilter="manual:zod";let selectedWorkItemId="";let selectedWorkItemIds=new Set();let lastWorkSelectionIndex=-1;let workSummaryTimer=null;let workSummaryPendingStatement=null;let workPreviousIndexCache=new WeakMap();let handoverDraft=null;let handoverDraftKey="";let editingHandoverId="";const $=id=>document.getElementById(id);const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));const eur=new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR"});const monthNames=["Jan","Feb","Mar","Apr","Máj","Jún","Júl","Aug","Sep","Okt","Nov","Dec"];
+let purchasePage=1;const PURCHASE_PAGE_SIZE=150;let zoom=.76;let selectedWorkerMonth=todayMonthValue();let selectedWorkerMode="companies";const workerRenderSignatures=new Map();let lastCompaniesViewSignature="";let selectedCompanyHourRowId="";let selectedCompanyTimesheetRowId="";let selectedDefectIds=new Set();let editingDefectId="";let pendingDefectPhotos=[];const defectPhotoUrlCache=new Map();let selectedControlDayDate=nextTuesdayISO(todayISO());let selectedCoordinationKind="coordination";let selectedCalendarMonth=todayMonthValue();let selectedCalendarDate=todayISO();let selectedWorkCompanyId="";let selectedWorkPeriod=todayMonthValue();let selectedWorkDocFilter="manual:zod";let selectedWorkItemId="";let selectedWorkItemIds=new Set();let lastWorkSelectionIndex=-1;let workSummaryTimer=null;let workSummaryPendingStatement=null;let workPreviousIndexCache=new WeakMap();let handoverDraft=null;let handoverDraftKey="";let editingHandoverId="";const $=id=>document.getElementById(id);const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));const eur=new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR"});const monthNames=["Jan","Feb","Mar","Apr","Máj","Jún","Júl","Aug","Sep","Okt","Nov","Dec"];
 function todayMonthValue(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function updateUndoButton(){const b=$("undoBtn");if(!b)return;b.disabled=!undoStack.length;b.title=undoStack.length?`Vrátiť: ${undoStack.at(-1).label||"poslednú zmenu"} (Ctrl + Z)`:"Nie je čo vrátiť"}
 function rememberPreviousState(label="Posledná zmena",serialized=""){const current=serialized||JSON.stringify(state);if(lastCommittedState!==current){undoStack.push({data:lastCommittedState,label});if(undoStack.length>30)undoStack.shift()}}
@@ -5648,7 +5648,7 @@ if($("quickPurchaseForm"))$("quickPurchaseForm").onsubmit=e=>{e.preventDefault()
 $("quickTaskForm").onsubmit=e=>{e.preventDefault();const previousKind=selectedCoordinationKind;selectedCoordinationKind="coordination";const date=nextTuesdayISO(todayISO()),r=controlDayRecord(date,true);selectedCoordinationKind=previousKind;r.tasks.push({id:uid("ktu"),text:$("quickTaskText").value.trim(),companyId:"",responsible:$("quickTaskResponsible").value.trim(),deadline:$("quickTaskDeadline").value,status:"Bez vyjadrenia",note:"",enteredDate:r.date,enteredMeetingNumber:r.number,originNumber:"",originDate:""});r.updatedAt=new Date().toISOString();e.target.reset();save("Úloha bola pridaná do najbližšej koordinačnej porady.")};
 
 function calendarEventClass(type){return type==="Koordinačná porada"||type==="Kontrolný deň"?"type-coordination":"type-meeting"}
-function normalizeCalendarColor(value,fallback="#2563eb"){
+function normalizeCalendarColor(value,fallback="#0a84ff"){
  const color=String(value||"").trim();
  return /^#[0-9a-f]{6}$/i.test(color)?color:fallback
 }
@@ -5664,10 +5664,23 @@ function updateCalendarColorPreview(){
  if(!$("calendarEventColor")||!$("calendarEventColorPreview"))return;
  const color=normalizeCalendarColor($("calendarEventColor").value);
  $("calendarEventColorPreview").style.background=color;
- $("calendarEventColorPreview").style.color=calendarTextColor(color)
+ $("calendarEventColorPreview").style.color=calendarTextColor(color);
+ document.querySelectorAll("[data-calendar-color]").forEach(button=>button.classList.toggle("active",button.dataset.calendarColor.toLowerCase()===color.toLowerCase()))
 }
 function calendarStoredEvents(){return state.calendarEvents.filter(x=>x.projectId===state.selectedProjectId)}
 function calendarDerivedEvents(){return[]}
+function calendarDateLabel(value,options={weekday:"long",day:"numeric",month:"long"}){
+ const date=isoLocalDate(value);
+ return new Intl.DateTimeFormat("sk-SK",options).format(date)
+}
+function calendarAgendaHtml(events){
+ const sorted=[...events].sort((a,b)=>(a.start||"").localeCompare(b.start||"")),dateLabel=calendarDateLabel(selectedCalendarDate),count=sorted.length;
+ return `<div class="apple-calendar-agenda-head"><div><span>VYBRANÝ DEŇ</span><h3>${esc(dateLabel)}</h3><small>${count?`${count} ${count===1?"udalosť":count<5?"udalosti":"udalostí"}`:"Bez udalostí"}</small></div><button type="button" id="calendarAgendaAdd" aria-label="Pridať udalosť">+</button></div>
+  <div class="apple-calendar-agenda-list">${sorted.length?sorted.map(event=>{
+   const color=normalizeCalendarColor(event.color),time=event.start?`${event.start}${event.end?` – ${event.end}`:""}`:"Celý deň",companyName=event.companyId?company(event.companyId)?.name||"":"";
+   return `<article class="apple-calendar-agenda-item" style="--event-color:${color}"><button type="button" class="apple-calendar-agenda-open" data-calendar-id="${event.id}"><span class="apple-calendar-agenda-time">${esc(time)}</span><strong>${esc(event.title)}</strong>${companyName?`<small>${esc(companyName)}</small>`:""}${event.location?`<small>⌖ ${esc(event.location)}</small>`:""}${event.note?`<p>${esc(event.note)}</p>`:""}</button><button type="button" class="apple-calendar-agenda-delete" data-delete-calendar-id="${event.id}" aria-label="Vymazať udalosť">×</button></article>`
+  }).join(""):`<div class="apple-calendar-empty"><span>○</span><strong>Voľný deň</strong><p>Naplánuj prácu, stretnutie alebo dôležitý termín.</p><button type="button" id="calendarAgendaEmptyAdd">+ Pridať udalosť</button></div>`}</div>`
+}
 function renderCalendar(){
  if(!$("calendarGrid"))return;
  $("calendarMonth").value=selectedCalendarMonth;
@@ -5675,32 +5688,44 @@ function renderCalendar(){
        first=new Date(y,m-1,1),
        offset=(first.getDay()+6)%7,
        events=[...calendarStoredEvents(),...calendarDerivedEvents()];
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(selectedCalendarDate)||selectedCalendarDate.slice(0,7)!==selectedCalendarMonth)selectedCalendarDate=`${selectedCalendarMonth}-01`;
+ const monthEvents=events.filter(event=>event.date?.slice(0,7)===selectedCalendarMonth),monthLabel=new Intl.DateTimeFormat("sk-SK",{month:"long",year:"numeric"}).format(first);
+ if($("calendarMonthTitle"))$("calendarMonthTitle").textContent=monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1);
+ if($("calendarMonthSummary"))$("calendarMonthSummary").textContent=monthEvents.length?`${monthEvents.length} ${monthEvents.length===1?"udalosť":monthEvents.length<5?"udalosti":"udalostí"}`:"Bez udalostí";
  let calendarHtml="";
  for(let i=0;i<42;i++){
   const d=new Date(y,m-1,1-offset+i),
         key=localDateISO(d),
         outside=d.getMonth()!==m-1,
         today=key===todayISO(),
+         selected=key===selectedCalendarDate,
+         weekend=[0,6].includes(d.getDay()),
         dayEvents=events.filter(e=>e.date===key).sort((a,b)=>(a.start||"").localeCompare(b.start||""));
-  calendarHtml+=`<div class="calendar-day ${outside?"outside":""} ${today?"today":""}" data-calendar-date="${key}" title="Kliknutím pridáš udalosť">
-   <div class="calendar-day-number">${d.getDate()}</div>
+   const aria=`${calendarDateLabel(key)}${dayEvents.length?`, ${dayEvents.length} udalostí`:""}`;
+   calendarHtml+=`<div class="calendar-day ${outside?"outside":""} ${today?"today":""} ${selected?"selected":""} ${weekend?"weekend":""} ${dayEvents.length?"has-events":""}" data-calendar-date="${key}" role="gridcell" tabindex="0" aria-label="${esc(aria)}" aria-selected="${selected}">
+    <div class="calendar-day-number"><span>${d.getDate()}</span></div>
    ${dayEvents.map(e=>{
-    const eventColor=normalizeCalendarColor(e.color,e.derived?"#2563eb":"#176aa5"),
+     const eventColor=normalizeCalendarColor(e.color,e.derived?"#0a84ff":"#0a84ff"),
           eventText=calendarTextColor(eventColor);
     return `<div class="calendar-event-entry"><button class="calendar-event-chip ${calendarEventClass(e.type)}" data-calendar-id="${e.id}" style="background:${eventColor};color:${eventText}">
-     ${esc(e.start?e.start+" ":"")}${esc(e.title)}
+      <span class="calendar-event-dot" style="background:${eventColor}"></span>${esc(e.start?e.start+" ":"")}${esc(e.title)}
      ${e.companyId?`<small>${esc(company(e.companyId)?.name||"")}</small>`:""}
     </button><button class="calendar-event-remove" data-delete-calendar-id="${e.id}" title="Vymazať udalosť" aria-label="Vymazať udalosť">×</button></div>`
    }).join("")}
+    <div class="calendar-day-dots" aria-hidden="true">${dayEvents.slice(0,3).map(event=>`<i style="background:${normalizeCalendarColor(event.color)}"></i>`).join("")}</div>
   </div>`
  }
  $("calendarGrid").innerHTML=calendarHtml;
+ if($("calendarAgenda"))$("calendarAgenda").innerHTML=calendarAgendaHtml(events.filter(event=>event.date===selectedCalendarDate));
 
  document.querySelectorAll("[data-calendar-date]").forEach(day=>{
   day.onclick=event=>{
    if(event.target.closest("[data-calendar-id],[data-delete-calendar-id]"))return;
-   openCalendarEvent("",day.dataset.calendarDate)
-  }
+    selectedCalendarDate=day.dataset.calendarDate;
+    if(selectedCalendarDate.slice(0,7)!==selectedCalendarMonth)selectedCalendarMonth=selectedCalendarDate.slice(0,7);
+    renderCalendar()
+   };
+   day.onkeydown=event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();day.click()}}
  });
 
  document.querySelectorAll("[data-calendar-id]").forEach(button=>{
@@ -5710,7 +5735,9 @@ function renderCalendar(){
    openCalendarEvent(id)
   }
  });
- document.querySelectorAll("[data-delete-calendar-id]").forEach(button=>{button.onclick=event=>{event.stopPropagation();const id=button.dataset.deleteCalendarId;if(!confirm("Vymazať túto udalosť z kalendára?"))return;state.calendarEvents=state.calendarEvents.filter(item=>item.id!==id);renderCalendar();save("Udalosť bola vymazaná.")}})
+ document.querySelectorAll("[data-delete-calendar-id]").forEach(button=>{button.onclick=event=>{event.stopPropagation();const id=button.dataset.deleteCalendarId;if(!confirm("Vymazať túto udalosť z kalendára?"))return;state.calendarEvents=state.calendarEvents.filter(item=>item.id!==id);renderCalendar();save("Udalosť bola vymazaná.")}});
+ $("calendarAgendaAdd")?.addEventListener("click",()=>openCalendarEvent("",selectedCalendarDate));
+ $("calendarAgendaEmptyAdd")?.addEventListener("click",()=>openCalendarEvent("",selectedCalendarDate))
 }
 function openCalendarEvent(id="",date=""){
  const event=id?state.calendarEvents.find(x=>x.id===id):null;
@@ -5719,23 +5746,28 @@ function openCalendarEvent(id="",date=""){
  $("calendarEventDate").value=event?.date||date||todayISO();
  $("calendarEventTitle").value=event?.title||"";
  $("calendarEventStart").value=event?.start||"";
+ $("calendarEventEnd").value=event?.end||"";
+ $("calendarEventLocation").value=event?.location||"";
  $("calendarEventNote").value=event?.note||"";
- $("calendarEventColor").value=normalizeCalendarColor(event?.color,"#2563eb");
+ $("calendarEventColor").value=normalizeCalendarColor(event?.color,"#0a84ff");
  $("calendarEventCompany").innerHTML=`<option value="">Bez firmy</option>`+[...state.companies].sort((a,b)=>a.name.localeCompare(b.name,"sk")).map(c=>`<option value="${c.id}" ${c.id===event?.companyId?"selected":""}>${esc(c.name)}</option>`).join("");
  $("deleteCalendarEvent").classList.toggle("hidden",!event);
  $("calendarEventModal").classList.remove("hidden");
  updateCalendarColorPreview();
  setTimeout(()=>$("calendarEventTitle").focus(),50)
 }
-$("calendarPrev").onclick=()=>{selectedCalendarMonth=shiftMonth(selectedCalendarMonth,-1);renderCalendar()};
-$("calendarNext").onclick=()=>{selectedCalendarMonth=shiftMonth(selectedCalendarMonth,1);renderCalendar()};
-$("calendarToday").onclick=()=>{selectedCalendarMonth=todayMonthValue();renderCalendar()};
-$("calendarMonth").onchange=()=>{selectedCalendarMonth=$("calendarMonth").value||todayMonthValue();renderCalendar()};
-$("addCalendarEvent").onclick=()=>openCalendarEvent("",todayISO());
+$("calendarPrev").onclick=()=>{selectedCalendarMonth=shiftMonth(selectedCalendarMonth,-1);selectedCalendarDate=`${selectedCalendarMonth}-01`;renderCalendar()};
+$("calendarNext").onclick=()=>{selectedCalendarMonth=shiftMonth(selectedCalendarMonth,1);selectedCalendarDate=`${selectedCalendarMonth}-01`;renderCalendar()};
+$("calendarToday").onclick=()=>{selectedCalendarMonth=todayMonthValue();selectedCalendarDate=todayISO();renderCalendar()};
+$("calendarMonth").onchange=()=>{selectedCalendarMonth=$("calendarMonth").value||todayMonthValue();selectedCalendarDate=`${selectedCalendarMonth}-01`;renderCalendar()};
+$("addCalendarEvent").onclick=()=>openCalendarEvent("",selectedCalendarDate||todayISO());
 $("clearCalendarEvents").onclick=()=>{const count=calendarStoredEvents().length;if(!count){toast("Kalendár je už prázdny.");return}if(!confirm(`Vymazať všetky udalosti aktívnej stavby (${count})?`))return;state.calendarEvents=state.calendarEvents.filter(event=>event.projectId!==state.selectedProjectId);save("Kalendár aktívnej stavby bol vyčistený.")};
 $("calendarEventColor").oninput=updateCalendarColorPreview;
+document.querySelectorAll("[data-calendar-color]").forEach(button=>button.onclick=()=>{$("calendarEventColor").value=button.dataset.calendarColor;updateCalendarColorPreview();document.querySelectorAll("[data-calendar-color]").forEach(item=>item.classList.toggle("active",item===button))});
 $("calendarEventForm").onsubmit=event=>{
  event.preventDefault();
+ const start=$("calendarEventStart").value,end=$("calendarEventEnd").value;
+ if(start&&end&&end<=start){alert("Koniec udalosti musí byť neskôr ako začiatok.");return}
  const id=$("calendarEventId").value||uid("cal"),
        existing=state.calendarEvents.find(x=>x.id===id),
        record={
@@ -5744,11 +5776,11 @@ $("calendarEventForm").onsubmit=event=>{
         title:$("calendarEventTitle").value.trim(),
         type:existing?.type||"Iné",
         date:$("calendarEventDate").value,
-        start:$("calendarEventStart").value,
-        end:existing?.end||"",
+         start,
+         end,
         companyId:$("calendarEventCompany").value,
-        location:existing?.location||"",
-        color:normalizeCalendarColor($("calendarEventColor").value,"#2563eb"),
+         location:$("calendarEventLocation").value.trim(),
+         color:normalizeCalendarColor($("calendarEventColor").value,"#0a84ff"),
         note:$("calendarEventNote").value.trim(),
         updatedAt:new Date().toISOString()
        };
@@ -5756,6 +5788,7 @@ $("calendarEventForm").onsubmit=event=>{
  else state.calendarEvents.push(record);
  $("calendarEventModal").classList.add("hidden");
  selectedCalendarMonth=record.date.slice(0,7);
+ selectedCalendarDate=record.date;
  save("Kalendár bol aktualizovaný.")
 };
 $("deleteCalendarEvent").onclick=()=>{
@@ -6427,6 +6460,7 @@ function renderWorkStatements(){
  if(!statement){
   const emptyMessage=selectedWorkCompanyId?"Súpis pre túto firmu a mesiac neexistuje. Tlačidlom Pridať položku vytvoríš nový súpis.":"Na stavbe nie je dostupná firma.";
   $("workStatementBody").innerHTML=`<tr class="work-empty-row"><td colspan="${orderMode?7:17}">${emptyMessage}</td></tr>`;
+  renderMobileWorkItems(null,[],orderMode,emptyMessage);
   ["workStatementNumber","workStatementObject","workStatementDate","workStatementDateFrom","workStatementDateTo","workStatementScope","workStatementNote"].forEach(id=>{if($(id))$(id).value=""});
   if($("deleteWorkStatement"))$("deleteWorkStatement").disabled=true;
   if($("workInvoiceAmount"))$("workInvoiceAmount").textContent="0,00 €";
@@ -6482,7 +6516,53 @@ function renderWorkStatements(){
    ${workCalcCell(c.remainingQty,"remain-col","qty",c.priceOnly||section)}${workCalcCell(c.remainingPrice,"remain-col","money",section)}
   </tr>`
  }).join("")||`<tr class="work-empty-row"><td colspan="${orderMode?7:17}">Súpis je prázdny. Pridaj riadok alebo vlož položky z Excelu cez Ctrl + V.</td></tr>`;
- attachWorkTableEvents(statement);updateWorkSelectionUI(statement);updateWorkStatementSummary(statement);applyWorkOverviewUI()
+ renderMobileWorkItems(statement,rows,orderMode);
+ attachWorkTableEvents(statement);attachMobileWorkEvents(statement);updateWorkSelectionUI(statement);updateWorkStatementSummary(statement);applyWorkOverviewUI()
+}
+function mobileWorkInput(item,field,label,wide=false){
+ return `<label class="mobile-work-field ${wide?"mobile-work-wide":""}"><span>${label}</span><input data-mobile-work-item="${esc(item.id)}" data-mobile-work-field="${field}" value="${esc(item[field]??"")}" autocomplete="off"></label>`
+}
+function renderMobileWorkItems(statement,rows,orderMode,emptyMessage=""){
+ const root=$("mobileWorkItems");if(!root)return;
+ if(!statement||!rows.length){root.innerHTML=`<div class="mobile-work-empty">${esc(emptyMessage||"Súpis je prázdny. Pridaj prvú položku.")}</div>`;return}
+ root.innerHTML=rows.map(item=>{
+  const c=workItemCalc(statement,item),section=c.section,needsAttention=workItemNeedsAttention(statement,item),selected=selectedWorkItemIds.has(item.id),source=workItemSourceLabel(item)||"ZoD";
+  if(section)return `<div class="mobile-work-section"><strong>${esc(item.description||"Časť súpisu")}</strong><small>${c.sectionCount||0} položiek · ${workMoney(orderMode?c.contractTotal:c.currentPrice)}</small></div>`;
+  const mainField=orderMode?"contractQty":"currentQty",mainLabel=orderMode?"Množstvo":"Množstvo tento mesiac",mainTotal=orderMode?c.contractTotal:c.currentPrice;
+  return `<article class="mobile-work-card ${c.over?"work-over":""} ${needsAttention?"work-needs-attention":""} ${selected?"work-row-selected":""}" data-mobile-work-card="${esc(item.id)}">
+   <header class="mobile-work-card-head"><input class="mobile-work-select" type="checkbox" value="${esc(item.id)}" ${selected?"checked":""} aria-label="Označiť položku"><strong class="mobile-work-card-code">${esc([item.pc,item.code].filter(Boolean).join(" · ")||"Položka")}</strong><span class="mobile-work-card-source">${esc(source)}</span></header>
+   <label class="mobile-work-field mobile-work-description"><span>Popis položky</span><textarea data-mobile-work-item="${esc(item.id)}" data-mobile-work-field="description" rows="3" autocomplete="off">${esc(item.description||"")}</textarea></label>
+   <div class="mobile-work-current"><label class="mobile-work-field"><span>${mainLabel}</span><input data-mobile-work-item="${esc(item.id)}" data-mobile-work-field="${mainField}" value="${esc(item[mainField]??"")}" inputmode="decimal" autocomplete="off"></label><div class="mobile-work-current-total"><span>${orderMode?"Cena celkom":"Tento mesiac"}</span><strong data-mobile-work-calc="main">${workMoney(mainTotal)}</strong></div></div>
+   ${orderMode?"":`<div class="mobile-work-metrics"><div><span>Minulé obdobia</span><strong data-mobile-work-calc="previous">${workMoney(c.previousPrice)}</strong></div><div><span>Spolu</span><strong data-mobile-work-calc="total">${workMoney(c.totalPrice)}</strong></div><div><span>Zostatok</span><strong data-mobile-work-calc="remaining">${workMoney(c.remainingPrice)}</strong></div></div>`}
+   ${needsAttention?`<p class="mobile-work-warning">Položka vyžaduje kontrolu množstva alebo ceny.</p>`:""}
+   <details class="mobile-work-details"><summary>Zmluvné údaje a kód</summary><div class="mobile-work-details-grid">${mobileWorkInput(item,"pc","P. č.")}${orderMode?"":mobileWorkInput(item,"type","Typ")}${orderMode?"":mobileWorkInput(item,"code","Kód položky",true)}${mobileWorkInput(item,"unit","MJ")}${mobileWorkInput(item,"contractQty","Zmluvné množstvo")}${mobileWorkInput(item,"unitPrice","Jednotková cena")}${orderMode?"":mobileWorkInput(item,"contractTotal","Cena celkom",true)}</div></details>
+  </article>`
+ }).join("")
+}
+function refreshMobileWorkCard(statement,item){
+ const card=document.querySelector(`[data-mobile-work-card="${CSS.escape(item.id)}"]`);if(!card)return;
+ const c=workItemCalc(statement,item),orderMode=isSelectedWorkOrderDocument();
+ const set=(name,value)=>{const el=card.querySelector(`[data-mobile-work-calc="${name}"]`);if(el)el.textContent=workMoney(value)};
+ set("main",orderMode?c.contractTotal:c.currentPrice);set("previous",c.previousPrice);set("total",c.totalPrice);set("remaining",c.remainingPrice);
+ card.classList.toggle("work-over",c.over);card.classList.toggle("work-needs-attention",workItemNeedsAttention(statement,item));
+ scheduleWorkStatementSummary(statement)
+}
+function attachMobileWorkEvents(statement){
+ document.querySelectorAll(".mobile-work-select[value]").forEach(check=>{
+  check.onchange=()=>{if(check.checked)selectedWorkItemIds.add(check.value);else selectedWorkItemIds.delete(check.value);updateWorkSelectionUI(statement)}
+ });
+ document.querySelectorAll("[data-mobile-work-item]").forEach(inp=>{
+  const fit=()=>{if(inp.tagName==="TEXTAREA"){inp.style.height="auto";inp.style.height=(inp.scrollHeight+2)+"px"}};fit();
+  inp.onfocus=()=>{beginDirectUndo("Úprava súpisu prác");fit()};
+  inp.oninput=()=>{
+   const item=statement.items.find(x=>x.id===inp.dataset.mobileWorkItem);if(!item)return;
+   const field=inp.dataset.mobileWorkField;item[field]=inp.value;if(field==="contractTotal")item.contractTotalAuto=false;if(field==="contractQty"||field==="unitPrice")updateAutomaticWorkTotal(item);
+   const desktop=document.querySelector(`#workStatementBody [data-work-item="${CSS.escape(item.id)}"][data-work-field="${CSS.escape(field)}"]`);if(desktop)desktop.value=inp.value;
+   fit();statement.status="draft";statement.updatedAt=new Date().toISOString();commitDirectState();
+   refreshWorkRowCalculations(statement,item,document.querySelector(`#workStatementBody tr[data-work-row="${CSS.escape(item.id)}"]`));refreshWorkSectionCalculations(statement);refreshMobileWorkCard(statement,item)
+  };
+  inp.onblur=()=>{const item=statement.items.find(x=>x.id===inp.dataset.mobileWorkItem);if(item&&inp.dataset.mobileWorkField!=="currentQty")syncWorkItemsAcrossCompanyMonths(statement,workItemSourceId(item));endDirectUndo();commitDirectState();if(inp.dataset.mobileWorkField==="type")renderWorkStatements()}
+ })
 }
 function workEditCell(item,field,cls="",extra=""){
  const raw=item[field]??"",text=String(raw),value=esc(raw),desc=field==="description";
@@ -6544,6 +6624,7 @@ function updateWorkSelectionUI(statement){
   check.checked=selectedWorkItemIds.has(check.value);
   check.closest("tr")?.classList.toggle("work-row-selected",check.checked)
  });
+ document.querySelectorAll(".mobile-work-select[value]").forEach(check=>{check.checked=selectedWorkItemIds.has(check.value);check.closest(".mobile-work-card")?.classList.toggle("work-row-selected",check.checked)});
  if(selectAll){
   selectAll.checked=checks.length>0&&count===checks.length;
   selectAll.indeterminate=count>0&&count<checks.length
