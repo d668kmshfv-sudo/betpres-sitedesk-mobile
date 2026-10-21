@@ -1,0 +1,33 @@
+/* BETPRES 5.4 — responsive field operations and desktop finance polish. */
+body.sitedesk-v3 #workStatements .work-invoice-banner{border-radius:22px;background:linear-gradient(135deg,#202064,#3f3dac 62%,#625fd2);box-shadow:0 18px 48px rgba(38,37,120,.2)}
+body.sitedesk-v3 #workStatements .work-header-panel{border-color:rgba(63,61,172,.18);box-shadow:0 12px 34px rgba(34,43,79,.08)}
+body.sitedesk-v3 #workStatements .work-actions{padding:10px;border:1px solid rgba(63,61,172,.14);border-radius:16px;background:rgba(247,247,252,.92)}
+body.sitedesk-v3 #workStatements .work-table-panel{border-color:rgba(63,61,172,.2);box-shadow:0 16px 44px rgba(34,43,79,.1)}
+body.sitedesk-v3 #workStatements .work-sheet thead th{background:#e9e9f8;color:#303066;border-color:#cbcbed}
+body.sitedesk-v3 #workStatements .work-sheet thead .current-col{background:#3f3dac!important;color:#fff!important}
+body.sitedesk-v3 #workStatements .work-sheet tbody tr:hover td{background:#f2f2fb!important}
+body.sitedesk-v3 #workStatements .work-summary-card,body.sitedesk-v3 #workStatements .work-check-card,body.sitedesk-v3 #workStatements .work-note-card{border-radius:20px;border-color:rgba(63,61,172,.15);box-shadow:0 12px 32px rgba(34,43,79,.075)}
+body.sitedesk-v3 #workStatements .work-current-summary-row{margin:4px -8px;padding:11px 8px!important;border-radius:12px;background:#efeffb}
+
+body.sitedesk-v3 #billing .billing-year-matrix-panel{border-radius:22px;border-color:rgba(10,84,140,.2);box-shadow:0 18px 48px rgba(18,62,91,.1)}
+body.sitedesk-v3 #billing .billing-year-matrix-head{background:linear-gradient(135deg,#f7fbfe,#e6f1f8)}
+body.sitedesk-v3 #billing .billing-year-matrix-wrap{scrollbar-gutter:stable}
+body.sitedesk-v3 #billing .billing-year-matrix thead th{background:#0a548c!important}
+body.sitedesk-v3 #billing .billing-year-matrix thead th:first-child,body.sitedesk-v3 #billing .billing-year-matrix thead th:last-child{background:#073d68!important}
+body.sitedesk-v3 #billing .billing-year-matrix tbody tr:nth-child(even) td{background:#f9fbfc}
+body.sitedesk-v3 #billing .billing-matrix-period strong{color:#0a548c}
+
+@media(max-width:800px){
+  .nav-btn[data-view="siteMeetings"],.nav-btn[data-view="controlDays"],.nav-btn[data-view="billing"],[data-go="siteMeetings"],[data-go="controlDays"],[data-go="billing"]{display:none!important}
+  #siteMeetings,#billing{display:none!important}
+  #handover .handover-layout{display:block!important}
+  #handover .wizard{margin-bottom:12px}
+  #handover .preview-panel{width:100%;min-width:0;overflow:hidden!important;border-radius:18px}
+  #handover .preview-toolbar{height:auto;min-height:48px;padding:9px 12px;gap:8px}
+  #handover .preview-toolbar>span{font-size:11px}
+  #handover .paper-stage{width:100%;min-width:0;min-height:0;padding:10px!important;overflow-x:hidden!important;overflow-y:visible!important;background:#dfe7ec}
+  #handover .papers{display:block!important;width:max-content;max-width:none;margin:0 auto;transform:none!important;transform-origin:top center!important}
+  #handover .paper{margin:0 0 12px!important}
+}
+@media(prefers-reduced-motion:reduce){.mobile-worker-home-grid button:active{scale:1}}
+@media print{.mobile-worker-home{display:none!important}}

@@ -1,4 +1,20 @@
 /* Mobile day entry for Stav pracovníkov. */
+.mobile-worker-home{display:none}
+.mobile-worker-category-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px 12px;border-bottom:1px solid var(--apple-line);background:#fff}
+#mobileWorkerDayModal .mobile-worker-category-tabs button{min-height:40px!important;padding:7px 5px!important;border-radius:12px!important;background:#eef1f5!important;color:#62656c!important;box-shadow:none!important;font-size:11px!important}
+#mobileWorkerDayModal .mobile-worker-category-tabs button.active{background:#0a548c!important;color:#fff!important;box-shadow:0 4px 12px rgba(10,84,140,.18)!important}
+.mobile-worker-attendance-card{grid-template-columns:minmax(0,1fr) 92px!important}
+.mobile-worker-attendance-input{display:grid;justify-items:center;gap:3px}
+body.sitedesk-v3 .mobile-worker-attendance-input input{width:88px!important;height:58px!important;min-height:58px!important;padding:4px 6px!important;border:2px solid rgba(60,60,67,.18)!important;border-radius:16px!important;text-align:center!important;font-size:25px!important;font-weight:790!important;font-variant-numeric:tabular-nums}
+.mobile-worker-attendance-input small{color:var(--apple-secondary);font-size:9px;font-weight:700}
+.mobile-worker-code-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%}
+#mobileWorkerDayModal .mobile-worker-code-row button{min-height:40px!important;padding:6px!important;border-radius:12px!important;background:#eef1f5!important;color:#5f636b!important;box-shadow:none!important}
+#mobileWorkerDayModal .mobile-worker-code-row button.active{background:#0a548c!important;color:#fff!important}
+.mobile-worker-company-hours-group{display:grid;gap:8px}
+.mobile-worker-company-hours-group>header{display:flex;align-items:center;justify-content:space-between;padding:8px 4px 0;color:#0a436c}
+.mobile-worker-company-hours-group>header strong{font-size:12px}.mobile-worker-company-hours-group>header small{color:var(--apple-secondary);font-size:10px}
+.mobile-worker-hour-card{grid-template-columns:minmax(0,1fr) 92px!important}
+body.sitedesk-v3 .mobile-worker-attendance-input input.is-invalid{border-color:#c9342f!important;box-shadow:0 0 0 4px rgba(201,52,47,.1)!important}
 .worker-day-open{
   width:100%!important;min-width:30px!important;min-height:38px!important;padding:2px!important;
   display:grid!important;place-items:center!important;gap:1px!important;border:0!important;border-radius:8px!important;
@@ -56,20 +72,36 @@ body.sitedesk-v3 .mobile-worker-stepper input.did-change{animation:mobileWorkerN
 .mobile-worker-empty{padding:32px 18px;text-align:center;color:var(--apple-secondary);font-size:13px}
 
 @media(max-width:800px){
+  body.sitedesk-v3 #workers .page-title .header-actions{display:none!important}
+  .mobile-worker-home{display:block;margin:0 0 18px;border:1px solid rgba(60,60,67,.12);border-radius:24px;background:#fff;box-shadow:0 14px 40px rgba(15,52,78,.09);overflow:hidden}
+  .mobile-worker-home-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px;background:linear-gradient(145deg,#073d68,#0a5d91);color:#fff}
+  .mobile-worker-home-head>div{display:grid;gap:4px}.mobile-worker-home-head span{font-size:9px;font-weight:780;letter-spacing:.08em;opacity:.72}.mobile-worker-home-head strong{font-size:17px;line-height:1.2;text-transform:capitalize}
+  .mobile-worker-home-total{text-align:right}.mobile-worker-home-total strong{font-size:34px;letter-spacing:-.04em}
+  .mobile-worker-home-grid{display:grid;gap:1px;background:rgba(60,60,67,.12)}
+  #workers .mobile-worker-home-grid button{display:grid!important;grid-template-columns:44px minmax(0,1fr) auto!important;align-items:center!important;gap:12px!important;min-height:76px!important;padding:12px 16px!important;border-radius:0!important;background:#fff!important;color:#111!important;text-align:left!important;box-shadow:none!important;transform:none!important}
+  #workers .mobile-worker-home-grid button:active{background:#e9f1f7!important;scale:.99}
+  .mobile-worker-home-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:#e5f0f8;color:#0a548c;font-size:18px;font-weight:820}
+  .mobile-worker-home-grid button>span:nth-child(2){display:grid;gap:3px}.mobile-worker-home-grid button strong{font-size:14px}.mobile-worker-home-grid button small{color:#72757d;font-size:10px}.mobile-worker-home-grid button>b{min-width:38px;padding:6px 8px;border-radius:999px;background:#e5f0f8;color:#0a548c;text-align:center;font-size:12px}
+  .mobile-worker-monthly-links{display:grid;gap:1px;padding:16px;background:#f2f2f7}.mobile-worker-monthly-links>div{display:grid;gap:3px;padding:0 3px 8px}.mobile-worker-monthly-links>div span{color:#696c73;font-size:9px;font-weight:800;letter-spacing:.08em}.mobile-worker-monthly-links>div small{color:#777b84;font-size:10px}
+  #workers .mobile-worker-monthly-links button{display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:50px!important;padding:0 15px!important;border-radius:14px!important;background:#fff!important;color:#153449!important;box-shadow:none!important}.mobile-worker-monthly-links button b{color:#8a8d94;font-size:24px;font-weight:400}
+  body.sitedesk-v3 #workers>.worker-mode-tabs,body.sitedesk-v3 #workers>.worker-toolbar,body.sitedesk-v3 #workers>#workerCompaniesPanel,body.sitedesk-v3 #workers>#betpresTimesheetPanel,body.sitedesk-v3 #workers>#thpTimesheetPanel,body.sitedesk-v3 #workers>#companyHoursPanel,body.sitedesk-v3 #workers>#companyTimesheetsPanel{display:none!important}
+  body.sitedesk-v3.mobile-worker-monthly-open #workers>.worker-toolbar{display:flex!important}
+  body.sitedesk-v3.mobile-worker-monthly-open #workers>#thpTimesheetPanel:not(.hidden),body.sitedesk-v3.mobile-worker-monthly-open #workers>#companyTimesheetsPanel:not(.hidden){display:block!important;margin-top:18px}
+  body.mobile-worker-monthly-open #workers>.mobile-worker-home{margin-bottom:18px}
   #openMobileWorkerDay{order:-2;background:#0a548c!important;border-color:#0a548c!important;color:#fff!important}
   .mobile-worker-day-card{width:100%!important;height:min(94dvh,900px)!important;max-height:94dvh!important;border-radius:24px 24px 0 0!important}
   .mobile-worker-day-card:before{position:absolute;z-index:12;left:calc(50% - 19px);top:7px}
   .mobile-worker-day-card .modal-head{padding:23px 16px 13px!important;border-radius:24px 24px 0 0!important}
   .mobile-worker-day-card .modal-head h2{font-size:20px!important;letter-spacing:-.02em}
-  .mobile-worker-day-list{max-height:none;min-height:0;overflow:auto;flex:1;padding:12px 10px calc(94px + env(safe-area-inset-bottom,0px))}
+  .mobile-worker-day-list{position:relative;z-index:1;max-height:none;min-height:0;overflow:auto;flex:1;padding:12px 10px calc(94px + env(safe-area-inset-bottom,0px))}
   .mobile-worker-day-card{display:flex;flex-direction:column}
-  .mobile-worker-day-toolbar,.mobile-worker-day-summary{flex:0 0 auto}
+  .mobile-worker-category-tabs,.mobile-worker-day-toolbar,.mobile-worker-day-summary{flex:0 0 auto}
   .mobile-worker-card{min-height:82px;padding:10px}
   .mobile-worker-company strong{font-size:13px}
   .mobile-worker-stepper{grid-template-columns:48px 70px 48px;gap:5px}
   #mobileWorkerDayModal .mobile-worker-stepper button{width:48px!important;height:54px!important;min-height:54px!important;border-radius:15px!important}
   body.sitedesk-v3 .mobile-worker-stepper input,.mobile-worker-auto-value{width:70px!important;min-width:70px;height:60px!important;min-height:60px!important;font-size:29px!important}
-  .mobile-worker-day-actions{position:absolute!important;bottom:0!important;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))!important}
+  #mobileWorkerDayModal .mobile-worker-day-actions{position:absolute!important;z-index:50!important;bottom:0!important;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))!important;pointer-events:auto!important}
   body.workers-focus-mode #workers .worker-table thead th .worker-day-open{min-height:34px!important}
 }
 @media(max-width:370px){

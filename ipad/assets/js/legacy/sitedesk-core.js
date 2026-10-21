@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.3.3";
+const SITE_DESK_APP_VERSION="5.4.0";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -433,10 +433,12 @@ function scheduleSiteDeskViewRender(id){
 }
 function showView(id){
  if(id==="purchases"||id==="concrete")id="dashboard";
+ const mobileLayout=window.matchMedia("(max-width: 800px)").matches;
+ if(mobileLayout&&["billing","siteMeetings","controlDays"].includes(id))id="dashboard";
  const requestedView=id;
  if(id==="controlDays"){selectedCoordinationKind="controlDay";id="siteMeetings"}
  else if(id==="siteMeetings")selectedCoordinationKind="coordination";
- document.body.classList.toggle("workers-focus-mode",id==="workers");
+ document.body.classList.toggle("workers-focus-mode",id==="workers"&&!mobileLayout);
  document.body.classList.toggle("work-focus-mode",id==="workStatements");
  if($("siteSectionTitle"))$("siteSectionTitle").textContent=siteViewLabel(requestedView);
  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===id));
@@ -2335,7 +2337,7 @@ function billingMonthRange(startMonth,endMonth){
 }
 function billingProjectPeriod(projectRows){
  const currentMonth=todayISO().slice(0,7),p=activeProject()||{},
-       recordMonths=projectRows.map(record=>record.month).filter(month=>/^\d{4}-\d{2}$/.test(month)).sort(),
+       recordMonths=[...(Array.isArray(p.billingMonths)?p.billingMonths:[]),...projectRows.map(record=>record.month)].filter(month=>/^\d{4}-\d{2}$/.test(month)).sort(),
        assignmentStarts=activeAssignments().map(item=>item.actualStart||item.contractStart||"").filter(Boolean).map(value=>value.slice(0,7)).sort(),
        assignmentEnds=activeAssignments().map(item=>item.actualEnd||item.contractEnd||"").filter(Boolean).map(value=>value.slice(0,7)).sort(),
        startMonth=(p.startDate||"").slice(0,7)||assignmentStarts[0]||recordMonths[0]||currentMonth,
@@ -2346,8 +2348,8 @@ function billingProjectPeriod(projectRows){
 function renderBillingTimelineMatrix(projectRows,companies,query="",companyId=""){
  const body=$("billingYearMatrix"),foot=$("billingYearMatrixTotals"),head=$("billingYearMatrixHead"),periodLabel=$("billingMatrixPeriod");
  if(!body||!foot||!head)return;
- const p=activeProject()||{},monthKeys=[...new Set([...(Array.isArray(p.billingMonths)?p.billingMonths:[]),...projectRows.map(record=>record.month)].filter(month=>/^\d{4}-(0[1-9]|1[0-2])$/.test(month)))].sort();
- if(periodLabel)periodLabel.textContent=monthKeys.length?`${monthKeys.length} mesiacov`:"Pridaj prvý mesiac";
+ const period=billingProjectPeriod(projectRows),monthKeys=billingMonthRange(period.startMonth,period.endMonth);
+ if(periodLabel)periodLabel.textContent=monthKeys.length?`${formatBillingMonth(monthKeys[0])} – ${formatBillingMonth(monthKeys.at(-1))} · ${monthKeys.length} mesiacov`:"Doplň začiatok a koniec stavby";
  if(!$("billingAddMonthValue").value)$("billingAddMonthValue").value=todayISO().slice(0,7);
  head.innerHTML=`<tr><th>Firma</th>${monthKeys.map(month=>`<th><span>${esc(monthNames[Number(month.slice(5,7))-1])}</span><small>${esc(month.slice(0,4))}</small></th>`).join("")}<th>Spolu</th></tr>`;
  const visibleCompanies=companies.filter(item=>(!companyId||item.id===companyId)&&(!query||item.name.toLowerCase().includes(query))),
@@ -4310,7 +4312,13 @@ $("handoverEditorForm").onsubmit=e=>{
  renderHandover();
  toast("Ručné úpravy vrátane mien boli uložené.")
 };[$("editHandoverBtn"),$("editHandoverTop"),$("editHandoverBottom")].forEach(b=>b.onclick=openHandoverEditor);function resetHandoverTemplate(){if(!confirm("Obnoviť všetky texty a údaje podľa šablóny a databázy?"))return;const pid=$("handoverProject").value||state.selectedProjectId;const cid=$("handoverCompany").value||state.assignments.find(a=>a.projectId===pid)?.companyId||"";if(!cid){alert("Na stavbe nie je priradená firma.");return}handoverDraft=defaultHandoverDraft(pid,cid);handoverDraftKey=`${pid}|${cid}`;if(state.handoverDrafts)delete state.handoverDrafts[handoverDraftKey];editingHandoverId="";commitDirectState();$("handoverDate").value=handoverDraft.date;$("entryDate").value=handoverDraft.entryDate;renderHandover();toast("Šablóna bola obnovená.")}$("resetHandoverBtn").onclick=resetHandoverTemplate;$("editorResetTemplate").onclick=()=>{resetHandoverTemplate();openHandoverEditor()};function newHandover(){const pid=$("handoverProject").value||state.selectedProjectId,cid=$("handoverCompany").value||"";handoverDraft=defaultHandoverDraft(pid,cid);handoverDraftKey=`${pid}|${cid||"blank"}`;editingHandoverId="";renderHandover();toast("Bola vytvorená nová zápisnica.")}$("newHandoverTop").onclick=newHandover;
-function applyZoom(){$("handoverPreview").style.zoom=zoom;$("zoomLabel").textContent=`${Math.round(zoom*100)} %`}$("zoomOut").onclick=()=>{zoom=Math.max(.4,zoom-.08);applyZoom()};$("zoomIn").onclick=()=>{zoom=Math.min(1,zoom+.08);applyZoom()};function removeHandoverPrintFrame(){
+function handoverEffectiveZoom(){
+ if(!window.matchMedia("(max-width: 800px)").matches)return zoom;
+ const stage=$("paperStage");if(!stage)return zoom;
+ const style=getComputedStyle(stage),available=stage.clientWidth-(parseFloat(style.paddingLeft)||0)-(parseFloat(style.paddingRight)||0),a4Width=210*96/25.4;
+ return Math.max(.1,Math.min(zoom,available/a4Width))
+}
+function applyZoom(){const effective=handoverEffectiveZoom(),preview=$("handoverPreview");preview.style.setProperty("zoom",String(effective),"important");$("zoomLabel").textContent=window.matchMedia("(max-width: 800px)").matches?`${Math.round(effective*100)} % · celá A4`:`${Math.round(effective*100)} %`}$("zoomOut").onclick=()=>{zoom=Math.max(.4,zoom-.08);applyZoom()};$("zoomIn").onclick=()=>{zoom=Math.min(1,zoom+.08);applyZoom()};window.addEventListener("resize",()=>{if(activeViewId()==="handover")applyZoom()},{passive:true});function removeHandoverPrintFrame(){
  const existing=document.getElementById("handoverPrintFrame");
  if(existing)existing.remove()
 }

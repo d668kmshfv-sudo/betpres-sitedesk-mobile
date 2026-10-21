@@ -2,11 +2,11 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f2f2f7"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BETPRES APP"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES APP 5.3.3</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0"><link rel="stylesheet" href="assets/styles/ux-refresh.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/apple-design.css?v=5.3.2"><link rel="stylesheet" href="assets/styles/mobile-worker-entry.css?v=5.3.2">
+<meta name="theme-color" content="#f2f2f7"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="BETPRES APP"><meta name="format-detection" content="telephone=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>BETPRES APP 5.4.0</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/images/app-icon.png"><link rel="icon" href="assets/images/betpres.ico"><link rel="stylesheet" href="assets/styles/app.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/appearance-settings.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ai-assistant.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/material-samples.css?v=5.1.0"><link rel="stylesheet" href="assets/styles/ipad.css?v=1.1.0"><link rel="stylesheet" href="assets/styles/ux-refresh.css?v=5.2.15"><link rel="stylesheet" href="assets/styles/apple-design.css?v=5.3.2"><link rel="stylesheet" href="assets/styles/mobile-worker-entry.css?v=5.4.0"><link rel="stylesheet" href="assets/styles/operations-refresh.css?v=5.4.0">
 
 <script src="assets/js/bootstrap/startup-guard.js?v=5.1.0"></script>
-<script src="assets/js/ipad-bridge.js?v=5.3.3"></script>
+<script src="assets/js/ipad-bridge.js?v=5.4.0"></script>
 
 </head>
 <body>
@@ -14,7 +14,7 @@
 <aside class="sidebar site-sidebar" id="sidebar">
  <div class="brand site-brand">
   <img src="assets/images/navigation-logo.png" alt="Betpres">
-    <div><strong>BETPRES</strong><small>BETPRES APP 5.3.3</small></div>
+    <div><strong>BETPRES</strong><small>BETPRES APP 5.4.0</small></div>
     <button type="button" class="sidebar-collapse" id="sidebarCollapse" aria-label="Zúžiť bočné menu" aria-expanded="true" title="Zúžiť bočné menu">‹</button>
  </div>
 
@@ -65,7 +65,7 @@
 
  <div class="site-sidebar-footer">
   <div class="site-version-dot"></div>
-      <div><strong>BETPRES APP 5.3.3</strong><small>Denník · súpisy · smenovky</small></div>
+      <div><strong>BETPRES APP 5.4.0</strong><small>Denník · súpisy · smenovky</small></div>
  </div>
 </aside>
 <main class="main">
@@ -581,18 +581,36 @@
   </div>
  </div>
 
+ <section class="mobile-worker-home" id="mobileWorkerHome" aria-label="Denné zadávanie pracovníkov">
+  <div class="mobile-worker-home-head">
+   <div><span>DENNÝ STAV</span><strong id="mobileWorkerHomeDate">Dnes</strong></div>
+   <div class="mobile-worker-home-total"><span>Spolu osôb</span><strong id="mobileWorkerHomeTotal">0</strong></div>
+  </div>
+  <div class="mobile-worker-home-grid">
+   <button type="button" data-mobile-worker-open-mode="companies"><span class="mobile-worker-home-icon">♟</span><span><strong>Firmy na stavbe</strong><small>Počet ľudí za firmu</small></span><b data-mobile-worker-mode-count="companies">0</b></button>
+   <button type="button" data-mobile-worker-open-mode="betpres"><span class="mobile-worker-home-icon">B</span><span><strong>Pracovníci BETPRES</strong><small>Hodiny alebo P / N / D</small></span><b data-mobile-worker-mode-count="betpres">0</b></button>
+   <button type="button" data-mobile-worker-open-mode="thp"><span class="mobile-worker-home-icon">T</span><span><strong>Pracovníci THP</strong><small>Hodiny a nadčas</small></span><b data-mobile-worker-mode-count="thp">0</b></button>
+   <button type="button" data-mobile-worker-open-mode="companyHours"><span class="mobile-worker-home-icon">h</span><span><strong>Na hodiny</strong><small>Mená a odpracovaný čas</small></span><b data-mobile-worker-mode-count="companyHours">0 h</b></button>
+  </div>
+  <div class="mobile-worker-monthly-links">
+   <div><span>MESAČNÉ PODKLADY</span><small>Podrobné smenovky sú nižšie, mimo denného zadávania.</small></div>
+   <button type="button" data-mobile-worker-monthly-mode="companyTimesheets"><span>Smenovky firiem</span><b>›</b></button>
+   <button type="button" data-mobile-worker-monthly-mode="thp"><span>Smenovky THP</span><b>›</b></button>
+  </div>
+ </section>
+
  <div class="worker-mode-tabs panel">
   <button class="active" data-worker-mode="companies">
    <span>♟</span><div><strong>Firmy na stavbe</strong><small>Denný počet osôb za jednotlivé firmy</small></div>
   </button>
   <button data-worker-mode="betpres">
-   <span>◷</span><div><strong>Podsmenovka BETPRES</strong><small>Bežné hodiny alebo kód P / N / D</small></div>
+   <span>◷</span><div><strong>Pracovníci BETPRES</strong><small>Bežné hodiny alebo kód P / N / D</small></div>
   </button>
   <button data-worker-mode="thp">
-   <span>▦</span><div><strong>Podsmenovka THP</strong><small>Čisté polia: hodiny a nadčas</small></div>
+   <span>▦</span><div><strong>Pracovníci THP</strong><small>Čisté polia: hodiny a nadčas</small></div>
   </button>
   <button data-worker-mode="companyHours">
-   <span>€</span><div><strong>Firmy na hodiny</strong><small>Hodinová smenovka + súpis prác</small></div>
+   <span>€</span><div><strong>Na hodiny</strong><small>Hodinová smenovka + súpis prác</small></div>
   </button>
   <button data-worker-mode="companyTimesheets">
    <span>▦</span><div><strong>Smenovky firiem</strong><small>Mená, dochádzka a tlač všetkých firiem</small></div>
@@ -1584,12 +1602,18 @@ Certifikáty"></textarea></label>
 
 <div class="modal hidden" id="mobileWorkerDayModal"><div class="modal-card mobile-worker-day-card">
  <div class="modal-head"><div><p>RÝCHLE ZADÁVANIE PRACOVNÍKOV</p><h2 id="mobileWorkerDayTitle">Vybraný deň</h2><small id="mobileWorkerDayNote">Pracovný deň</small></div><button class="close" data-close="mobileWorkerDayModal">×</button></div>
+ <nav class="mobile-worker-category-tabs" id="mobileWorkerCategoryTabs" aria-label="Skupina pracovníkov">
+  <button type="button" class="active" data-mobile-worker-category="companies">Firmy</button>
+  <button type="button" data-mobile-worker-category="betpres">BETPRES</button>
+  <button type="button" data-mobile-worker-category="thp">THP</button>
+  <button type="button" data-mobile-worker-category="companyHours">Na hodiny</button>
+ </nav>
  <div class="mobile-worker-day-toolbar">
   <button type="button" class="ghost" id="mobileWorkerPrevDay" aria-label="Predchádzajúci deň">‹</button>
   <label class="mobile-worker-date-field">Vybraný deň<input type="date" id="mobileWorkerDate"></label>
   <button type="button" class="ghost" id="mobileWorkerNextDay" aria-label="Nasledujúci deň">›</button>
  </div>
- <div class="mobile-worker-day-summary"><div class="mobile-worker-day-total"><span>Spolu na stavbe</span><strong id="mobileWorkerDayTotal">0</strong></div><small id="mobileWorkerDayFilled">0 firiem vyplnených</small></div>
+ <div class="mobile-worker-day-summary"><div class="mobile-worker-day-total"><span id="mobileWorkerSummaryLabel">Spolu na stavbe</span><strong id="mobileWorkerDayTotal">0</strong></div><small id="mobileWorkerDayFilled">0 firiem vyplnených</small></div>
  <div class="mobile-worker-day-list" id="mobileWorkerDayList"></div>
  <div class="modal-actions mobile-worker-day-actions"><button type="button" id="mobileWorkerDone">Hotovo</button></div>
 </div></div>
@@ -1734,7 +1758,7 @@ Marek Kováč"></textarea>
 
 <div id="toast" class="toast"></div>
 <script src="assets/js/data/seed-data.js?v=5.1.0"></script><script src="assets/js/data/material-passport-data.js?v=5.1.0"></script><script src="assets/js/vendor/jszip.min.js"></script><script src="assets/js/vendor/exceljs.min.js"></script>
-<script src="assets/js/legacy/sitedesk-core.js?v=5.3.3"></script>
+<script src="assets/js/legacy/sitedesk-core.js?v=5.4.0"></script>
 <script src="assets/js/features/work-spreadsheet.js?v=5.1.0"></script>
 <script src="assets/js/features/work-statement-roundtrip.js?v=5.2.15"></script>
 <script src="assets/js/features/pdf-preview.js?v=5.1.5"></script>
@@ -1742,4 +1766,4 @@ Marek Kováč"></textarea>
 <script src="assets/js/features/mobile-diary-dashboard.js?v=5.2.15"></script>
 <script src="assets/js/features/appearance-settings.js?v=5.3.1"></script>
 <script src="assets/js/features/ai-assistant.js?v=5.2.15"></script>
-<script src="assets/js/features/material-samples.js?v=5.2.15"></script><script src="assets/js/features/ux-refresh.js?v=5.2.15"></script><script src="assets/js/features/apple-motion.js?v=5.3.0"></script><script src="assets/js/features/mobile-worker-entry.js?v=5.3.2"></script></body></html>
+<script src="assets/js/features/material-samples.js?v=5.2.15"></script><script src="assets/js/features/ux-refresh.js?v=5.2.15"></script><script src="assets/js/features/apple-motion.js?v=5.3.0"></script><script src="assets/js/features/mobile-worker-entry.js?v=5.4.0"></script></body></html>
