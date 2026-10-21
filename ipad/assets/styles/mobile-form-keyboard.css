@@ -1,0 +1,15 @@
+/* Keep editable text visible above the iPhone keyboard in calendar and diary sheets. */
+@media(max-width:800px) and (pointer:coarse){
+ body.sitedesk-v3 #calendarEventModal input:not([type="date"]):not([type="time"]):not([type="color"]),body.sitedesk-v3 #calendarEventModal textarea,
+ body.sitedesk-v3 #mobileDiaryModal input:not([type="date"]):not([type="file"]),body.sitedesk-v3 #mobileDiaryModal textarea{font-size:16px!important;scroll-margin-block:18px}
+ #calendarEventModal.mobile-form-keyboard-open,#mobileDiaryModal.mobile-form-keyboard-open{align-items:stretch!important;padding:0!important;overflow:hidden!important}
+ #calendarEventModal.mobile-form-keyboard-open>.modal-card,#mobileDiaryModal.mobile-form-keyboard-open>.modal-card{width:100%!important;height:var(--apple-visual-height,100dvh)!important;max-height:none!important;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 16px!important;border:0!important;border-radius:0!important;overflow:auto!important;overscroll-behavior:contain}
+ #calendarEventModal.mobile-form-keyboard-open .modal-head,#mobileDiaryModal.mobile-form-keyboard-open .modal-head{display:none!important}
+ #calendarEventModal.mobile-form-keyboard-open form,#mobileDiaryModal.mobile-form-keyboard-open form{display:grid!important;grid-template-columns:1fr!important;gap:11px!important;padding-bottom:34px!important}
+ #calendarEventModal.mobile-form-keyboard-open form>* ,#mobileDiaryModal.mobile-form-keyboard-open form>*{grid-column:1!important}
+ #calendarEventModal.mobile-form-keyboard-open label:focus-within,#mobileDiaryModal.mobile-form-keyboard-open label:focus-within{position:relative;padding:10px;border-radius:16px;background:#edf6fc;box-shadow:0 0 0 2px rgba(10,91,145,.16)}
+ #calendarEventModal.mobile-form-keyboard-open .calendar-color-presets,#calendarEventModal.mobile-form-keyboard-open .calendar-color-control,
+ #mobileDiaryModal.mobile-form-keyboard-open .mobile-diary-photo-field,#calendarEventModal.mobile-form-keyboard-open .modal-actions,#mobileDiaryModal.mobile-form-keyboard-open .modal-actions{display:none!important}
+ #calendarEventModal.mobile-form-keyboard-open textarea,#mobileDiaryModal.mobile-form-keyboard-open textarea{min-height:120px!important}
+}
+@media(prefers-reduced-motion:reduce){#calendarEventModal.mobile-form-keyboard-open>.modal-card,#mobileDiaryModal.mobile-form-keyboard-open>.modal-card{scroll-behavior:auto!important}}
