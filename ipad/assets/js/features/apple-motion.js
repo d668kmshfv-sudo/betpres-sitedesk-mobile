@@ -8,6 +8,11 @@
   const springStore=new WeakMap();
   let lastTrigger=null;
 
+  function syncVisualViewport(){
+    const height=window.visualViewport?.height||window.innerHeight;
+    root.style.setProperty("--apple-visual-height",`${Math.round(height)}px`)
+  }
+
   function channelsFor(element){
     let channels=springStore.get(element);
     if(!channels){channels=new Map();springStore.set(element,channels)}
@@ -234,6 +239,10 @@
   }
 
   function init(){
+    syncVisualViewport();
+    window.visualViewport?.addEventListener("resize",syncVisualViewport,{passive:true});
+    window.visualViewport?.addEventListener("scroll",syncVisualViewport,{passive:true});
+    window.addEventListener("orientationchange",syncVisualViewport,{passive:true});
     enhancePressTargets();
     document.querySelectorAll(".modal").forEach(prepareModal);
     document.querySelectorAll(".view").forEach(view=>{

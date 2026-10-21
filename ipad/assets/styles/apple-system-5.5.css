@@ -1,0 +1,132 @@
+/* BETPRES APP 5.5 — one Apple-style design system across every module. */
+@media screen{
+  :root{
+    --ios-blue:#0a5b91;--ios-blue-pressed:#074a78;--ios-blue-soft:#e6f2fa;
+    --ios-label:#1d1d1f;--ios-secondary:#6e6e73;--ios-tertiary:#8e8e93;
+    --ios-bg:#f5f5f7;--ios-grouped:#ececf1;--ios-surface:#fff;
+    --ios-separator:rgba(60,60,67,.16);--ios-border:rgba(60,60,67,.12);
+    --ios-red:#d70015;--ios-green:#248a3d;--ios-orange:#b86200;
+    --ios-radius-s:10px;--ios-radius-m:14px;--ios-radius-l:20px;--ios-radius-xl:26px;
+    --ios-shadow:0 1px 2px rgba(0,0,0,.035),0 10px 30px rgba(28,45,62,.06);
+    --ios-shadow-float:0 24px 80px rgba(12,31,48,.22),0 2px 10px rgba(12,31,48,.08);
+    --navy:var(--ios-blue)!important;--navy2:#073d68!important;--yellow:var(--ios-blue)!important;--yellow2:#1672aa!important;
+    --bg:var(--ios-bg)!important;--card:var(--ios-surface)!important;--text:var(--ios-label)!important;
+    --muted:var(--ios-secondary)!important;--line:var(--ios-separator)!important;--green:var(--ios-green)!important;--red:var(--ios-red)!important;
+    --radius:var(--ios-radius-l)!important;--shadow:var(--ios-shadow)!important;
+  }
+  html{font-size:100%;line-height:1.45;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",system-ui,sans-serif!important;font-optical-sizing:auto}
+  body.sitedesk-v3{background:var(--ios-bg)!important;color:var(--ios-label)!important}
+  body.sitedesk-v3 *{scrollbar-color:rgba(60,60,67,.27) transparent;scrollbar-width:thin}
+  body.sitedesk-v3 ::-webkit-scrollbar{width:8px;height:8px}body.sitedesk-v3 ::-webkit-scrollbar-thumb{border:2px solid transparent;border-radius:999px;background:rgba(60,60,67,.24);background-clip:padding-box}
+
+  /* Chrome and wayfinding */
+  body.sitedesk-v3 .site-sidebar{background:linear-gradient(180deg,#182b3b,#102333 58%,#0b1d2b)!important;border-right:1px solid rgba(255,255,255,.08)!important;box-shadow:12px 0 42px rgba(10,27,41,.12)!important}
+  body.sitedesk-v3 .site-brand{border-bottom-color:rgba(255,255,255,.09)!important}
+  body.sitedesk-v3 .site-brand img{box-shadow:none!important}
+  body.sitedesk-v3 .site-nav .nav-btn{min-height:44px!important;border-radius:12px!important;color:rgba(255,255,255,.78)!important;font-weight:620!important;letter-spacing:0!important}
+  body.sitedesk-v3 .site-nav .nav-btn:hover{background:rgba(255,255,255,.075)!important;color:#fff!important}
+  body.sitedesk-v3 .site-nav .nav-btn.active{background:rgba(255,255,255,.14)!important;border-color:rgba(255,255,255,.12)!important;color:#fff!important;box-shadow:inset 3px 0 0 #55b8f0!important}
+  body.sitedesk-v3 .site-nav .nav-btn .nav-icon{background:rgba(255,255,255,.07)!important;border-radius:9px!important}
+  body.sitedesk-v3 .site-nav .nav-btn.active .nav-icon{background:var(--ios-blue)!important;box-shadow:0 5px 14px rgba(0,0,0,.16)!important}
+  body.sitedesk-v3 .nav-group-label{color:rgba(224,237,247,.48)!important;font-size:.56rem!important;font-weight:720!important;letter-spacing:.12em!important}
+  body.sitedesk-v3 .site-sidebar-footer{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.10)!important;box-shadow:none!important}
+  body.sitedesk-v3 .site-topbar{background:rgba(248,248,250,.78)!important;border-bottom:1px solid rgba(255,255,255,.7)!important;box-shadow:0 1px 0 rgba(60,60,67,.10),0 8px 28px rgba(25,43,59,.045)!important;-webkit-backdrop-filter:blur(30px) saturate(170%)!important;backdrop-filter:blur(30px) saturate(170%)!important}
+  body.sitedesk-v3 .site-topbar:after{display:none!important}
+  body.sitedesk-v3 .project-picker select{background:rgba(255,255,255,.78)!important;border-color:var(--ios-border)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important}
+  body.sitedesk-v3 .site-command-button,body.sitedesk-v3 .cloud-quick-status{background:rgba(255,255,255,.7)!important;border:1px solid var(--ios-border)!important;color:var(--ios-label)!important;box-shadow:none!important}
+
+  /* Type hierarchy and section headers */
+  body.sitedesk-v3 .view{padding:1.25rem 1.5rem 3.5rem!important}
+  body.sitedesk-v3 .page-title{min-height:4rem!important;margin:0 0 1rem!important;padding:.55rem .25rem!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  body.sitedesk-v3 .page-title:before{display:none!important}
+  body.sitedesk-v3 .page-title h1{font-size:clamp(1.55rem,2.1vw,2rem)!important;line-height:1.06!important;letter-spacing:-.035em!important;font-weight:760!important;color:var(--ios-label)!important}
+  body.sitedesk-v3 .page-title p,body.sitedesk-v3 .panel-head p,body.sitedesk-v3 .modal-head p{font-size:.58rem!important;line-height:1.3!important;letter-spacing:.105em!important;font-weight:760!important;color:var(--ios-secondary)!important}
+  body.sitedesk-v3 .panel-head h2,body.sitedesk-v3 .panel h2{font-size:1.05rem!important;line-height:1.18!important;letter-spacing:-.015em!important;font-weight:720!important}
+  body.sitedesk-v3 h3{letter-spacing:-.01em}
+
+  /* Surfaces and grouped content */
+  body.sitedesk-v3 .panel,body.sitedesk-v3 .excel-panel,body.sitedesk-v3 .worker-panel,body.sitedesk-v3 .preview-panel{border:1px solid var(--ios-border)!important;border-radius:var(--ios-radius-l)!important;background:var(--ios-surface)!important;box-shadow:var(--ios-shadow)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  body.sitedesk-v3 .site-kpi,body.sitedesk-v3 .metrics article,body.sitedesk-v3 .acceptance-summary article,body.sitedesk-v3 .defect-metrics article,body.sitedesk-v3 .betpres-timesheet-summary article,body.sitedesk-v3 .company-hours-summary article{border:1px solid var(--ios-border)!important;border-radius:var(--ios-radius-l)!important;background:#fff!important;box-shadow:var(--ios-shadow)!important}
+  body.sitedesk-v3 .site-kpi-icon{border-radius:12px!important;background:var(--ios-blue-soft)!important;color:var(--ios-blue)!important}
+  body.sitedesk-v3 .site-kpi:nth-child(n) .site-kpi-icon{background:var(--ios-blue-soft)!important;color:var(--ios-blue)!important}
+  body.sitedesk-v3 .site-hero{border:1px solid rgba(255,255,255,.16)!important;border-radius:var(--ios-radius-xl)!important;background:linear-gradient(145deg,#073d68,#0a5b91)!important;box-shadow:0 18px 46px rgba(7,61,104,.18)!important}
+  body.sitedesk-v3 .quick-grid button,body.sitedesk-v3 .dashboard-quick-actions button{border:1px solid var(--ios-border)!important;border-radius:18px!important;background:#fff!important;color:var(--ios-label)!important;box-shadow:var(--ios-shadow)!important}
+
+  /* Controls: restraint, clear hierarchy, immediate spring response from apple-motion.js. */
+  body.sitedesk-v3 button,body.sitedesk-v3 .file-btn{min-height:40px;border-radius:var(--ios-radius-m)!important;font-weight:660!important;letter-spacing:-.006em!important;touch-action:manipulation}
+  body.sitedesk-v3 button:not(.nav-btn):not(.link-btn):not(.close):not(.ghost):not(.ui-secondary):not(.ui-info):not(.ui-danger):not(.danger){background:var(--ios-blue)!important;border:1px solid var(--ios-blue)!important;color:#fff!important;box-shadow:0 5px 14px rgba(10,91,145,.16)!important}
+  body.sitedesk-v3 button.ghost,body.sitedesk-v3 button.ui-secondary{background:rgba(255,255,255,.82)!important;border:1px solid var(--ios-border)!important;color:var(--ios-label)!important;box-shadow:none!important}
+  body.sitedesk-v3 button.danger,body.sitedesk-v3 button.ui-danger{background:rgba(215,0,21,.07)!important;border:1px solid rgba(215,0,21,.16)!important;color:var(--ios-red)!important;box-shadow:none!important}
+  body.sitedesk-v3 button:disabled{opacity:.42!important;filter:saturate(.5)!important;box-shadow:none!important}
+  body.sitedesk-v3 input,body.sitedesk-v3 select,body.sitedesk-v3 textarea{min-height:40px;border:1px solid var(--ios-border)!important;border-radius:12px!important;background:#fff!important;color:var(--ios-label)!important;box-shadow:0 1px 1px rgba(0,0,0,.02)!important}
+  body.sitedesk-v3 input:focus,body.sitedesk-v3 select:focus,body.sitedesk-v3 textarea:focus{border-color:rgba(10,91,145,.62)!important;box-shadow:0 0 0 4px rgba(10,91,145,.11)!important}
+  body.sitedesk-v3 label{color:var(--ios-secondary)}
+  body.sitedesk-v3 .chip,body.sitedesk-v3 .status,body.sitedesk-v3 .status-badge{border-radius:999px!important;font-weight:680!important}
+  body.sitedesk-v3 .searchbox{border:1px solid transparent!important;border-radius:12px!important;background:#ededf2!important;box-shadow:none!important}
+  body.sitedesk-v3 .searchbox:focus-within{border-color:rgba(10,91,145,.45)!important;background:#fff!important;box-shadow:0 0 0 4px rgba(10,91,145,.10)!important}
+
+  /* Tables become grouped, calm data surfaces. */
+  body.sitedesk-v3 .table-wrap,body.sitedesk-v3 .worker-table-wrap,body.sitedesk-v3 .work-sheet-wrap{border:1px solid var(--ios-border)!important;border-radius:16px!important;background:#fff!important;box-shadow:none!important;overscroll-behavior:contain}
+  body.sitedesk-v3 table th{background:#f2f2f7!important;color:var(--ios-secondary)!important;border-color:var(--ios-separator)!important;font-size:.58rem!important;font-weight:740!important;letter-spacing:.045em!important}
+  body.sitedesk-v3 table td{border-color:var(--ios-separator)!important;color:var(--ios-label)!important}
+  body.sitedesk-v3 tbody tr:nth-child(even) td{background:rgba(242,242,247,.34)}
+  body.sitedesk-v3 tbody tr:hover td{background:#eef6fb!important}
+  body.sitedesk-v3 .worker-table thead th,body.workers-focus-mode #workers .worker-table thead th{background:#0a5b91!important;color:#fff!important;border-color:rgba(255,255,255,.18)!important}
+  body.sitedesk-v3 .work-sheet thead th,body.work-focus-mode #workStatements .work-sheet thead th,body.work-focus-mode #workStatements .work-sheet thead tr:nth-child(2) th{background:#0a5b91!important;color:#fff!important;border-color:rgba(255,255,255,.18)!important}
+  body.sitedesk-v3 #billing .billing-year-matrix thead th,body.sitedesk-v3 #billing .billing-year-matrix thead th:first-child,body.sitedesk-v3 #billing .billing-year-matrix thead th:last-child{background:#0a5b91!important;color:#fff!important}
+
+  /* High-information modules share one blue visual language. */
+  body.sitedesk-v3 #workStatements .work-invoice-banner,body.work-focus-mode #workStatements .work-invoice-banner,body.sitedesk-v3 #billing .billing-month-banner{border:1px solid rgba(255,255,255,.17)!important;border-radius:20px!important;background:linear-gradient(145deg,#073d68,#0a5b91)!important;box-shadow:0 14px 34px rgba(7,61,104,.16)!important}
+  body.sitedesk-v3 #workStatements .work-actions,body.sitedesk-v3 .billing-filter-panel,body.sitedesk-v3 .purchase-filter-panel,body.sitedesk-v3 .concrete-filter-panel,body.sitedesk-v3 .defect-toolbar,body.sitedesk-v3 .calendar-toolbar{border:1px solid var(--ios-border)!important;border-radius:16px!important;background:rgba(255,255,255,.88)!important;box-shadow:none!important}
+  body.sitedesk-v3 #workStatements .work-current-summary-row{background:var(--ios-blue-soft)!important;color:var(--ios-blue)!important}
+  body.sitedesk-v3 #billing .billing-year-matrix-panel,body.sitedesk-v3 #workStatements .work-table-panel{border-radius:20px!important;border-color:var(--ios-border)!important;box-shadow:var(--ios-shadow)!important}
+  body.sitedesk-v3 #billing .billing-year-matrix-head{background:#f7f7fa!important;border-bottom-color:var(--ios-separator)!important}
+  body.sitedesk-v3 #billing .billing-matrix-period strong{color:var(--ios-blue)!important}
+  body.sitedesk-v3 .excel-toolbar,body.sitedesk-v3 .table-toolbar,body.sitedesk-v3 .preview-toolbar{background:rgba(248,248,250,.88)!important;border-color:var(--ios-separator)!important}
+
+  /* Sheets, alerts and transient feedback. */
+  body.sitedesk-v3 .modal{background:rgba(18,25,32,.38)!important;-webkit-backdrop-filter:blur(12px) saturate(115%)!important;backdrop-filter:blur(12px) saturate(115%)!important}
+  body.sitedesk-v3 .modal-card{border:1px solid rgba(255,255,255,.74)!important;border-radius:var(--ios-radius-xl)!important;background:rgba(250,250,252,.94)!important;box-shadow:var(--ios-shadow-float)!important;-webkit-backdrop-filter:blur(32px) saturate(160%)!important;backdrop-filter:blur(32px) saturate(160%)!important}
+  body.sitedesk-v3 .modal-head{background:transparent!important;border-bottom:1px solid var(--ios-separator)!important}
+  body.sitedesk-v3 .close{width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;border:0!important;border-radius:50%!important;background:#e5e5ea!important;color:#3a3a3c!important;box-shadow:none!important}
+  body.sitedesk-v3 .toast{border:1px solid rgba(255,255,255,.16)!important;border-radius:14px!important;background:rgba(31,31,33,.9)!important;color:#fff!important;box-shadow:0 16px 44px rgba(0,0,0,.22)!important}
+  body.sitedesk-v3 .status-open,body.sitedesk-v3 .acceptance-status-warn{background:#fff4e5!important;color:var(--ios-orange)!important;border-color:#ffd8a8!important}
+  body.sitedesk-v3 .status-progress{background:var(--ios-blue-soft)!important;color:var(--ios-blue)!important;border-color:#bdd9ea!important}
+  body.sitedesk-v3 .status-done,body.sitedesk-v3 .acceptance-status-done{background:#eaf8ed!important;color:var(--ios-green)!important;border-color:#bfe5c8!important}
+  body.sitedesk-v3 .acceptance-status-missing{background:#fff0f1!important;color:var(--ios-red)!important;border-color:#ffc7cc!important}
+}
+
+@media screen and (max-width:800px){
+  body.sitedesk-v3{background:var(--ios-bg)!important}
+  body.sitedesk-v3 .view{padding:.65rem .65rem calc(2rem + env(safe-area-inset-bottom,0px))!important}
+  body.sitedesk-v3 .page-title{min-height:3.4rem!important;margin-bottom:.7rem!important;padding:.55rem .45rem!important;background:transparent!important}
+  body.sitedesk-v3 .page-title h1{font-size:1.55rem!important;line-height:1.08!important;text-align:left!important}
+  body.sitedesk-v3 .panel{border-radius:18px!important}
+  body.sitedesk-v3 .site-topbar{background:rgba(248,248,250,.82)!important;-webkit-backdrop-filter:blur(26px) saturate(165%)!important;backdrop-filter:blur(26px) saturate(165%)!important}
+  body.sitedesk-v3 .menu-btn{background:var(--ios-blue)!important;border:1px solid var(--ios-blue-pressed)!important;box-shadow:0 5px 14px rgba(10,91,145,.18)!important}
+  body.sitedesk-v3 button,body.sitedesk-v3 .file-btn{min-height:44px}
+  body.sitedesk-v3 .modal-card,body.sitedesk-v3 .modal-card.wide,body.sitedesk-v3 .modal-card.extra-wide{border-radius:26px 26px 0 0!important;background:rgba(250,250,252,.97)!important}
+  body.sitedesk-v3 .modal{inset:0 auto auto 0!important;width:100%!important;height:var(--apple-visual-height,100dvh)!important}
+  body.sitedesk-v3 .modal-head{border-radius:26px 26px 0 0!important}
+  body.sitedesk-v3 .mobile-worker-home{border-color:var(--ios-border)!important;border-radius:24px!important;box-shadow:var(--ios-shadow)!important}
+  body.sitedesk-v3 .mobile-worker-home-head{background:linear-gradient(145deg,#073d68,#0a5b91)!important}
+  body.sitedesk-v3 .mobile-worker-home-grid{background:var(--ios-separator)!important}
+  body.sitedesk-v3 #workers .mobile-worker-home-grid button{border:0!important;background:#fff!important;color:var(--ios-label)!important;box-shadow:none!important}
+  body.sitedesk-v3 #workers .mobile-worker-home-grid button:active{background:#e9f3f9!important}
+  body.sitedesk-v3 .mobile-worker-day-card{box-shadow:0 -18px 56px rgba(13,31,46,.18)!important}
+  body.sitedesk-v3 #mobileWorkerDayModal .mobile-worker-day-card{height:min(88svh,820px)!important;max-height:88svh!important}
+  body.sitedesk-v3 .mobile-worker-card{border-color:var(--ios-border)!important;border-radius:18px!important;box-shadow:0 8px 24px rgba(20,42,60,.05)!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.sitedesk-v3 *,body.sitedesk-v3 *:before,body.sitedesk-v3 *:after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+@media(prefers-reduced-transparency:reduce){
+  body.sitedesk-v3 .site-topbar,body.sitedesk-v3 .modal-card,body.sitedesk-v3 .billing-filter-panel,body.sitedesk-v3 #workStatements .work-actions{background:#fff!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  body.sitedesk-v3 .modal{background:rgba(18,25,32,.62)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+}
+@media(prefers-contrast:more){
+  body.sitedesk-v3 .panel,body.sitedesk-v3 input,body.sitedesk-v3 select,body.sitedesk-v3 textarea,body.sitedesk-v3 button.ghost{border-color:#636366!important}
+  body.sitedesk-v3 .site-topbar{background:#fff!important;border-bottom-color:#636366!important}
+}
+@media print{body.sitedesk-v3 .panel,body.sitedesk-v3 .excel-panel,body.sitedesk-v3 .worker-panel{box-shadow:none!important;background:#fff!important}}
