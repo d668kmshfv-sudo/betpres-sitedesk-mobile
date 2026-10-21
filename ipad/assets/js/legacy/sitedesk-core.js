@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.6.1";
+const SITE_DESK_APP_VERSION="5.6.2";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -28,6 +28,16 @@ function siteDeskSaveDbSnapshot(serialized,snapshotKey=KEY){
    tx.objectStore(SITE_DESK_SNAPSHOT_STORE).put({key:snapshotKey,value:serialized,version:SITE_DESK_APP_VERSION,updatedAt:new Date().toISOString()})
   }catch{}
  })
+}
+function siteDeskReadDbSnapshot(snapshotKey){
+ return siteDeskOpenDb().then(db=>new Promise(resolve=>{
+  if(!db)return resolve("");
+  try{
+   const tx=db.transaction(SITE_DESK_SNAPSHOT_STORE,"readonly"),req=tx.objectStore(SITE_DESK_SNAPSHOT_STORE).get(snapshotKey);
+   req.onsuccess=()=>resolve(req.result?.value||"");
+   req.onerror=()=>resolve("")
+  }catch{resolve("")}
+ }))
 }
 function siteDeskStoreRecoverySnapshot(snapshotKey,serialized){
  let storedLocally=false;
@@ -1667,27 +1677,42 @@ function groupedDefects(items){
 function photoPreviewSource(photo){
  return photo?.dataUrl||""
 }
+const DEFECT_RECOVERY_KEYS=[KEY+"-defect-recovery",AUTO_BACKUP_KEY,CLOUD_PRE_PUSH_BACKUP_KEY,CLOUD_PRE_PULL_BACKUP_KEY];
+function appendDefectRecoveryRecords(records,serialized){
+ try{for(const item of JSON.parse(serialized||"{}").defects||[]){
+  if(!item.id)continue;
+  const previous=records.get(item.id);
+  if(!previous||String(item.updatedAt||item.createdAt||"")>String(previous.updatedAt||previous.createdAt||""))records.set(item.id,item)
+ }}catch{}
+ return records
+}
 function defectRecoveryCandidates(){
  const records=new Map();
- for(const key of [KEY+"-defect-recovery",AUTO_BACKUP_KEY,CLOUD_PRE_PUSH_BACKUP_KEY,CLOUD_PRE_PULL_BACKUP_KEY]){
-  try{for(const item of JSON.parse(localStorage.getItem(key)||"{}").defects||[]){
-   if(!item.id)continue;
-   const previous=records.get(item.id);
-   if(!previous||String(item.updatedAt||item.createdAt||"")>String(previous.updatedAt||previous.createdAt||""))records.set(item.id,item)
-  }}catch{}
- }
+ for(const key of DEFECT_RECOVERY_KEYS)try{appendDefectRecoveryRecords(records,localStorage.getItem(key))}catch{}
  return [...records.values()]
+}
+async function defectRecoveryCandidatesAll(){
+ const records=new Map(defectRecoveryCandidates().map(item=>[item.id,item])),snapshots=await Promise.all(DEFECT_RECOVERY_KEYS.map(siteDeskReadDbSnapshot));
+ snapshots.forEach(serialized=>appendDefectRecoveryRecords(records,serialized));
+ return[...records.values()]
 }
 function preserveDefectRecovery(){
  const records=new Map(defectRecoveryCandidates().map(item=>[item.id,item]));
  for(const item of state.defects||[])records.set(item.id,item);
- if(records.size)siteDeskStoreRecoverySnapshot(KEY+"-defect-recovery",JSON.stringify({defects:[...records.values()]}))
+ if(!records.size)return;
+ const snapshotKey=KEY+"-defect-recovery",localSnapshot=JSON.stringify({defects:[...records.values()]});
+ try{localStorage.setItem(snapshotKey,localSnapshot)}catch{}
+ defectRecoveryCandidatesAll().then(candidates=>{
+  const merged=new Map(candidates.map(item=>[item.id,item]));
+  for(const item of state.defects||[]){const previous=merged.get(item.id);if(!previous||cloudDefectMergeStamp(item)>=cloudDefectMergeStamp(previous))merged.set(item.id,clone(item))}
+  if(merged.size)siteDeskStoreRecoverySnapshot(snapshotKey,JSON.stringify({defects:[...merged.values()]}))
+ }).catch(()=>siteDeskSaveDbSnapshot(localSnapshot,snapshotKey))
 }
-function openDefectRecovery(){
- const candidates=defectRecoveryCandidates().filter(item=>item.projectId===state.selectedProjectId&&!state.defects.some(existing=>existing.id===item.id));
+async function openDefectRecovery(){
+ const candidates=(await defectRecoveryCandidatesAll()).filter(item=>!state.defects.some(existing=>existing.id===item.id)).sort((a,b)=>Number(b.projectId===state.selectedProjectId)-Number(a.projectId===state.selectedProjectId)||String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||"")));
  const dialog=document.createElement("dialog");
  dialog.style.cssText="width:min(640px,92vw);max-height:85dvh;overflow:auto;border:1px solid #c5d6e6;border-radius:16px;padding:20px;color:#123756";
- dialog.innerHTML=`<h2>Vady zo zálohy v tomto zariadení</h2><p>Aktuálna stavba: ${esc(activeProject()?.name||"")}. Nájdených chýbajúcich záznamov: ${candidates.length}.</p><p>Vyber iba vady, ktoré chceš vrátiť. Záloha môže obsahovať aj úmyselne odstránené záznamy.</p><div>${candidates.map((item,index)=>`<label style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #ddd"><input type="checkbox" data-recovery-index="${index}" style="width:22px;min-width:22px"><span><strong>${esc(item.number||"")} ${esc(item.location||"")}</strong><br>${esc(item.description||item.type||"Vada")}<br><small>${esc(item.createdAt?.slice(0,10)||"")} · Fotografie: ${(item.photos||[]).length}</small></span></label>`).join("")||"<p>Pre túto stavbu sa v lokálnych zálohách nenašli chýbajúce vady. Skontroluj aj výber stavby a filtre v zozname vád.</p>"}</div><div style="display:flex;gap:12px;margin-top:16px"><button data-restore>Obnoviť vybrané vady</button><button data-close>Zavrieť</button></div>`;
+ dialog.innerHTML=`<h2>Vady zo záloh v tomto zariadení</h2><p>Prehľadané bolo bežné úložisko aj databáza telefónu. Nájdených chýbajúcich záznamov zo všetkých stavieb: ${candidates.length}.</p><p>Vyber iba vady, ktoré chceš vrátiť. Záloha môže obsahovať aj úmyselne odstránené záznamy.</p><div>${candidates.map((item,index)=>`<label style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #ddd"><input type="checkbox" data-recovery-index="${index}" style="width:22px;min-width:22px"><span><strong>${esc(item.number||"")} ${esc(item.location||"")}</strong><br>${esc(item.description||item.type||"Vada")}<br><small>${esc(project(item.projectId)?.name||"Neznáma stavba")} · ${esc(item.createdAt?.slice(0,10)||"")} · Fotografie: ${(item.photos||[]).length}</small></span></label>`).join("")||"<p>V dostupných lokálnych zálohách sa nenašli žiadne chýbajúce vady. Skontroluj ešte cloudovú históriu a zariadenie, na ktorom boli vady vytvorené.</p>"}</div><div style="display:flex;gap:12px;margin-top:16px"><button data-restore>Obnoviť vybrané vady</button><button data-close>Zavrieť</button></div>`;
  dialog.querySelector("[data-restore]").disabled=!candidates.length;
  dialog.querySelector("[data-close]").onclick=()=>dialog.close();
  dialog.querySelector("[data-restore]").onclick=()=>{
@@ -1698,7 +1723,7 @@ function openDefectRecovery(){
  };
  dialog.addEventListener("close",()=>dialog.remove());document.body.appendChild(dialog);dialog.showModal()
 }
-$("recoverLocalDefects").onclick=openDefectRecovery;
+$("recoverLocalDefects").onclick=()=>openDefectRecovery();
 function renderDefects(){
  if(!$("defectCompanyGroups"))return;
  [...selectedDefectIds].forEach(id=>{
@@ -1767,6 +1792,7 @@ function renderDefects(){
  document.querySelectorAll("[data-edit-defect]").forEach(button=>button.onclick=()=>openDefectEditor(button.dataset.editDefect));
  document.querySelectorAll("[data-delete-defect]").forEach(button=>button.onclick=()=>{
   if(confirm("Vymazať túto vadu?")){
+   preserveDefectRecovery();
    state.defects=state.defects.filter(item=>item.id!==button.dataset.deleteDefect);
    selectedDefectIds.delete(button.dataset.deleteDefect);
    save("Vada bola vymazaná.")
@@ -3735,6 +3761,7 @@ function createCompanyHourTemplatesForAllAssigned(){
  save(`Vytvorené menné smenovky pre ${missing.length} ${missing.length===1?"firmu":missing.length<5?"firmy":"firiem"}.`)
 }
 if($("addCompanyHourTimesheet"))$("addCompanyHourTimesheet").onclick=openCompanyHourModal;
+if($("companyHourAddProminent"))$("companyHourAddProminent").onclick=openCompanyHourModal;
 if($("addAllCompanyHourTimesheets"))$("addAllCompanyHourTimesheets").onclick=createCompanyHourTemplatesForAllAssigned;
 if($("companyHourCompany"))$("companyHourCompany").onchange=updateCompanyHourPreview;
 ["companyHourCustomName","companyHourRate","companyHourWorkers"].forEach(id=>{if($(id))$(id).oninput=updateCompanyHourPreview});
@@ -8043,6 +8070,7 @@ $("defectForm").onsubmit=event=>{
        };
  if(existing)Object.assign(existing,record);
  else state.defects.push(record);
+ preserveDefectRecovery();
  if(!defectCanBeSelected(record))selectedDefectIds.delete(record.id);
  $("defectModal").classList.add("hidden");
  editingDefectId="";

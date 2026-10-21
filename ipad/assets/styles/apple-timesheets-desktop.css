@@ -1,0 +1,104 @@
+/* BETPRES 5.6.2 — legible Apple-style desktop timesheets. */
+@media(min-width:801px){
+ body.workers-focus-mode #workers{
+  --timesheet-blue:#0a5b91;--timesheet-accent:#0a84ff;--timesheet-ink:#142b3d;
+  --timesheet-muted:#657786;--timesheet-line:rgba(60,60,67,.18);--timesheet-fill:#f5f7fa
+ }
+ body.workers-focus-mode #workers.active{grid-template-rows:54px 64px 50px minmax(0,1fr)!important;gap:9px!important;padding:10px 14px 14px!important;background:#f5f5f7!important}
+ body.workers-focus-mode #workers .page-title{height:54px!important;padding:0 2px!important;overflow:visible!important}
+ body.workers-focus-mode #workers .page-title h1{font-size:25px!important;letter-spacing:-.025em!important;color:var(--timesheet-ink)!important}
+ body.workers-focus-mode #workers .header-actions{align-items:center!important;scrollbar-width:none}
+ body.workers-focus-mode #workers .header-actions button{height:40px!important;min-height:40px!important;padding:0 14px!important;border-radius:12px!important;font-size:12px!important}
+ body.workers-focus-mode #workers #addCompanyHourTimesheet{background:linear-gradient(180deg,#1682c4,#09629a)!important;color:#fff!important;border-color:#09629a!important;box-shadow:0 8px 20px rgba(10,91,145,.25)!important}
+
+ body.workers-focus-mode #workers .worker-mode-tabs{
+  height:64px!important;min-height:64px!important;padding:6px!important;gap:6px!important;border:1px solid var(--timesheet-line)!important;
+  border-radius:17px!important;background:rgba(255,255,255,.9)!important;box-shadow:0 8px 26px rgba(27,48,63,.06)!important
+ }
+ body.workers-focus-mode #workers .worker-mode-tabs button{
+  min-width:0!important;height:50px!important;min-height:50px!important;padding:7px 12px!important;border:0!important;border-radius:12px!important;
+  justify-content:flex-start!important;text-align:left!important;color:#52525a!important;background:transparent!important;box-shadow:none!important
+ }
+ body.workers-focus-mode #workers .worker-mode-tabs button>span{font-size:19px!important;color:#6e6e73!important}
+ body.workers-focus-mode #workers .worker-mode-tabs button strong{font-size:12.5px!important;line-height:1.15!important;color:inherit!important}
+ body.workers-focus-mode #workers .worker-mode-tabs button small{display:block!important;margin-top:2px!important;font-size:9px!important;line-height:1.1!important;color:inherit!important;opacity:.7}
+ body.workers-focus-mode #workers .worker-mode-tabs button.active{background:linear-gradient(180deg,#126ca7,#0a548c)!important;color:#fff!important;box-shadow:0 7px 18px rgba(10,84,140,.22)!important}
+ body.workers-focus-mode #workers .worker-mode-tabs button.active>span{color:#fff!important}
+
+ body.workers-focus-mode #workers .worker-toolbar{
+  height:50px!important;min-height:50px!important;padding:5px 8px!important;gap:8px!important;border:1px solid var(--timesheet-line)!important;
+  border-radius:14px!important;background:#fff!important;overflow-x:auto!important
+ }
+ body.workers-focus-mode #workers .worker-toolbar label{font-size:11px!important;color:var(--timesheet-muted)!important}
+ body.workers-focus-mode #workers .worker-toolbar input,body.workers-focus-mode #workers .worker-toolbar button{height:38px!important;min-height:38px!important;border-radius:10px!important;font-size:12px!important}
+ body.workers-focus-mode #workers #workerSheetStatus{padding:6px 10px;border-radius:999px;background:#edf5fb;color:#0a548c;font-size:11px!important;white-space:nowrap}
+
+ body.workers-focus-mode #workers #workerCompaniesPanel,
+ body.workers-focus-mode #workers #betpresTimesheetPanel:not(.hidden),
+ body.workers-focus-mode #workers #thpTimesheetPanel:not(.hidden),
+ body.workers-focus-mode #workers #companyHoursPanel:not(.hidden),
+ body.workers-focus-mode #workers #companyTimesheetsPanel:not(.hidden){min-height:0!important;height:100%!important;overflow:hidden!important}
+ body.workers-focus-mode #workers #betpresTimesheetPanel:not(.hidden),body.workers-focus-mode #workers #thpTimesheetPanel:not(.hidden){display:grid!important;grid-template-rows:auto auto minmax(0,1fr)!important;gap:8px!important}
+ body.workers-focus-mode #workers #companyHoursPanel:not(.hidden),body.workers-focus-mode #workers #companyTimesheetsPanel:not(.hidden){display:grid!important;grid-template-rows:auto auto minmax(0,1fr)!important;gap:8px!important}
+ body.workers-focus-mode #workers .worker-inline-actions{min-height:40px!important;margin:0!important;gap:7px!important}
+ body.workers-focus-mode #workers .worker-inline-actions button{height:38px!important;min-height:38px!important;border-radius:11px!important;padding:0 14px!important;font-size:12px!important}
+
+ body.workers-focus-mode #workers .betpres-timesheet-summary,body.workers-focus-mode #workers .company-hours-summary{height:68px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;margin:0!important;overflow:visible!important}
+ body.workers-focus-mode #workers .betpres-timesheet-summary article,body.workers-focus-mode #workers .company-hours-summary article{
+  position:relative;min-height:68px!important;padding:10px 14px 10px 17px!important;border:1px solid var(--timesheet-line)!important;border-radius:15px!important;
+  background:#fff!important;box-shadow:0 7px 20px rgba(24,47,63,.055)!important;overflow:hidden
+ }
+ body.workers-focus-mode #workers .betpres-timesheet-summary article:before,body.workers-focus-mode #workers .company-hours-summary article:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--timesheet-accent)}
+ body.workers-focus-mode #workers .betpres-timesheet-summary span,body.workers-focus-mode #workers .company-hours-summary span{margin:0 0 5px!important;color:var(--timesheet-muted)!important;font-size:10px!important;font-weight:730!important;letter-spacing:.02em!important;text-transform:uppercase!important}
+ body.workers-focus-mode #workers .betpres-timesheet-summary strong,body.workers-focus-mode #workers .company-hours-summary strong{color:var(--timesheet-ink)!important;font-size:23px!important;line-height:1!important;font-variant-numeric:tabular-nums}
+
+ body.workers-focus-mode #workers .company-hour-switcher,body.workers-focus-mode #workers .company-timesheet-switcher{min-height:66px!important;margin:0!important;padding:9px 12px!important;border:1px solid var(--timesheet-line)!important;border-radius:15px!important;background:#fff!important;box-shadow:none!important}
+ body.workers-focus-mode #workers .company-hour-switcher select,body.workers-focus-mode #workers .company-timesheet-switcher select{height:42px!important;min-height:42px!important;border-radius:11px!important;font-size:14px!important}
+ body.workers-focus-mode #workers .company-hour-switcher button,body.workers-focus-mode #workers .company-timesheet-switcher button{height:40px!important;min-height:40px!important;border-radius:11px!important}
+ body.workers-focus-mode #workers #companyHourAddProminent{
+  padding:0 17px!important;background:linear-gradient(180deg,#1482c7,#075a91)!important;color:#fff!important;border:1px solid #075487!important;
+  font-size:12.5px!important;font-weight:800!important;box-shadow:0 7px 16px rgba(10,91,145,.22)!important;white-space:nowrap
+ }
+ body.workers-focus-mode #workers #companyHourAddProminent:hover{filter:brightness(1.06)!important;transform:translateY(-1px)}
+ body.workers-focus-mode #workers #companyHourAddProminent:active{transform:scale(.98);box-shadow:0 3px 8px rgba(10,91,145,.18)!important}
+
+ body.workers-focus-mode #workers .worker-panel{border:1px solid var(--timesheet-line)!important;border-radius:16px!important;background:#fff!important;box-shadow:0 10px 30px rgba(23,45,61,.075)!important}
+ body.workers-focus-mode #workers .worker-table-wrap{border:0!important;border-radius:16px!important;scrollbar-color:#b6c4ce transparent;scrollbar-width:thin}
+ body.workers-focus-mode #workers .worker-table{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif!important;color:var(--timesheet-ink)!important}
+ body.workers-focus-mode #workers .worker-table thead th{
+  height:43px!important;min-height:43px!important;padding:4px 2px!important;background:#0a548c!important;color:#fff!important;border-color:rgba(255,255,255,.17)!important;
+  font-size:10.5px!important;font-weight:760!important;letter-spacing:.015em!important
+ }
+ body.workers-focus-mode #workers .worker-table .worker-day-name{color:rgba(255,255,255,.72)!important;font-size:8px!important}
+ body.workers-focus-mode #workers .worker-table tbody td{height:43px!important;min-height:43px!important;border-color:#dfe5ea!important;background:#fff!important;font-size:12px!important}
+ body.workers-focus-mode #workers .worker-table tbody tr:nth-child(even)>td:not(.weekend):not(.holiday):not(.today-col){background:#f8fafb!important}
+ body.workers-focus-mode #workers .worker-table tbody tr:hover>td{background:#eaf4fb!important}
+ body.workers-focus-mode #workers .worker-table tbody tr:focus-within>td{background:#e8f4ff!important}
+ body.workers-focus-mode #workers .worker-table input{height:39px!important;min-height:39px!important;font-size:13px!important;font-weight:720!important;color:#172b3a!important}
+ body.workers-focus-mode #workers .worker-table input:focus{outline:0!important;border-radius:7px!important;box-shadow:inset 0 0 0 2px var(--timesheet-accent),0 0 0 3px rgba(10,132,255,.14)!important;background:#fff!important}
+ body.workers-focus-mode #workers .worker-table .weekend{background:#edf1f4!important}
+ body.workers-focus-mode #workers .worker-table .holiday{background:#fff0ee!important;color:#9b2821!important}
+ body.workers-focus-mode #workers .worker-table .today-col{background:#e5f3ff!important;box-shadow:inset 2px 0 0 var(--timesheet-accent),inset -2px 0 0 var(--timesheet-accent)!important}
+ body.workers-focus-mode #workers .worker-table thead .today-col{background:#0a84ff!important;box-shadow:inset 2px 0 0 #66b5ff,inset -2px 0 0 #66b5ff!important}
+ body.workers-focus-mode #workers .worker-table tfoot td{height:40px!important;min-height:40px!important;background:#153f62!important;color:#fff!important;border-color:#315c7c!important;font-size:12px!important}
+
+ body.workers-focus-mode #workers .worker-table .employee-col,body.workers-focus-mode #workers .worker-table .company-col{width:300px!important;min-width:300px!important;max-width:300px!important}
+ body.workers-focus-mode #workers .worker-table tbody .employee-cell,body.workers-focus-mode #workers .worker-table tbody .company-col{position:sticky!important;left:0;z-index:6;background:#fff!important;box-shadow:3px 0 8px rgba(31,51,65,.05)}
+ body.workers-focus-mode #workers #betpresTimesheetPanel .worker-table tbody .employee-cell{left:58px!important}
+ body.workers-focus-mode #workers .worker-table thead .employee-col,body.workers-focus-mode #workers .worker-table thead .company-col{position:sticky!important;left:0;z-index:18!important;background:#073d68!important}
+ body.workers-focus-mode #workers #betpresTimesheetPanel .worker-table thead .employee-col{left:58px!important}
+ body.workers-focus-mode #workers .employee-name,body.workers-focus-mode #workers .worker-company-main{font-size:14px!important;line-height:1.15!important;font-weight:760!important;color:var(--timesheet-ink)!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+ body.workers-focus-mode #workers .employee-position-input{display:block!important;height:22px!important;min-height:22px!important;text-align:left!important;font-size:11px!important;font-weight:620!important;color:var(--timesheet-muted)!important;border-bottom:1px solid transparent!important}
+ body.workers-focus-mode #workers .employee-delete-btn{width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important;border-radius:9px!important}
+ body.workers-focus-mode #workers #betpresTimesheetPanel .betpres-timesheet-table tbody td.employee-cell{height:58px!important;min-height:58px!important}
+ body.workers-focus-mode #workers #thpTimesheetPanel .betpres-timesheet-table tbody td.employee-cell{height:50px!important;min-height:50px!important}
+ body.workers-focus-mode #workers #betpresTimesheetPanel .betpres-timesheet-table tbody td:not(.employee-cell):not(.employee-personal-number-col),body.workers-focus-mode #workers #thpTimesheetPanel .betpres-timesheet-table tbody td:not(.employee-cell){height:50px!important;min-height:50px!important}
+ body.workers-focus-mode #workers #betpresTimesheetPanel .monthly-total-col,body.workers-focus-mode #workers #thpTimesheetPanel .monthly-total-col,body.workers-focus-mode #workers #companyHoursPanel .sum-col,body.workers-focus-mode #workers #companyTimesheetsPanel .company-hour-sum{position:sticky!important;right:0!important;z-index:7!important;width:76px!important;min-width:76px!important;max-width:76px!important;background:#edf5fb!important;color:#073d68!important;font-size:13px!important;font-weight:800!important;box-shadow:-3px 0 8px rgba(31,51,65,.06)}
+ body.workers-focus-mode #workers .worker-table thead .monthly-total-col,body.workers-focus-mode #workers #companyTimesheetsPanel .worker-table thead .company-hour-total-col{z-index:19!important;background:#073d68!important;color:#fff!important}
+ body.workers-focus-mode #workers .worker-table tfoot .monthly-total-col,body.workers-focus-mode #workers #companyTimesheetsPanel .worker-table tfoot .company-hour-sum{background:#073d68!important;color:#fff!important}
+ body.workers-focus-mode #workers #companyTimesheetsPanel .company-hour-worker-name{height:38px!important;min-height:38px!important;font-size:13px!important;border-radius:9px!important}
+ body.workers-focus-mode #workers #companyTimesheetsPanel .company-timesheet-time-cell input{height:25px!important;min-height:25px!important;font-size:10.5px!important;border-radius:5px!important}
+ body.workers-focus-mode #workers #companyTimesheetsPanel .company-hours-table tbody tr,body.workers-focus-mode #workers #companyTimesheetsPanel .company-hours-table tbody td{height:60px!important;min-height:60px!important}
+}
+
+@media(min-width:801px) and (prefers-contrast:more){body.workers-focus-mode #workers .worker-table td,body.workers-focus-mode #workers .worker-table th{border-color:#667786!important}}
