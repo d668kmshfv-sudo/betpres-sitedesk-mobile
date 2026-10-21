@@ -113,8 +113,10 @@
   body.sitedesk-v3 .mobile-worker-home-grid{background:var(--ios-separator)!important}
   body.sitedesk-v3 #workers .mobile-worker-home-grid button{border:0!important;background:#fff!important;color:var(--ios-label)!important;box-shadow:none!important}
   body.sitedesk-v3 #workers .mobile-worker-home-grid button:active{background:#e9f3f9!important}
-  body.sitedesk-v3 .mobile-worker-day-card{box-shadow:0 -18px 56px rgba(13,31,46,.18)!important}
-  body.sitedesk-v3 #mobileWorkerDayModal .mobile-worker-day-card{height:min(88svh,820px)!important;max-height:88svh!important}
+  body.sitedesk-v3 .mobile-worker-day-card{box-shadow:none!important}
+  body.sitedesk-v3 #mobileWorkerDayModal{align-items:stretch!important;padding:0!important;background:var(--ios-bg)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  body.sitedesk-v3 #mobileWorkerDayModal .mobile-worker-day-card{width:100%!important;height:var(--apple-visual-height,100dvh)!important;max-height:none!important;border:0!important;border-radius:0!important;background:var(--ios-bg)!important}
+  body.sitedesk-v3 #mobileWorkerDayModal .modal-head{border-radius:0!important;background:rgba(248,248,250,.9)!important;-webkit-backdrop-filter:blur(26px) saturate(165%)!important;backdrop-filter:blur(26px) saturate(165%)!important}
   body.sitedesk-v3 .mobile-worker-card{border-color:var(--ios-border)!important;border-radius:18px!important;box-shadow:0 8px 24px rgba(20,42,60,.05)!important}
 }
 
