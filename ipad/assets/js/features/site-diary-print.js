@@ -27,12 +27,15 @@
   .sdp-data-row{color:#21394f;font-size:9.5px;line-height:1.3;overflow-wrap:anywhere}
   .sdp-data-head span:last-child,.sdp-data-row span:last-child{text-align:right;font-variant-numeric:tabular-nums}
   .sdp-data-empty{padding:1.8mm 2.5mm;border-bottom:1px solid #d4dee6;color:#708394;font-size:9px}
-  .sdp-entry{display:flow-root;margin-top:3mm;padding-top:1.5mm;border-top:1px solid #aebecb;break-inside:avoid}
+  .sdp-entry{display:flow-root;margin-top:1.6mm;padding-top:.8mm;border-top:1px solid #aebecb;break-inside:avoid}
   .sdp-entry-head{display:flex;justify-content:space-between;align-items:baseline;gap:6mm}
   .sdp-entry-head-day{justify-content:flex-end}
   .sdp-entry-head strong{flex:none;color:#1d587d;font-size:10px}
-  .sdp-entry-place{margin-top:1mm;color:#536a7d;font-size:9px;overflow-wrap:anywhere}
-  .sdp-entry p{margin:1.5mm 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;line-height:1.38}
+  .sdp-entry p{margin:.7mm 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;line-height:1.38}
+  .sdp-inspection{padding:1.7mm 2.5mm;border-bottom:1px solid #d4dee6;break-inside:avoid}
+  .sdp-inspection-meta{display:flex;justify-content:space-between;gap:4mm;color:#466176;font-size:9px}
+  .sdp-inspection-meta strong{color:#213e57;font-size:9.5px}
+  .sdp-inspection p{margin:.7mm 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:#263b4d;font-size:9.5px;line-height:1.34}
   .sdp-docs{display:flow-root;margin-top:3mm;color:#3b566d;font-size:10px;overflow-wrap:anywhere}
   .sdp-docs strong{color:#244666}.sdp-docs ul{margin:1mm 0 0;padding-left:5mm}.sdp-docs li{margin:.6mm 0}
   .sdp-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4mm;margin-top:6mm}
@@ -67,11 +70,26 @@
  function dataHeading(kind){return `<div class="sdp-data-head"><span>${kind==="crew"?"Profesia":"Prostriedok"}</span><span>Dodávateľ</span><span>Počet</span></div>`}
  function dataRow(row){return `<div class="sdp-data-row"><span>${escape(row.name)}</span><span>${escape(row.companyName)}</span><span>${escape(row.count)}</span></div>`}
  function dayHeading(date,weather){return `<div class="sdp-day-heading">${escape(dateLabel(date))}${weatherHtml(weather)}</div>`}
+ function inspectionsForDate(map,date){
+  const source=map&&typeof map==="object"?map[date]:null;
+  return (Array.isArray(source)?source:[]).filter(item=>item&&typeof item==="object").map(item=>({
+   recipient:String(item.recipient||"Adresát neuvedený").trim(),
+   subject:String(item.subject||"Kontrola").trim(),
+   note:String(item.note||"").trim(),
+   dueDate:String(item.dueDate||"").trim(),
+   status:String(item.status||"").trim()
+  }))
+ }
+ function inspectionHtml(item,text,continuation){
+  const due=/^\d{4}-\d{2}-\d{2}/.test(item.dueDate)?`${dateLabel(item.dueDate.slice(0,10))}${item.dueDate.includes("T")?` · ${item.dueDate.slice(11,16)}`:""}`:item.dueDate;
+  const status=item.status==="done"?"Kontrola vykonaná":item.status==="open"?"Čaká na kontrolu":item.status;
+  return `<div class="sdp-inspection"><div class="sdp-inspection-meta"><strong>${escape(item.recipient)}${continuation?" · pokračovanie":""}</strong><span>${escape([due,status].filter(Boolean).join(" · "))}</span></div><p>${escape(text||"").replace(/\r\n?/g,"\n")}</p></div>`
+ }
  function recordHeader(entry,mode,continuation){
   const count=countValue(entry.workersCount);
   const label=continuation?`<span>Pokračovanie · ${escape(dateLabel(entry.date))}</span>`:"";
   const heading=count||continuation?`<div class="sdp-entry-head${mode==="day"?" sdp-entry-head-day":""}">${label}${count?`<strong>${count} pracovníkov</strong>`:""}</div>`:"";
-  return `${heading}${!continuation&&entry.place?`<div class="sdp-entry-place"><strong>Miesto / objekt:</strong> ${escape(entry.place)}</div>`:""}`
+  return heading
  }
  function entryHtml(entry,mode,text,continuation){
   return `<section class="sdp-entry">${recordHeader(entry,mode,continuation)}<p>${escape(text||"").replace(/\r\n?/g,"\n")}</p></section>`
@@ -94,7 +112,7 @@
    `<span><strong>Stavba:</strong> ${escape(projectName)}</span>${place}<span>Prehľad prác podľa dní</span>`;
   return `<div class="sdp-kicker">Stavebný denník · BETPRES</div><h1 class="sdp-title">${escape(title)}${continuation?" · pokračovanie":""}</h1><div class="sdp-meta">${meta}</div>${mode==="day"&&!continuation?weatherHtml(weather):""}`
  }
- async function printDiary({mode="day",entries=[],weatherByDate={},crewByDate={},machineryByDate={},projectName="",projectLocation="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
+ async function printDiary({mode="day",entries=[],weatherByDate={},crewByDate={},machineryByDate={},inspectionsByDate={},projectName="",projectLocation="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
   if(!["day","company"].includes(mode))throw new Error("Neznámy typ exportu stavebného denníka.");
   const records=(Array.isArray(entries)?entries:[]).filter(item=>item&&item.date).slice().sort((a,b)=>mode==="company"?String(a.date).localeCompare(String(b.date))||String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"):String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"));
   if(!records.length)return false;
@@ -163,6 +181,38 @@
      if(start<docs.length)page=newPage(true)
     }
    };
+   const addInspections=items=>{
+    if(!items.length)return;
+    const heading=sectionTitle("Kontroly a výzvy"),first=inspectionHtml(items[0],(items[0].subject||"Kontrola").slice(0,1),false);
+    if(!fits(heading+first))page=newPage(true);
+    if(!fits(heading+first))throw new Error("Kontroly a výzvy sa nezmestia na stranu A4.");
+    page.blocks.push(heading);
+    for(const item of items){
+     let remainder=[item.subject,item.note].filter(Boolean).join("\n")||"Kontrola",continued=false;
+     for(;;){
+      const firstPart=inspectionHtml(item,remainder.slice(0,1),continued);
+      if(!fits(firstPart)){
+       page=newPage(true);
+       const continuationHeading=sectionTitle("Kontroly a výzvy",true);
+       if(!fits(continuationHeading+firstPart))throw new Error("Záznam kontroly sa nezmestí na stranu A4.");
+       page.blocks.push(continuationHeading)
+      }
+      const full=inspectionHtml(item,remainder,continued);
+      if(fits(full)){page.blocks.push(full);break}
+      let low=0,high=remainder.length;
+      while(low<high){const mid=Math.ceil((low+high)/2);if(fits(inspectionHtml(item,remainder.slice(0,mid),continued)))low=mid;else high=mid-1}
+      if(low<1)throw new Error("Záznam kontroly sa nezmestí na stranu A4.");
+      let cut=low;
+      if(cut<remainder.length){const breakAt=Math.max(remainder.lastIndexOf(" ",cut),remainder.lastIndexOf("\n",cut));if(breakAt>cut-80)cut=breakAt+1}
+      page.blocks.push(inspectionHtml(item,remainder.slice(0,cut),continued));
+      remainder=remainder.slice(cut);if(!remainder)break;
+      continued=true;page=newPage(true);
+      const continuationHeading=sectionTitle("Kontroly a výzvy",true);
+      if(!fits(continuationHeading+inspectionHtml(item,remainder.slice(0,1),continued)))throw new Error("Záznam kontroly sa nezmestí na stranu A4.");
+      page.blocks.push(continuationHeading)
+     }
+    }
+   };
    const groups=new Map();
    for(const item of records){
     const date=mode==="day"?firstDate:String(item.date);
@@ -180,6 +230,7 @@
     if(!fits(workHeading+firstWork))throw new Error("Záznam práce sa nezmestí na stranu A4.");
     page.blocks.push(workHeading);
     for(const entry of dayEntries){addEntry(entry);addDocuments(entry)}
+    if(mode==="day")addInspections(inspectionsForDate(inspectionsByDate,date))
    }
    for(const entry of records){
     const urls=(Array.isArray(entry.photos)?entry.photos:[]).map(safeImage).filter(Boolean);

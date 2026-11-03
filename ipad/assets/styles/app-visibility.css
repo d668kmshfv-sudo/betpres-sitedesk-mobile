@@ -53,3 +53,13 @@
   body.sitedesk-v3 .metrics article,
   body.sitedesk-v3 .page-title { border-color: #526577; }
 }
+
+/* The company name and its alias need enough vertical space in the worker grid. */
+@media (min-width: 801px) {
+  body.workers-focus-mode #workers #workerCompaniesPanel .worker-table tbody td { height: 34px !important; min-height: 34px !important; }
+  body.workers-focus-mode #workers #workerCompaniesPanel .worker-company-cell { height: 32px !important; min-height: 32px !important; overflow: visible !important; }
+  body.workers-focus-mode #workers #workerCompaniesPanel .worker-company-names { grid-template-rows: 15px 12px !important; align-content: center !important; }
+  body.workers-focus-mode #workers #workerCompaniesPanel .worker-company-main { font-size: 12px !important; line-height: 15px !important; }
+  body.workers-focus-mode #workers #workerCompaniesPanel .worker-company-alias { font-size: 9px !important; line-height: 12px !important; }
+  body.workers-focus-mode #workers #workerCompaniesPanel .worker-table input { height: 30px !important; min-height: 30px !important; font-size: 11px !important; }
+}
