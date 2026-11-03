@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.7.3";
+const SITE_DESK_APP_VERSION="5.7.4";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -6846,7 +6846,7 @@ function updateWorkStatementSummary(statement){
  );
  const orderMode=isSelectedWorkOrderDocument(),calculations=workItemsForCurrentDocument(statement).filter(x=>String(x.type||"").toUpperCase()!=="D").map(x=>workItemCalc(statement,x));
  $("workStatements")?.classList.toggle("work-order-statement",orderMode);
- const currentLabel=$("workCurrentTotal")?.previousElementSibling;if(currentLabel)currentLabel.textContent=orderMode?"Cena celkom bez DPH":"Aktuálne obdobie – suma na faktúru";
+ const currentLabel=$("workCurrentTotal")?.previousElementSibling;if(currentLabel)currentLabel.textContent=orderMode?"Cena celkom bez DPH":"Na faktúru";
  const sum=k=>calculations.reduce((a,c)=>a+Number(c[k]||0),0);
  $("workContractTotal").textContent=eur.format(sum("contractTotal"));
  $("workPreviousTotal").textContent=eur.format(sum("previousPrice"));

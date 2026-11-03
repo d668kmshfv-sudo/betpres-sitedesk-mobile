@@ -1,0 +1,221 @@
+/* Reading-first work statement layout. The table is the main surface. */
+@media (min-width: 801px) {
+  body.work-focus-mode #workStatements .page-title {
+    position: relative;
+    z-index: 12;
+    overflow: visible !important;
+  }
+  body.work-focus-mode #workStatements .header-actions {
+    overflow: visible !important;
+  }
+  body.work-focus-mode #workStatements .work-header-panel:not(.work-details-collapsed) {
+    flex: 0 0 auto;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 240px !important;
+    padding: 9px 12px !important;
+    overflow: auto !important;
+  }
+  body.work-focus-mode #workStatements .work-header-panel:has(.work-extra-fields[open]) {
+    max-height: min(68vh, 600px) !important;
+  }
+  body.work-focus-mode #workStatements .work-header-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 5px 10px !important;
+  }
+  body.work-focus-mode #workStatements .work-header-grid > label {
+    grid-column: auto !important;
+    font-size: 10px !important;
+  }
+  body.work-focus-mode #workStatements .work-actions {
+    position: relative;
+    z-index: 10;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    min-height: 40px !important;
+    max-height: none !important;
+    margin: 0 0 5px !important;
+    padding: 2px 0 !important;
+    overflow: visible !important;
+  }
+  body.work-focus-mode #workStatements .work-actions .work-search-control {
+    flex: 1 1 200px;
+    min-width: 150px;
+    width: auto;
+  }
+  body.work-focus-mode #workStatements .work-actions .work-filter-control {
+    flex: 0 0 172px;
+  }
+  body.work-focus-mode #workStatements .work-actions #addWorkRow,
+  body.work-focus-mode #workStatements .work-actions #exportWorkPdf {
+    flex: 0 0 auto;
+  }
+  body.work-focus-mode #workStatements .work-bottom-grid {
+    max-height: 68px !important;
+  }
+  body.work-focus-mode #workStatements .work-bottom-grid .panel {
+    box-shadow: none !important;
+  }
+}
+
+body.sitedesk-v3 #workStatements .work-header-panel,
+body.sitedesk-v3 #workStatements .work-table-panel,
+body.sitedesk-v3 #workStatements .work-bottom-grid .panel {
+  border: 1px solid #dfe4e9 !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+body.sitedesk-v3 #workStatements .work-invoice-banner {
+  display: none !important;
+}
+body.sitedesk-v3 #workStatements .work-actions {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body.sitedesk-v3 #workStatements .work-header-grid input,
+body.sitedesk-v3 #workStatements .work-header-grid select {
+  border-color: #d9e0e6 !important;
+  background: #fff !important;
+}
+body.sitedesk-v3 #workStatements .work-sheet thead th {
+  border-color: #dce3e9 !important;
+  background: #f7f9fb !important;
+  color: #354657 !important;
+}
+body.sitedesk-v3 #workStatements .work-sheet thead .current-col {
+  border-color: #dce3e9 !important;
+  background: #eaf3fa !important;
+  color: #0a5b91 !important;
+}
+body.sitedesk-v3 #workStatements .work-current-summary-row {
+  background: #edf5fb !important;
+  color: #0a5b91 !important;
+}
+body.sitedesk-v3 #workStatements .work-bottom-grid .work-current-summary-row strong {
+  color: #0a5b91 !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+#workStatements .work-extra-fields {
+  grid-column: 1 / -1;
+  min-width: 0;
+  border-top: 1px solid #e5e9ed;
+}
+#workStatements .work-extra-fields summary {
+  min-height: 25px;
+  padding: 5px 4px 0;
+  cursor: pointer;
+  color: #0a5b91;
+  font-size: 11px;
+  font-weight: 680;
+}
+#workStatements .work-extra-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px 10px;
+  padding: 8px 2px 3px;
+}
+#workStatements .work-extra-grid label {
+  display: grid;
+  grid-column: auto !important;
+  gap: 4px;
+  min-width: 0;
+  color: #586775;
+  font-size: 10px;
+  font-weight: 600;
+}
+#workStatements .work-extra-grid .work-scope-field {
+  grid-column: 1 / -1 !important;
+}
+#workStatements .work-extra-grid textarea {
+  min-height: 40px !important;
+  resize: vertical;
+}
+
+#workStatements .work-header-more,
+#workStatements .work-more-actions {
+  position: relative;
+  flex: 0 0 auto;
+}
+#workStatements .work-header-more > summary,
+#workStatements .work-more-actions > summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 31px;
+  padding: 0 10px;
+  border: 1px solid #dbe2e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #365065;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+  list-style: none;
+  white-space: nowrap;
+}
+#workStatements .work-header-more > summary::-webkit-details-marker,
+#workStatements .work-more-actions > summary::-webkit-details-marker {
+  display: none;
+}
+#workStatements .work-header-more > summary::after,
+#workStatements .work-more-actions > summary::after {
+  content: "⌄";
+  margin-left: 7px;
+  color: #718091;
+  font-size: 15px;
+}
+#workStatements .work-header-more > div,
+#workStatements .work-more-actions-list {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(170px, 1fr));
+  gap: 6px;
+  width: min(490px, 85vw);
+  padding: 10px;
+  border: 1px solid #dce3e9;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(29, 48, 65, .14);
+}
+#workStatements .work-header-more > div { width: min(380px, 85vw); }
+body.sitedesk-v3 #workStatements .work-header-more button,
+body.sitedesk-v3 #workStatements .work-more-actions-list button {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px !important;
+  height: auto !important;
+  padding: 6px 9px !important;
+  text-align: left;
+  white-space: normal;
+}
+body.sitedesk-v3 #workStatements .work-more-actions-list button.hidden,
+body.sitedesk-v3 #workStatements .work-more-actions-list input.hidden {
+  display: none !important;
+}
+body.sitedesk-v3 #workStatements .work-more-actions-list .work-move-button {
+  min-width: 0;
+}
+#workStatements .work-header-more > summary:focus-visible,
+#workStatements .work-more-actions > summary:focus-visible,
+#workStatements .work-extra-fields summary:focus-visible {
+  outline: 3px solid rgba(10, 91, 145, .3);
+  outline-offset: 2px;
+}
+
+@media (min-width: 801px) and (max-width: 1180px) {
+  body.work-focus-mode #workStatements .work-actions { flex-wrap: wrap; }
+  body.work-focus-mode #workStatements .work-actions .work-search-control { flex-basis: 130px; }
+  body.work-focus-mode #workStatements .work-actions .work-visible-count { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #workStatements .work-header-more > summary,
+  #workStatements .work-more-actions > summary { transition: none; }
+}

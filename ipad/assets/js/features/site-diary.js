@@ -8,6 +8,7 @@
  const rows=()=>Array.isArray(state.mobileDiary)?state.mobileDiary.filter(item=>item.kind==="siteLog"&&item.projectId===state.selectedProjectId):[];
  const companyName=item=>state.companies.find(company=>company.id===item.companyId)?.name||item.companyName||"Firma";
  const siteProject=()=>state.projects.find(project=>project.id===state.selectedProjectId)||null;
+ const weatherCity=()=>siteProject()?.city?.trim()||weatherForDate(day)?.city?.trim()||[...dayWeatherRows()].filter(item=>item.projectId===state.selectedProjectId&&item.weather?.city).sort((a,b)=>b.date.localeCompare(a.date))[0]?.weather?.city?.trim()||"";
  const makeId=prefix=>typeof uid==="function"?uid(prefix):`${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
  const alertUser=message=>typeof toast==="function"?toast(message):alert(message);
  const roundedTemp=value=>value===""||value==null||!Number.isFinite(Number(value))?"":String(Math.round(Number(value)));
@@ -57,14 +58,13 @@
  function recordFor(date,companyId){return rows().find(item=>item.date===date&&item.companyId===companyId)}
  function setWeather(weather){
   get("siteDiaryWeatherText").value=weather?.text||"";get("siteDiaryTempMin").value=roundedTemp(weather?.min);get("siteDiaryTempMax").value=roundedTemp(weather?.max);
-  get("siteDiaryWeatherCity").value=weather?.city||[...dayWeatherRows()].filter(item=>item.projectId===state.selectedProjectId&&item.weather?.city).sort((a,b)=>b.date.localeCompare(a.date))[0]?.weather?.city||siteProject()?.city||"";
   weatherMeta=weather?{source:weather.source||"Ručný údaj",station:weather.station||"",retrievedAt:weather.retrievedAt||""}:null;
   get("siteDiaryWeatherSource").textContent=weatherMeta?.source?`${weatherMeta.source}${weatherMeta.station?` · ${weatherMeta.station}`:""}`:"Počasie sa uloží raz pre celý deň. Predpoveď ALADIN SHMÚ môžeš upraviť."
  }
  function saveWeather({silent=false}={}){
   if(!Array.isArray(state.siteDiaryWeather))state.siteDiaryWeather=[];
   const existing=dayWeatherRows().find(item=>item.projectId===state.selectedProjectId&&item.date===day),now=new Date().toISOString();
-  const weather={text:get("siteDiaryWeatherText").value.trim(),min:roundedTemp(get("siteDiaryTempMin").value),max:roundedTemp(get("siteDiaryTempMax").value),city:get("siteDiaryWeatherCity").value.trim(),source:weatherMeta?.source||"Ručný údaj",station:weatherMeta?.station||"",retrievedAt:weatherMeta?.retrievedAt||""};
+  const weather={text:get("siteDiaryWeatherText").value.trim(),min:roundedTemp(get("siteDiaryTempMin").value),max:roundedTemp(get("siteDiaryTempMax").value),city:weatherCity(),source:weatherMeta?.source||"Ručný údaj",station:weatherMeta?.station||"",retrievedAt:weatherMeta?.retrievedAt||""};
   const record={id:existing?.id||makeId("site-weather"),projectId:state.selectedProjectId,date:day,weather,createdAt:existing?.createdAt||now,updatedAt:now};
   if(existing)state.siteDiaryWeather[state.siteDiaryWeather.indexOf(existing)]=record;else state.siteDiaryWeather.push(record);
   weatherDirty=false;weatherFormDay=day;save(silent?"":`Počasie pre ${dateLabel(day)} bolo uložené.`);render()
@@ -167,8 +167,8 @@
   return 6371*2*Math.asin(Math.sqrt(Math.sin(deltaLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(deltaLon/2)**2))
  }
  async function loadWeather(){
-  const button=get("siteDiaryLoadWeather"),city=get("siteDiaryWeatherCity").value.trim(),date=day;
-  if(!city){get("siteDiaryWeatherCity").focus();return}
+  const button=get("siteDiaryLoadWeather"),city=weatherCity(),date=day;
+  if(!city){alertUser("Doplň mesto v nastavení stavby, aby sa dalo načítať počasie SHMÚ.");return}
   button.disabled=true;button.textContent="Načítavam…";
   try{
    let stations=[];
@@ -178,7 +178,7 @@
     let archive=null;
     for(const url of [
      `https://raw.githubusercontent.com/d668kmshfv-sudo/betpres-sitedesk-mobile/main/ipad/assets/data/shmu-history.json?date=${date}&t=${Math.floor(Date.now()/300000)}`,
-     "assets/data/shmu-history.json?v=5.7.3"
+     "assets/data/shmu-history.json?v=5.7.4"
     ]){
      try{const response=await fetch(url,{cache:"no-store"});if(response.ok){const value=await response.json();if(value?.dates?.[date]){archive=value;break}}}catch{}
     }
@@ -212,7 +212,7 @@
     photos:(await Promise.all((item.photos||[]).map(async photo=>{try{return photo.dataUrl||photo.path&&await cloudPhotoObjectUrl(photo.path)||""}catch{return""}}))).filter(Boolean)
    })));
    const weatherByDate=Object.fromEntries([...new Set(normalized.map(item=>item.date))].map(date=>[date,weatherForDate(date)]));
-   await window.siteDiaryPrint({mode,entries:normalized,weatherByDate,projectName:siteProject()?.name||"BETPRES",title,fileName,letterheadImage:LETTERHEAD_IMAGE})
+   await window.siteDiaryPrint({mode,entries:normalized,weatherByDate,projectName:siteProject()?.name||"BETPRES",projectLocation:siteProject()?.address||siteProject()?.city||"",title,fileName,letterheadImage:LETTERHEAD_IMAGE})
   }catch(error){alertUser(`Export sa nepodaril: ${error.message||error}`)}
  }
  function dayReportEntries(){return rows().filter(item=>item.date===day).sort((a,b)=>companyName(a).localeCompare(companyName(b),"sk"))}
@@ -223,7 +223,7 @@
  get("siteDiaryCompanyFilter").onchange=render;
  get("siteDiaryAddInline").onclick=()=>openEditor("",get("siteDiaryCompanyFilter").value);
  get("siteDiaryCopy").onclick=()=>void copyDay();get("siteDiaryLoadWeather").onclick=()=>void loadWeather();get("siteDiaryWeatherSave").onclick=()=>saveWeather();form.onsubmit=event=>void saveEntry(event);
- for(const id of ["siteDiaryWeatherCity","siteDiaryWeatherText","siteDiaryTempMin","siteDiaryTempMax"])get(id).addEventListener("input",()=>{weatherDirty=true;weatherMeta={source:"Ručný údaj",station:"",retrievedAt:""};get("siteDiaryWeatherSource").textContent="Ručný údaj · ulož počasie pre vybraný deň."});
+ for(const id of ["siteDiaryWeatherText","siteDiaryTempMin","siteDiaryTempMax"])get(id).addEventListener("input",()=>{weatherDirty=true;weatherMeta={source:"Ručný údaj",station:"",retrievedAt:""};get("siteDiaryWeatherSource").textContent="Ručný údaj · ulož počasie pre vybraný deň."});
  get("siteDiaryWorkers").oninput=()=>{get("siteDiaryWorkers").dataset.userEdited="1"};
  get("siteDiaryUseWorkers").onclick=()=>{get("siteDiaryWorkers").value=workersAt(get("siteDiaryEntryDate").value,get("siteDiaryEntryCompany").value,selectedCompanyName());get("siteDiaryWorkers").dataset.userEdited="0"};
  get("siteDiaryEntryCompany").onchange=()=>{const date=get("siteDiaryEntryDate").value;get("siteDiaryWorkers").value=workersAt(date,get("siteDiaryEntryCompany").value,selectedCompanyName());get("siteDiaryWorkers").dataset.userEdited="0"};

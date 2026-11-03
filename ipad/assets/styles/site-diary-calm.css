@@ -98,6 +98,7 @@ body.sitedesk-v3 #mobileDiary .site-diary-daybar button:active { background: #ed
 #mobileDiary .site-diary-weather summary small { color: #69737e; font-size: 13px; font-weight: 450; line-height: 1.4; }
 #mobileDiary .site-diary-weather-body,
 #mobileDiary .site-diary-more-body { display: grid; gap: 14px; padding: 2px 0 18px; }
+#mobileDiary .site-diary-weather-fields { grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)); }
 #mobileDiary .site-diary-weather-top { justify-content: flex-start; }
 body.sitedesk-v3 #mobileDiary .site-diary-weather-top button,
 body.sitedesk-v3 #mobileDiary .site-diary-weather-bottom button { min-height: 44px !important; box-shadow: none !important; }
@@ -169,6 +170,9 @@ body.sitedesk-v3 #mobileDiary .site-diary-copy button { min-height: 44px !import
   #mobileDiary .site-diary-toolbar button { grid-row: 1; width: 100%; }
   #mobileDiary .site-diary-weather-body,
   #mobileDiary .site-diary-more-body { gap: 12px; }
+  #mobileDiary .site-diary-weather-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #mobileDiary .site-diary-weather-fields label:nth-child(-n+2) { grid-column: auto; }
+  #mobileDiary .site-diary-weather-fields label:first-child { grid-column: 1 / -1; }
   #mobileDiary .site-diary-weather-top button { max-width: none; }
   #mobileDiary .site-diary-records-head { padding-top: 17px; }
   #mobileDiary .site-diary-actions,

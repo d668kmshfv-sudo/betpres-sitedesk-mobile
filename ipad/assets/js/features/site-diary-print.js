@@ -66,12 +66,13 @@
   const limit=gauge.getBoundingClientRect().height;
   return{fits(markup){flow.innerHTML=markup;return flow.getBoundingClientRect().height<=limit-.5},close(){host.remove()}}
  }
- function makeHeader({mode,title,projectName,date,weather,continuation}){
-  const meta=mode==="day"?`<span><strong>Stavba:</strong> ${escape(projectName)}</span><span><strong>Dátum:</strong> ${escape(dateLabel(date))}</span>`:
-   `<span><strong>Stavba:</strong> ${escape(projectName)}</span><span>Prehľad prác podľa dní</span>`;
+ function makeHeader({mode,title,projectName,projectLocation,date,weather,continuation}){
+  const place=projectLocation?`<span><strong>Lokalita:</strong> ${escape(projectLocation)}</span>`:"";
+  const meta=mode==="day"?`<span><strong>Stavba:</strong> ${escape(projectName)}</span>${place}<span><strong>Dátum:</strong> ${escape(dateLabel(date))}</span>`:
+   `<span><strong>Stavba:</strong> ${escape(projectName)}</span>${place}<span>Prehľad prác podľa dní</span>`;
   return `<div class="sdp-kicker">Stavebný denník · BETPRES</div><h1 class="sdp-title">${escape(title)}${continuation?" · pokračovanie":""}</h1><div class="sdp-meta">${meta}</div>${mode==="day"&&!continuation?weatherHtml(weather):""}`
  }
- async function printDiary({mode="day",entries=[],weatherByDate={},projectName="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
+ async function printDiary({mode="day",entries=[],weatherByDate={},projectName="",projectLocation="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
   if(!["day","company"].includes(mode))throw new Error("Neznámy typ exportu stavebného denníka.");
   const records=(Array.isArray(entries)?entries:[]).filter(item=>item&&item.date).slice().sort((a,b)=>mode==="company"?String(a.date).localeCompare(String(b.date))||String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"):String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"));
   if(!records.length)return false;
@@ -80,7 +81,7 @@
   const measure=createMeasurer(),pages=[];
   try{
    const newPage=(continuation=false,photo=false)=>{
-    const page={header:makeHeader({mode,title:photo?"Fotodokumentácia · "+displayTitle:displayTitle,projectName,date:firstDate,weather:weatherMap[firstDate],continuation}),blocks:[],photo};
+    const page={header:makeHeader({mode,title:photo?"Fotodokumentácia · "+displayTitle:displayTitle,projectName,projectLocation,date:firstDate,weather:weatherMap[firstDate],continuation}),blocks:[],photo};
     pages.push(page);return page
    };
    let page=newPage();
