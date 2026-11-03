@@ -13,3 +13,10 @@
  #calendarEventModal.mobile-form-keyboard-open textarea,#mobileDiaryModal.mobile-form-keyboard-open textarea{min-height:120px!important}
 }
 @media(prefers-reduced-motion:reduce){#calendarEventModal.mobile-form-keyboard-open>.modal-card,#mobileDiaryModal.mobile-form-keyboard-open>.modal-card{scroll-behavior:auto!important}}
+@media(max-width:800px) and (pointer:coarse){
+ #siteDiaryModal.mobile-form-keyboard-open{align-items:stretch!important;padding:0!important;overflow:hidden!important}
+ #siteDiaryModal.mobile-form-keyboard-open>.modal-card{height:var(--apple-visual-height,100dvh)!important;max-height:none!important;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 16px!important;overflow:auto!important}
+ #siteDiaryModal.mobile-form-keyboard-open .modal-head,#siteDiaryModal.mobile-form-keyboard-open .modal-actions,#siteDiaryModal.mobile-form-keyboard-open label:has(input[type=file]),#siteDiaryModal.mobile-form-keyboard-open .site-diary-attachments{display:none!important}
+ #siteDiaryModal.mobile-form-keyboard-open label:focus-within{padding:10px;border-radius:16px;background:#edf6fc;box-shadow:0 0 0 2px rgba(10,91,145,.16)}
+ #siteDiaryModal.mobile-form-keyboard-open textarea{min-height:150px!important}
+}

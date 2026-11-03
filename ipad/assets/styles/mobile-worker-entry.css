@@ -97,12 +97,12 @@ body.sitedesk-v3 .mobile-worker-stepper input.did-change{animation:mobileWorkerN
   #workers .mobile-worker-home-grid button:active{background:#e9f1f7!important;scale:.99}
   .mobile-worker-home-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:#e5f0f8;color:#0a548c;font-size:18px;font-weight:820}
   .mobile-worker-home-grid button>span:nth-child(2){display:grid;gap:3px}.mobile-worker-home-grid button strong{font-size:14px}.mobile-worker-home-grid button small{color:#72757d;font-size:10px}.mobile-worker-home-grid button>b{min-width:38px;padding:6px 8px;border-radius:999px;background:#e5f0f8;color:#0a548c;text-align:center;font-size:12px}
-  .mobile-worker-monthly-links{display:grid;gap:1px;padding:16px;background:#f2f2f7}.mobile-worker-monthly-links>div{display:grid;gap:3px;padding:0 3px 8px}.mobile-worker-monthly-links>div span{color:#696c73;font-size:9px;font-weight:800;letter-spacing:.08em}.mobile-worker-monthly-links>div small{color:#777b84;font-size:10px}
-  #workers .mobile-worker-monthly-links button{display:flex!important;align-items:center!important;justify-content:space-between!important;min-height:50px!important;padding:0 15px!important;border-radius:14px!important;background:#fff!important;color:#153449!important;box-shadow:none!important}.mobile-worker-monthly-links button b{color:#8a8d94;font-size:24px;font-weight:400}
   body.sitedesk-v3 #workers>.worker-mode-tabs,body.sitedesk-v3 #workers>.worker-toolbar,body.sitedesk-v3 #workers>#workerCompaniesPanel,body.sitedesk-v3 #workers>#betpresTimesheetPanel,body.sitedesk-v3 #workers>#thpTimesheetPanel,body.sitedesk-v3 #workers>#companyHoursPanel,body.sitedesk-v3 #workers>#companyTimesheetsPanel{display:none!important}
-  body.sitedesk-v3.mobile-worker-monthly-open #workers>.worker-toolbar{display:flex!important}
-  body.sitedesk-v3.mobile-worker-monthly-open #workers>#thpTimesheetPanel:not(.hidden),body.sitedesk-v3.mobile-worker-monthly-open #workers>#companyTimesheetsPanel:not(.hidden){display:block!important;margin-top:18px}
-  body.mobile-worker-monthly-open #workers>.mobile-worker-home{margin-bottom:18px}
+  .mobile-worker-category-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.mobile-worker-category-tabs button:last-child{grid-column:span 2}
+  .mobile-worker-empty{display:grid;gap:10px;padding:24px 16px;border-radius:17px;background:#fff;text-align:left}.mobile-worker-empty strong{color:#162f42;font-size:17px}.mobile-worker-empty span{color:#6e6e73;font-size:13px;line-height:1.4}
+  #mobileWorkerDayModal .mobile-worker-empty button{min-height:50px!important;border-radius:13px!important;background:#0a5b91!important;color:#fff!important}
+  .mobile-worker-company-picker{display:grid;gap:5px;padding:15px;border:1px solid rgba(60,60,67,.14);border-radius:17px;background:#fff}.mobile-worker-company-picker label{display:grid;gap:6px;color:#646b72;font-size:12px;font-weight:750}.mobile-worker-company-picker select{width:100%;min-height:48px!important;font-size:16px!important}.mobile-worker-company-picker small{color:#6e6e73;font-size:11px}
+  .mobile-worker-timesheet-card{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important}.mobile-worker-timesheet-name{display:grid;gap:5px;color:#6e6e73;font-size:11px;font-weight:750}.mobile-worker-time-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:end}.mobile-worker-time-pair label{display:grid;gap:5px;min-width:0;color:#6e6e73;font-size:11px;font-weight:750}.mobile-worker-time-pair input{width:100%;min-width:0;min-height:48px!important;font-size:16px!important}.mobile-worker-time-pair output{min-width:42px;padding-bottom:13px;color:#0a548c;font-size:12px;font-weight:800;text-align:right}
   #openMobileWorkerDay{order:-2;background:#0a548c!important;border-color:#0a548c!important;color:#fff!important}
   #mobileWorkerDayModal{align-items:stretch!important;padding:0!important;overflow:hidden!important}
   .mobile-worker-day-card{width:100%!important;height:var(--apple-visual-height,100dvh)!important;max-height:none!important;border:0!important;border-radius:0!important}
@@ -131,6 +131,7 @@ body.sitedesk-v3 .mobile-worker-stepper input.did-change{animation:mobileWorkerN
   #mobileWorkerDayModal.mobile-worker-keyboard-open .mobile-worker-day-list{padding:10px 10px calc(16px + env(safe-area-inset-bottom,0px));scroll-padding-block:12px}
   #mobileWorkerDayModal.mobile-worker-keyboard-open .mobile-worker-card:focus-within{border-color:rgba(10,84,140,.55)!important;box-shadow:0 0 0 4px rgba(10,84,140,.12),0 8px 24px rgba(20,42,60,.08)!important}
 }
+@media(max-width:380px){.mobile-worker-time-pair{grid-template-columns:repeat(2,minmax(0,1fr))}.mobile-worker-time-pair output{grid-column:1/-1;padding:0;text-align:left}}
 @media(max-width:370px){
   .mobile-worker-attendance-card{grid-template-columns:1fr!important;grid-template-areas:"person" "attendance" "codes"!important}
   .mobile-worker-hour-card{grid-template-columns:1fr!important}.mobile-worker-hour-card .mobile-worker-attendance-input{justify-self:center}

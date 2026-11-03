@@ -1,6 +1,6 @@
 (function(){
  "use strict";
- const phone=matchMedia("(max-width: 800px) and (pointer: coarse)"),selectors=["#calendarEventModal","#mobileDiaryModal"],timers=new WeakMap();
+ const phone=matchMedia("(max-width: 800px) and (pointer: coarse)"),selectors=["#calendarEventModal","#mobileDiaryModal","#siteDiaryModal"],timers=new WeakMap();
  const textField=element=>element?.matches?.('textarea,input:not([type="hidden"]):not([type="date"]):not([type="time"]):not([type="color"]):not([type="file"]):not([type="checkbox"]):not([type="radio"])');
  function reveal(modal,field){
   if(!modal||!field||!modal.contains(field))return;const card=modal.querySelector(":scope > .modal-card"),label=field.closest("label")||field;if(!card)return;
@@ -17,7 +17,7 @@
   if(!modal||modal.dataset.mobileKeyboardReady)return;modal.dataset.mobileKeyboardReady="1";
   modal.addEventListener("focusin",event=>{if(textField(event.target)){event.target.classList.add("mobile-form-active-field");sync(modal)}});
   modal.addEventListener("focusout",event=>{event.target.classList.remove("mobile-form-active-field");setTimeout(()=>sync(modal),70)});
-  new MutationObserver(()=>{if(modal.classList.contains("hidden"))modal.classList.remove("mobile-form-keyboard-open")}).observe(modal,{attributes:true,attributeFilter:["class"]});
+  new MutationObserver(()=>{if(modal.classList.contains("hidden")&&modal.classList.contains("mobile-form-keyboard-open"))modal.classList.remove("mobile-form-keyboard-open")}).observe(modal,{attributes:true,attributeFilter:["class"]});
   visualViewport?.addEventListener("resize",()=>{if(modal.classList.contains("mobile-form-keyboard-open"))sync(modal)},{passive:true});visualViewport?.addEventListener("scroll",()=>{if(modal.classList.contains("mobile-form-keyboard-open"))sync(modal)},{passive:true})
  }
  selectors.forEach(selector=>bind(document.querySelector(selector)));window.__BETPRES_MOBILE_FORM_KEYBOARD_READY__=true

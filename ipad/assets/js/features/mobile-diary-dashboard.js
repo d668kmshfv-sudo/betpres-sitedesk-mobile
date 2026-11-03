@@ -14,7 +14,7 @@
   if(typeof state==="undefined")return[];
   if(!Array.isArray(state.mobileDiary))state.mobileDiary=[];
   var projectId=state.selectedProjectId;
-  return state.mobileDiary.filter(function(item){return!projectId||item.projectId===projectId})
+  return state.mobileDiary.filter(function(item){return item.kind!=="siteLog"&&(!projectId||item.projectId===projectId)})
  }
  function diaryDate(value){
   if(!value)return"Bez dátumu";

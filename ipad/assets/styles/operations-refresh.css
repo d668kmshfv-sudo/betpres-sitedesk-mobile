@@ -18,7 +18,8 @@ body.sitedesk-v3 #billing .billing-year-matrix tbody tr:nth-child(even) td{backg
 body.sitedesk-v3 #billing .billing-matrix-period strong{color:#0a548c}
 
 @media(max-width:800px){
-  .nav-btn[data-view="siteMeetings"],.nav-btn[data-view="controlDays"],.nav-btn[data-view="billing"],[data-go="siteMeetings"],[data-go="controlDays"],[data-go="billing"]{display:none!important}
+  .nav-btn[data-view="siteMeetings"],.nav-btn[data-view="controlDays"],.nav-btn[data-view="billing"],.nav-btn[data-view="workStatements"],[data-go="siteMeetings"],[data-go="controlDays"],[data-go="billing"],[data-go="workStatements"]{display:none!important}
+  #workStatements{display:none!important}
   #siteMeetings,#billing{display:none!important}
   #handover .handover-layout{display:block!important}
   #handover .wizard{margin-bottom:12px}

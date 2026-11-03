@@ -1,10 +1,12 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.6.3";
+const SITE_DESK_APP_VERSION="5.7.0";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
+const SITE_DESK_ATTACHMENT_STORE="attachments";
 let siteDeskDbPromise=null;
+let siteDeskAttachmentDbPromise=null;
 function siteDeskOpenDb(){
  if(!("indexedDB" in window))return Promise.resolve(null);
  if(siteDeskDbPromise)return siteDeskDbPromise;
@@ -12,22 +14,46 @@ function siteDeskOpenDb(){
   const req=indexedDB.open(SITE_DESK_DB_NAME,SITE_DESK_DB_VERSION);
   req.onupgradeneeded=()=>{
    const db=req.result;
-   if(!db.objectStoreNames.contains(SITE_DESK_SNAPSHOT_STORE))db.createObjectStore(SITE_DESK_SNAPSHOT_STORE,{keyPath:"key"})
+   if(!db.objectStoreNames.contains(SITE_DESK_SNAPSHOT_STORE))db.createObjectStore(SITE_DESK_SNAPSHOT_STORE,{keyPath:"key"});
   };
-  req.onsuccess=()=>resolve(req.result);
+  req.onsuccess=()=>{req.result.onversionchange=()=>req.result.close();resolve(req.result)};
   req.onerror=()=>resolve(null);
  });
  return siteDeskDbPromise
 }
-function siteDeskSaveDbSnapshot(serialized,snapshotKey=KEY){
- if(!serialized)return;
- siteDeskOpenDb().then(db=>{
-  if(!db)return;
+function siteDeskAttachmentDb(){
+ if(!("indexedDB" in window))return Promise.resolve(null);
+ if(siteDeskAttachmentDbPromise)return siteDeskAttachmentDbPromise;
+ siteDeskAttachmentDbPromise=new Promise(resolve=>{
+  const req=indexedDB.open(`${SITE_DESK_DB_NAME}-attachments`,1);
+  req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(SITE_DESK_ATTACHMENT_STORE))req.result.createObjectStore(SITE_DESK_ATTACHMENT_STORE,{keyPath:"key"})};
+  req.onsuccess=()=>{req.result.onversionchange=()=>req.result.close();resolve(req.result)};
+  req.onerror=()=>resolve(null)
+ });
+ return siteDeskAttachmentDbPromise
+}
+async function siteDeskPutAttachment(key,blob){
+ const db=await siteDeskAttachmentDb();if(!db)throw new Error("Lokálna databáza príloh nie je dostupná.");
+ return new Promise((resolve,reject)=>{try{const tx=db.transaction(SITE_DESK_ATTACHMENT_STORE,"readwrite");tx.objectStore(SITE_DESK_ATTACHMENT_STORE).put({key,blob});tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error||new Error("Prílohu sa nepodarilo uložiť."))}catch(error){reject(error)}})
+}
+async function siteDeskGetAttachment(key){
+ const db=await siteDeskAttachmentDb();if(!db)return null;
+ return new Promise(resolve=>{try{const req=db.transaction(SITE_DESK_ATTACHMENT_STORE,"readonly").objectStore(SITE_DESK_ATTACHMENT_STORE).get(key);req.onsuccess=()=>resolve(req.result?.blob||null);req.onerror=()=>resolve(null)}catch{resolve(null)}})
+}
+async function siteDeskDeleteAttachment(key){
+ const db=await siteDeskAttachmentDb();if(!db)return;
+ return new Promise(resolve=>{try{const tx=db.transaction(SITE_DESK_ATTACHMENT_STORE,"readwrite");tx.objectStore(SITE_DESK_ATTACHMENT_STORE).delete(key);tx.oncomplete=()=>resolve();tx.onerror=()=>resolve()}catch{resolve()}})
+}
+function siteDeskSaveDbSnapshot(serialized,snapshotKey=KEY,{localStorageSaved=true}={}){
+ if(!serialized)return Promise.resolve(false);
+ return siteDeskOpenDb().then(db=>new Promise(resolve=>{
+  if(!db)return resolve(false);
   try{
    const tx=db.transaction(SITE_DESK_SNAPSHOT_STORE,"readwrite");
-   tx.objectStore(SITE_DESK_SNAPSHOT_STORE).put({key:snapshotKey,value:serialized,version:SITE_DESK_APP_VERSION,updatedAt:new Date().toISOString()})
-  }catch{}
- })
+   tx.objectStore(SITE_DESK_SNAPSHOT_STORE).put({key:snapshotKey,value:serialized,version:SITE_DESK_APP_VERSION,updatedAt:new Date().toISOString(),localStorageSaved});
+   tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)
+  }catch{resolve(false)}
+ }))
 }
 function siteDeskReadDbSnapshot(snapshotKey){
  return siteDeskOpenDb().then(db=>new Promise(resolve=>{
@@ -46,22 +72,22 @@ function siteDeskStoreRecoverySnapshot(snapshotKey,serialized){
  siteDeskSaveDbSnapshot(serialized,snapshotKey);
  return storedLocally
 }
-function siteDeskRestoreDbSnapshotIfNeeded(){
- try{if(localStorage.getItem(KEY))return}catch{}
- siteDeskOpenDb().then(db=>{
-  if(!db)return;
-  try{
-   const tx=db.transaction(SITE_DESK_SNAPSHOT_STORE,"readonly"),req=tx.objectStore(SITE_DESK_SNAPSHOT_STORE).get(KEY);
-   req.onsuccess=()=>{
-    const row=req.result;
-    if(row&&row.value){
-     try{localStorage.setItem(KEY,row.value);location.reload()}catch{}
-    }
-   }
-  }catch{}
- })
+async function siteDeskRestoreDbSnapshotIfNeeded(){
+ const db=await siteDeskOpenDb();if(!db)return false;
+ const row=await new Promise(resolve=>{try{const req=db.transaction(SITE_DESK_SNAPSHOT_STORE,"readonly").objectStore(SITE_DESK_SNAPSHOT_STORE).get(KEY);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>resolve(null)}catch{resolve(null)}});
+ if(!row?.value)return false;
+ let local="";try{local=localStorage.getItem(KEY)||""}catch{}
+ if(local&&row.localStorageSaved!==false)return false;
+ try{
+  const restored=JSON.parse(row.value);if(!Array.isArray(restored.projects)||!Array.isArray(restored.companies))return false;
+  state=restored;lastCommittedState=row.value;
+  try{localStorage.setItem(KEY,row.value);void siteDeskSaveDbSnapshot(row.value,KEY,{localStorageSaved:true})}catch{}
+  cloudLocalDirty=true;cloudConfig.localDirty=true;saveCloudConfig();
+  return true
+ }catch{return false}
 }
-siteDeskRestoreDbSnapshotIfNeeded();
+const siteDeskRecoveryPromise=siteDeskRestoreDbSnapshotIfNeeded();
+const siteDeskHadLocalState=(()=>{try{return Boolean(localStorage.getItem(KEY))}catch{return false}})();
 let state=(()=>{try{return JSON.parse(localStorage.getItem(KEY))||clone(seed)}catch{return clone(seed)}})();let undoStack=[];let lastCommittedState=JSON.stringify(state);let directUndoActive=false;
 if(!state.handoverDrafts||typeof state.handoverDrafts!=="object"||Array.isArray(state.handoverDrafts))state.handoverDrafts={};
 const normalizeStateList=key=>{
@@ -351,6 +377,7 @@ let siteDeskPendingSerialized="";
 let siteDeskPendingBackup=false;
 let siteDeskLastBackupAt=0;
 let siteDeskRenderTimer=null;
+let siteDeskPersistGeneration=0;
 function siteDeskRunIdle(fn){("requestIdleCallback" in window)?requestIdleCallback(fn,{timeout:1200}):setTimeout(fn,0)}
 function siteDeskQueueRender(){
  if(siteDeskRenderTimer)return;
@@ -369,12 +396,16 @@ function siteDeskFlushPersistNow(){
    try{const previous=localStorage.getItem(KEY);if(previous)localStorage.setItem(AUTO_BACKUP_KEY,previous);siteDeskLastBackupAt=now}catch{}
   }
  }
- try{localStorage.setItem(KEY,serialized)}catch{}
+ let localStorageSaved=false;
+ try{localStorage.setItem(KEY,serialized);localStorageSaved=true}catch(error){console.warn("BETPRES – hlavné úložisko je plné, ukladám do databázy zariadenia:",error?.name||error)}
  lastCommittedState=serialized;
  siteDeskPendingSerialized="";
  siteDeskPendingBackup=false;
- siteDeskSaveDbSnapshot(serialized);
- updateSiteDeskSaveState("Automaticky uložené",false)
+ const generation=++siteDeskPersistGeneration;
+ void siteDeskSaveDbSnapshot(serialized,KEY,{localStorageSaved}).then(databaseSaved=>{
+  if(generation!==siteDeskPersistGeneration)return;
+  updateSiteDeskSaveState(localStorageSaved||databaseSaved?"Automaticky uložené":"Uloženie zlyhalo – uvoľni miesto v zariadení",false)
+ })
 }
 function siteDeskSchedulePersist(serialized,{backup=false}={}){
  siteDeskPendingSerialized=serialized;
@@ -388,7 +419,7 @@ function flushDirectState(description="Automatická zmena údajov"){
  const current=JSON.stringify(state);
  lastCommittedState=current;
  siteDeskSchedulePersist(current,{backup:false});
- updateSiteDeskSaveState("Automaticky uložené",false);
+ updateSiteDeskSaveState("Ukladám...",true);
  queueCloudPush(description)
 }
 function save(msg){
@@ -398,7 +429,6 @@ function save(msg){
  lastCommittedState=current;
  siteDeskSchedulePersist(current,{backup:true});
  siteDeskQueueRender();
- updateSiteDeskSaveState("Automaticky uložené",false);
  queueCloudPush(msg||"Zmena údajov");
  if(msg)toast(msg)
 }
@@ -444,7 +474,7 @@ function scheduleSiteDeskViewRender(id){
 function showView(id){
  if(id==="purchases"||id==="concrete")id="dashboard";
  const mobileLayout=window.matchMedia("(max-width: 800px)").matches;
- if(mobileLayout&&["billing","siteMeetings","controlDays"].includes(id))id="dashboard";
+ if(mobileLayout&&["billing","siteMeetings","controlDays","workStatements"].includes(id))id="dashboard";
  const requestedView=id;
  if(id==="controlDays"){selectedCoordinationKind="controlDay";id="siteMeetings"}
  else if(id==="siteMeetings")selectedCoordinationKind="coordination";
@@ -542,7 +572,7 @@ function updateSiteDeskSaveState(text="Automaticky uložené",saving=false){
 
 function siteViewLabel(id){
  return({
-  dashboard:"Prehľad stavby",quick:"Rýchle zadávanie",calendar:"Kalendár",mobileDiary:"Denník",
+  dashboard:"Prehľad stavby",quick:"Rýchle zadávanie",calendar:"Kalendár",mobileDiary:"Stavebný denník",
   workers:"Stav pracovníkov",defects:"Vady a nedorobky",siteMeetings:"Koordinačné porady",controlDays:"Kontrolné dni",billing:"Fakturácia",
   workStatements:"Súpis prác",purchases:"Pasport skladu",concrete:"Betóny",materialSamples:"Vzorkovanie materiálov",documents:"Archív dokumentov",
   handover:"Odovzdanie pracoviska",acceptance:"Preberacie protokoly",
@@ -653,7 +683,7 @@ function applySiteDesk3UI(){
  const section=document.querySelector(".view.active");
  if(section&&$("siteSectionTitle")){
   const heading=section.querySelector(".page-title h1");
-  if(heading)$("siteSectionTitle").textContent=heading.textContent.trim()
+  if(heading){const label=heading.textContent.trim();if($("siteSectionTitle").textContent!==label)$("siteSectionTitle").textContent=label}
  }
 }
 
@@ -1083,6 +1113,17 @@ async function cloudUploadPhoto(record,photo,workspaceId,folder="defects"){
  photo.path=path;
  return path
 }
+async function cloudUploadDiaryAttachment(entry,attachment,workspaceId){
+ const blob=await siteDeskGetAttachment(`${entry.id}:${attachment.id}`);
+ if(!blob)throw new Error(`PDF príloha ${attachment.name||""} je dostupná iba v zariadení, kde bola vložená. Otvor tento záznam na ňom a znova spusti synchronizáciu.`);
+ const path=`${workspaceId}/site-diary/${entry.id}/${attachment.id}.pdf`;
+ const response=await fetch(`${normalizeCloudUrl(cloudConfig.url)}/storage/v1/object/sitedesk-files/${encodeStoragePath(path)}`,{
+  method:"POST",headers:{apikey:cloudConfig.key,Authorization:`Bearer ${cloudSession.access_token}`,"Content-Type":"application/pdf","x-upsert":"true"},body:blob
+ });
+ if(!response.ok)throw new Error(`Nahratie PDF prílohy zlyhalo (${response.status}).`);
+ attachment.path=path;
+ return path
+}
 async function cloudPrepareState(workspaceId){
  const cloudData=typeof structuredClone==="function"?structuredClone(state):clone(state);
  let localStateChanged=false;
@@ -1109,6 +1150,15 @@ async function cloudPrepareState(workspaceId){
    if(localPhoto.dataUrl&&!localPhoto.path){await cloudUploadPhoto(entry,localPhoto,workspaceId,"diary");localStateChanged=true}
    if(localPhoto.path)cloudPhoto.path=localPhoto.path;
    delete cloudPhoto.dataUrl
+  }
+  if(entry.kind==="siteLog"){
+   cloudEntry.attachments=Array.isArray(cloudEntry.attachments)?cloudEntry.attachments:[];
+   for(let index=0;index<(entry.attachments||[]).length;index++){
+    const localAttachment=entry.attachments[index],cloudAttachment=cloudEntry.attachments[index];
+    if(!cloudAttachment)continue;
+    if(!localAttachment.path){await cloudUploadDiaryAttachment(entry,localAttachment,workspaceId);localStateChanged=true}
+    cloudAttachment.path=localAttachment.path
+   }
   }
  }
  if(localStateChanged){
@@ -1241,6 +1291,15 @@ async function cloudPush({force=false,silent=false}={}){
   renderCloudPanel()
  }
 }
+const CLOUD_PROTECTED_COLLECTIONS=["projects","companies","assignments","billings","materials","purchases","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"];
+function cloudMissingLocalRecords(remoteData){
+ const missing=[];
+ for(const key of CLOUD_PROTECTED_COLLECTIONS){
+  const remoteIds=new Set((Array.isArray(remoteData[key])?remoteData[key]:[]).map(item=>item?.id).filter(Boolean));
+  for(const item of Array.isArray(state[key])?state[key]:[]){if(item?.id&&!remoteIds.has(item.id))missing.push({key,id:item.id})}
+ }
+ return missing
+}
 async function cloudPull({silent=false,replaceLocal=false}={}){
  if(cloudPullRunning)return false;
  if(cloudPushRunning)return false;
@@ -1253,18 +1312,21 @@ async function cloudPull({silent=false,replaceLocal=false}={}){
   const remote=await cloudGetWorkspace();
   if(!remote?.data)throw new Error("V cloude zatiaľ nie sú uložené žiadne dáta.");
   if(cloudLocalRevision!==revisionBeforePull||(cloudLocalDirty&&!replaceLocal))throw new Error("V tomto zariadení sú neodoslané zmeny. Načítanie cloudu bolo zastavené, aby sa nestratili.");
-  preserveDefectRecovery();
-  siteDeskStoreRecoverySnapshot(CLOUD_PRE_PULL_BACKUP_KEY,JSON.stringify(state));
   const imported=remote.data;
   if(!Array.isArray(imported.projects)||!Array.isArray(imported.companies))throw new Error("Cloudový záznam nemá platný formát BETPRES APP.");
+  const missing=siteDeskHadLocalState||cloudLocalDirty?cloudMissingLocalRecords(imported):[];
+  if(missing.length&&!replaceLocal)throw new Error(`V tomto zariadení je ${missing.length} záznamov, ktoré chýbajú v cloude. Automatické načítanie bolo zastavené, aby sa nestratili. Najprv zosynchronizuj alebo skontroluj zálohu.`);
+  preserveDefectRecovery();
+  siteDeskStoreRecoverySnapshot(CLOUD_PRE_PULL_BACKUP_KEY,JSON.stringify(state));
+  if(missing.length){for(const {key,id} of missing){if(!Array.isArray(imported[key]))imported[key]=[];const item=state[key].find(record=>record.id===id);if(item)imported[key].push(clone(item))}}
   if(imported.projects.some(project=>project.id===state.selectedProjectId))imported.selectedProjectId=state.selectedProjectId;
   state=imported;
-  ["projects","companies","assignments","billings","materials","purchases","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","materialSamples"].forEach(key=>{
+  CLOUD_PROTECTED_COLLECTIONS.forEach(key=>{
    if(!Array.isArray(state[key]))state[key]=[]
   });
   const bachCleanup=cleanupBachCorporationWorkStatements(state);
   const serialized=JSON.stringify(state);
-  localStorage.setItem(KEY,serialized);
+  siteDeskSchedulePersist(serialized,{backup:true});siteDeskFlushPersistNow();
   lastCommittedState=serialized;
   cloudConfig.lastCloudVersion=Number(remote.data_version||0);
   cloudConfig.fullDataLoadedVersion=Number(remote.data_version||0);
@@ -1275,9 +1337,10 @@ async function cloudPull({silent=false,replaceLocal=false}={}){
   saveCloudConfig();
   await cloudLoadTeamContext(remote);
   renderAll();
+  if(missing.length)queueCloudPush(`Zachované lokálne záznamy (${missing.length})`);
   if(bachCleanup.removed)queueCloudPush(`Vymazané súpisy prác Bach corporation (${bachCleanup.removed})`);
   cloudSetQuickStatus("connected",`Cloud v${cloudConfig.lastCloudVersion}`);
-  setCloudMessage("cloudSyncMessage",`Cloudové dáta boli načítané. Verzia ${cloudConfig.lastCloudVersion}.`,"success");
+  setCloudMessage("cloudSyncMessage",`Cloudové dáta boli načítané. Verzia ${cloudConfig.lastCloudVersion}.${missing.length?` Zachované lokálne záznamy: ${missing.length}.`:""}`,"success");
   clearLatestCloudRequest();
   if(!silent)toast("Načítané údaje z cloudu.")
   return true
@@ -1977,7 +2040,7 @@ function renderActiveView(id=activeViewId()){
   case "acceptance":renderAcceptance();break;
   case "siteMeetings":prepareControlDay();break;
   case "calendar":renderCalendar();break;
-  case "mobileDiary":window.renderMobileDiaryPage?.();break;
+  case "mobileDiary":window.renderMobileDiaryPage?.();window.renderSiteDiary?.();break;
   case "defects":renderDefects();if(Date.now()-defectsLastRefreshAt>15000)void refreshMobileDefects({silent:true});break;
   case "documents":renderDocuments();break;
   case "excelImport":renderExcelPreview();break;
@@ -5827,7 +5890,32 @@ $("deleteCalendarEvent").onclick=()=>{
 };
 
 function renderDocuments(){const handovers=[...state.handovers].map(x=>({...x,docKind:"handover"}));const protocols=[...state.acceptanceProtocols].map(x=>({...x,docKind:"acceptance",contractNo:assignment(x.projectId,x.companyId)?.contractNo||"",type:"Preberací protokol",content:true}));const controlDays=state.controlDays.filter(x=>x.savedToDocuments).map(x=>({...x,docKind:"controlDay",companyId:"",contractNo:"",type:"Zápis z koordinačnej porady"}));const rows=[...handovers,...protocols,...controlDays].sort((a,b)=>(b.updatedAt||b.date).localeCompare(a.updatedAt||a.date));$("documentsTable").innerHTML=rows.map(h=>`<tr><td>${esc(fmtDateISO(h.date))}</td><td>${esc(project(h.projectId)?.name||"")}</td><td><strong>${esc(h.docKind==="controlDay"?(h.number||"Koordinačná porada"):(company(h.companyId)?.name||""))}</strong></td><td>${esc(h.contractNo||"")}</td><td>${esc(h.type)}</td><td>${documentVersions(h.docKind,h.id).length} verzií</td><td><div class="row-actions"><button data-open-doc="${h.docKind}:${h.id}">Otvoriť</button><button class="ghost" data-history-doc="${h.docKind}:${h.id}">História</button><button class="danger" data-delete-doc="${h.docKind}:${h.id}">Vymazať</button></div></td></tr>`).join("")||`<tr><td colspan="7" style="text-align:center;padding:30px;color:#789">Zatiaľ nie sú uložené žiadne dokumenty.</td></tr>`;document.querySelectorAll("[data-history-doc]").forEach(b=>b.onclick=()=>{const [kind,id]=b.dataset.historyDoc.split(":");openHistory(kind,id)});document.querySelectorAll("[data-open-doc]").forEach(b=>b.onclick=()=>{const [kind,id]=b.dataset.openDoc.split(":");if(kind==="controlDay"){const r=state.controlDays.find(x=>x.id===id);if(!r)return;state.selectedProjectId=r.projectId;selectedControlDayDate=r.date;showView("siteMeetings");return}if(kind==="acceptance"){state.selectedProjectId=state.acceptanceProtocols.find(x=>x.id===id)?.projectId||state.selectedProjectId;showView("acceptance");openAcceptance(id);return}const h=state.handovers.find(x=>x.id===id);if(!h)return;state.selectedProjectId=h.projectId;showView("handover");$("handoverProject").value=h.projectId;renderHandoverCompanies(h.companyId);$("handoverCompany").value=h.companyId;handoverDraft=h.content?clone(h.content):defaultHandoverDraft(h.projectId,h.companyId);handoverDraft.date=h.date;handoverDraft.entryDate=h.entryDate;handoverDraft.contract=h.contractNo;handoverDraftKey=`${h.projectId}|${h.companyId}`;editingHandoverId=h.id;$("handoverDate").value=h.date;$("entryDate").value=h.entryDate;renderHandover()});document.querySelectorAll("[data-delete-doc]").forEach(b=>b.onclick=()=>{const [kind,id]=b.dataset.deleteDoc.split(":");if(!confirm("Vymazať tento dokument z archívu?"))return;if(kind==="controlDay")state.controlDays=state.controlDays.filter(x=>x.id!==id);else if(kind==="acceptance")state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.id!==id);else state.handovers=state.handovers.filter(x=>x.id!==id);save("Dokument bol vymazaný.")})}
-$("exportJson").onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`betpres-evidencia-${todayISO()}.json`;a.click();URL.revokeObjectURL(url)};$("importJson").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);save("Záloha bola importovaná.")}catch{alert("Neplatná záloha.")}};r.readAsText(f)};$("restoreAutoBackup").onclick=()=>{const backup=localStorage.getItem(AUTO_BACKUP_KEY);if(!backup){alert("Automatická záloha zatiaľ neexistuje.");return}if(!confirm("Obnoviť poslednú automatickú zálohu? Aktuálne údaje sa nahradia."))return;try{state=JSON.parse(backup);const current=JSON.stringify(state);localStorage.setItem(KEY,current);lastCommittedState=current;renderAll();toast("Automatická záloha bola obnovená.")}catch{alert("Automatická záloha je poškodená.")}};
+$("exportJson").onclick=async()=>{
+ const button=$("exportJson");button.disabled=true;
+ try{
+  const backup=clone(state),embedded=[];
+  for(const entry of backup.mobileDiary||[]){if(entry.kind!=="siteLog")continue;for(const attachment of entry.attachments||[]){
+   const key=`${entry.id}:${attachment.id}`,blob=await siteDeskGetAttachment(key);if(!blob)continue;
+   const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("PDF prílohu sa nepodarilo načítať."));reader.readAsDataURL(blob)});
+   embedded.push({key,dataUrl})
+  }}
+  backup._betpresEmbeddedPdfs=embedded;
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`betpres-evidencia-${todayISO()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  toast(`Záloha bola pripravená. Priložené PDF: ${embedded.length}.`)
+ }catch(error){alert(`Zálohu sa nepodarilo vytvoriť: ${error.message||error}`)}finally{button.disabled=false}
+};
+$("importJson").onchange=async event=>{
+ const file=event.target.files[0];if(!file)return;
+ try{
+  const imported=JSON.parse(await file.text());if(!Array.isArray(imported.projects)||!Array.isArray(imported.companies))throw new Error("Neplatný formát zálohy.");
+  const embedded=Array.isArray(imported._betpresEmbeddedPdfs)?imported._betpresEmbeddedPdfs:[];delete imported._betpresEmbeddedPdfs;
+  const expected=new Set((imported.mobileDiary||[]).filter(entry=>entry.kind==="siteLog").flatMap(entry=>(entry.attachments||[]).map(attachment=>`${entry.id}:${attachment.id}`)));
+  siteDeskStoreRecoverySnapshot(`${KEY}-pre-import`,JSON.stringify(state));
+  for(const item of embedded){if(expected.has(item.key)&&String(item.dataUrl).startsWith("data:application/pdf;"))await siteDeskPutAttachment(item.key,dataUrlToBlob(item.dataUrl))}
+  state=imported;save("Záloha bola importovaná.")
+ }catch(error){alert(`Zálohu sa nepodarilo importovať: ${error.message||error}`)}finally{event.target.value=""}
+};
+$("restoreAutoBackup").onclick=()=>{const backup=localStorage.getItem(AUTO_BACKUP_KEY);if(!backup){alert("Automatická záloha zatiaľ neexistuje.");return}if(!confirm("Obnoviť poslednú automatickú zálohu? Aktuálne údaje sa nahradia."))return;try{const restored=JSON.parse(backup);if(!Array.isArray(restored.projects)||!Array.isArray(restored.companies))throw new Error("Neplatná záloha");siteDeskStoreRecoverySnapshot(`${KEY}-pre-auto-restore`,JSON.stringify(state));state=restored;save("Automatická záloha bola obnovená.")}catch{alert("Automatická záloha je poškodená.")}};
 $("resetData").onclick=()=>{if(confirm("Obnoviť demo údaje? Aktuálne údaje sa vymažú.")){state=clone(seed);save("Demo údaje boli obnovené.")}};
 
 function creditNumber(v){const m=String(v||"").replace(/\s/g,"").replace("€","").replace(",",".").match(/-?\d+(?:\.\d+)?/);return m?Number(m[0]):0}
@@ -8431,6 +8519,9 @@ async function initializeCloudPilot(){
  }
 }
 
-initializeCloudPilot();
 function removeHandoverPrintFrame(){const frame=document.getElementById("handoverPrintFrame");if(frame)frame.remove()}
-removeHandoverPrintFrame();renderAll();window.__BETPRES_APP_READY__=true;window.__BETPRES_APP_VERSION__=SITE_DESK_APP_VERSION;updateSiteDeskSaveState("Automaticky uložené",false);document.documentElement.setAttribute("data-betpres-ready","true");document.documentElement.setAttribute("data-betpres-version",SITE_DESK_APP_VERSION);
+void siteDeskRecoveryPromise.then(()=>{
+ removeHandoverPrintFrame();renderAll();window.__BETPRES_APP_READY__=true;window.__BETPRES_APP_VERSION__=SITE_DESK_APP_VERSION;
+ updateSiteDeskSaveState("Automaticky uložené",false);document.documentElement.setAttribute("data-betpres-ready","true");document.documentElement.setAttribute("data-betpres-version",SITE_DESK_APP_VERSION);
+ return initializeCloudPilot()
+}).catch(error=>{console.error("BETPRES – obnova lokálnych dát zlyhala:",error);updateSiteDeskSaveState("Skontroluj uložené dáta",false)})

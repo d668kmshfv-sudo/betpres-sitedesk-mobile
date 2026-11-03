@@ -5,6 +5,17 @@
  var activePayload = null;
  var zoom = 0.78;
 
+ function printFrame() {
+  var frame = document.getElementById("pdfPreviewFrame");
+  if (!frame || !frame.contentWindow) return;
+  var root = frame.contentDocument && frame.contentDocument.documentElement;
+  var previewZoom = root ? root.style.zoom : "";
+  if (root) root.style.zoom = "1";
+  frame.contentWindow.addEventListener("afterprint", function () { if (root) root.style.zoom = previewZoom || String(zoom); }, { once: true });
+  frame.contentWindow.focus();
+  frame.contentWindow.print();
+ }
+
  function ensurePreview() {
   var modal = document.getElementById("pdfPreviewModal");
   if (modal) return modal;
@@ -18,21 +29,13 @@
   modal.addEventListener("click", function (event) { if (event.target === modal) closePreview({ ok: false, canceled: true }); });
   modal.querySelector("[data-pdf-zoom='out']").onclick = function () { setZoom(zoom - 0.1); };
   modal.querySelector("[data-pdf-zoom='in']").onclick = function () { setZoom(zoom + 0.1); };
-  modal.querySelector("[data-pdf-print]").onclick = function () {
-   var frame = document.getElementById("pdfPreviewFrame");
-   if (!frame || !frame.contentWindow) return;
-   var root = frame.contentDocument && frame.contentDocument.documentElement;
-   var previewZoom = root ? root.style.zoom : "";
-   var restorePreviewZoom = function () {
-    if (root) root.style.zoom = previewZoom || String(zoom);
-   };
-   if (root) root.style.zoom = "1";
-   frame.contentWindow.addEventListener("afterprint", restorePreviewZoom, { once: true });
-   frame.contentWindow.focus();
-   frame.contentWindow.print();
-  };
+  modal.querySelector("[data-pdf-print]").onclick = printFrame;
   modal.querySelector("[data-pdf-save]").onclick = async function () {
-   if (!activePayload || !window.betpresDesktop || typeof window.betpresDesktop.exportPdf !== "function") return;
+   if (!activePayload) return;
+   if (!window.betpresDesktop || typeof window.betpresDesktop.exportPdf !== "function") {
+    printFrame();
+    return;
+   }
    var button = modal.querySelector("[data-pdf-save]");
    button.disabled = true;
    button.textContent = "Ukladám…";
@@ -50,7 +53,7 @@
  }
 
  function setZoom(value) {
-  zoom = Math.max(0.4, Math.min(1.4, value));
+  zoom = Math.max(0.28, Math.min(1.4, value));
   var label = document.getElementById("pdfPreviewZoom");
   var frame = document.getElementById("pdfPreviewFrame");
   if (label) label.textContent = Math.round(zoom * 100) + " %";
@@ -75,11 +78,14 @@
   var frame = document.getElementById("pdfPreviewFrame");
   var title = document.getElementById("pdfPreviewTitle");
   activePayload = payload;
-  zoom = payload && payload.landscape === false ? 0.72 : 0.68;
+  var paperWidth = payload && payload.landscape === false ? 794 : 1123;
+  var defaultZoom = payload && payload.landscape === false ? 0.72 : 0.68;
   if (title) title.textContent = (payload && payload.title) || (payload && payload.fileName) || "PDF dokument";
   modal.classList.remove("hidden");
+  zoom = Math.min(defaultZoom, Math.max(0.28, ((frame ? frame.clientWidth : window.innerWidth) - 14) / paperWidth));
   if (frame) {
    frame.onload = async function () {
+    setZoom(zoom);
     var images = Array.prototype.slice.call(frame.contentDocument ? frame.contentDocument.images : []);
     await Promise.all(images.map(function (image) {
      if (image.complete && image.naturalWidth > 0) return typeof image.decode === "function" ? image.decode().catch(function () {}) : Promise.resolve();
