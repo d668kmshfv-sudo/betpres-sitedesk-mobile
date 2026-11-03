@@ -3432,7 +3432,7 @@ body.sitedesk-v3 #workers .company-hours-table .rate-col,body.sitedesk-v3 #worke
 
 /* SiteDesk 5.0.36 – preberací protokol výpočet ceny */
 .acceptance-calculation-note{background:#f0f7ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 12px;color:#173a61}
-#acceptanceActualPrice[readonly],#acceptanceAdditionsPrice[readonly]{background:#eef7ff;font-weight:900;color:#0b3b70}
+#acceptanceActualPrice[readonly],#acceptanceInvoicedAmount[readonly],#acceptanceAdditionsPrice[readonly]{background:#eef7ff;font-weight:900;color:#0b3b70}
 @media print{.ap-page{page-break-after:always}}
 
 /* SiteDesk 5.0.40 – výkon, branding a funkčné PDF exporty */

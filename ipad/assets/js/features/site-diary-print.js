@@ -18,12 +18,19 @@
   .sdp-weather{margin-top:4mm;padding:3mm 4mm;border-radius:2mm;background:#edf3f8;color:#274663;font-size:10px}
   .sdp-weather strong{color:#153a61}
   .sdp-weather small{display:block;margin-top:1mm;color:#607387;font-size:9px}
+  .sdp-day-heading{margin-top:4mm;padding:1.7mm 2.5mm;border-left:2mm solid #245d87;background:#edf3f8;color:#153a61;font-size:11px;font-weight:800}
+  .sdp-day-heading .sdp-weather{margin:1.5mm 0 0;padding:0;background:transparent;font-weight:400}
+  .sdp-section-title{display:flex;justify-content:space-between;align-items:center;gap:3mm;margin-top:4mm;padding:1.5mm 2.5mm;background:#617b8a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.035em;break-inside:avoid}
+  .sdp-section-title small{font-size:9px;font-weight:600;letter-spacing:0}
+  .sdp-data-head,.sdp-data-row{display:grid;grid-template-columns:minmax(0,41fr) minmax(0,45fr) minmax(12mm,14fr);align-items:start;gap:2mm;padding:1.25mm 2.5mm;border-bottom:1px solid #d4dee6;break-inside:avoid}
+  .sdp-data-head{background:#f3f6f8;color:#557084;font-size:8px;font-weight:800;letter-spacing:.035em;text-transform:uppercase}
+  .sdp-data-row{color:#21394f;font-size:9.5px;line-height:1.3;overflow-wrap:anywhere}
+  .sdp-data-head span:last-child,.sdp-data-row span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  .sdp-data-empty{padding:1.8mm 2.5mm;border-bottom:1px solid #d4dee6;color:#708394;font-size:9px}
   .sdp-entry{display:flow-root;margin-top:3mm;padding-top:1.5mm;border-top:1px solid #aebecb;break-inside:avoid}
   .sdp-entry-head{display:flex;justify-content:space-between;align-items:baseline;gap:6mm}
   .sdp-entry-head-day{justify-content:flex-end}
-  .sdp-entry h2{margin:0;color:#18385e;font-size:11px;line-height:1.3;overflow-wrap:anywhere}
   .sdp-entry-head strong{flex:none;color:#1d587d;font-size:10px}
-  .sdp-entry-date{color:#0b598a;font-size:11px;font-weight:800}
   .sdp-entry-place{margin-top:1mm;color:#536a7d;font-size:9px;overflow-wrap:anywhere}
   .sdp-entry p{margin:1.5mm 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;line-height:1.38}
   .sdp-docs{display:flow-root;margin-top:3mm;color:#3b566d;font-size:10px;overflow-wrap:anywhere}
@@ -45,14 +52,29 @@
   const range=value.min!==""&&value.max!==""?` · ${escape(value.min)} až ${escape(value.max)} °C`:value.min!==""?` · ${escape(value.min)} °C`:value.max!==""?` · ${escape(value.max)} °C`:"";
   return `<div class="sdp-weather"><strong>Počasie:</strong> ${escape(value.text||"—")}${range}${value.source||value.station?`<small>${escape([value.source,value.station].filter(Boolean).join(" · "))}</small>`:""}</div>`
  }
- function recordHeader(entry,mode,continuation,weather){
-  const count=Math.max(0,Number(entry.workersCount)||0);
-  const heading=mode==="day"?`<div class="sdp-entry-head sdp-entry-head-day">${continuation?'<span>Pokračovanie záznamu</span>':""}<strong>${count} pracovníkov</strong></div>`:
-   `<div class="sdp-entry-head"><h2 class="sdp-entry-date">${escape(dateLabel(entry.date))}${continuation?" · pokračovanie":""}</h2><strong>${count} pracovníkov</strong></div>`;
-  return `${heading}${!continuation&&mode==="company"?weatherHtml(weather):""}${!continuation&&entry.place?`<div class="sdp-entry-place"><strong>Miesto / objekt:</strong> ${escape(entry.place)}</div>`:""}`
+ function countValue(value){const number=Number(value);return Number.isFinite(number)?Math.max(0,Math.round(number)):0}
+ function rowsForDate(map,date,kind){
+  const source=map&&typeof map==="object"?map[date]:null;
+  return (Array.isArray(source)?source:[]).filter(item=>item&&typeof item==="object").map(item=>({
+   name:String((kind==="crew"?item.profession:item.name)||"—").trim()||"—",
+   companyName:String(item.companyName||"—").trim()||"—",
+   count:countValue(item.count)
+  })).filter(item=>item.count>0)
  }
- function entryHtml(entry,mode,text,continuation,weather){
-  return `<section class="sdp-entry">${recordHeader(entry,mode,continuation,weather)}<p>${escape(text||"").replace(/\r\n?/g,"\n")}</p></section>`
+ function sectionTitle(label,continued=false,total=null){
+  return `<div class="sdp-section-title"><span>${escape(label)}${continued?" · pokračovanie":""}</span>${total===null?"":`<small>Spolu ${escape(total)}</small>`}</div>`
+ }
+ function dataHeading(kind){return `<div class="sdp-data-head"><span>${kind==="crew"?"Profesia":"Prostriedok"}</span><span>Dodávateľ</span><span>Počet</span></div>`}
+ function dataRow(row){return `<div class="sdp-data-row"><span>${escape(row.name)}</span><span>${escape(row.companyName)}</span><span>${escape(row.count)}</span></div>`}
+ function dayHeading(date,weather){return `<div class="sdp-day-heading">${escape(dateLabel(date))}${weatherHtml(weather)}</div>`}
+ function recordHeader(entry,mode,continuation){
+  const count=countValue(entry.workersCount);
+  const label=continuation?`<span>Pokračovanie · ${escape(dateLabel(entry.date))}</span>`:"";
+  const heading=count||continuation?`<div class="sdp-entry-head${mode==="day"?" sdp-entry-head-day":""}">${label}${count?`<strong>${count} pracovníkov</strong>`:""}</div>`:"";
+  return `${heading}${!continuation&&entry.place?`<div class="sdp-entry-place"><strong>Miesto / objekt:</strong> ${escape(entry.place)}</div>`:""}`
+ }
+ function entryHtml(entry,mode,text,continuation){
+  return `<section class="sdp-entry">${recordHeader(entry,mode,continuation)}<p>${escape(text||"").replace(/\r\n?/g,"\n")}</p></section>`
  }
  function documentHtml(entry,docs,continuation){
   return `<div class="sdp-docs"><strong>PDF prílohy · ${escape(dateLabel(entry.date))}${continuation?" · pokračovanie":""}</strong><ul>${docs.map(item=>`<li>${escape(item.name||"PDF dokument")}</li>`).join("")}</ul></div>`
@@ -72,7 +94,7 @@
    `<span><strong>Stavba:</strong> ${escape(projectName)}</span>${place}<span>Prehľad prác podľa dní</span>`;
   return `<div class="sdp-kicker">Stavebný denník · BETPRES</div><h1 class="sdp-title">${escape(title)}${continuation?" · pokračovanie":""}</h1><div class="sdp-meta">${meta}</div>${mode==="day"&&!continuation?weatherHtml(weather):""}`
  }
- async function printDiary({mode="day",entries=[],weatherByDate={},projectName="",projectLocation="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
+ async function printDiary({mode="day",entries=[],weatherByDate={},crewByDate={},machineryByDate={},projectName="",projectLocation="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
   if(!["day","company"].includes(mode))throw new Error("Neznámy typ exportu stavebného denníka.");
   const records=(Array.isArray(entries)?entries:[]).filter(item=>item&&item.date).slice().sort((a,b)=>mode==="company"?String(a.date).localeCompare(String(b.date))||String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"):String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"));
   if(!records.length)return false;
@@ -86,36 +108,78 @@
    };
    let page=newPage();
    const fits=block=>measure.fits(page.header+page.blocks.join("")+block);
-   for(const item of records){
-    const entry={...item,date:String(item.date),companyName:String(item.companyName||"Firma"),work:String(item.work||"")};
-    let remainder=entry.work,continuation=false,done=false;
-    while(!done){
-     const full=entryHtml(entry,mode,remainder,continuation,weatherMap[entry.date]);
-     if(fits(full)){page.blocks.push(full);done=true;break}
-     if(page.blocks.length){page=newPage(true);continue}
+   const addTable=(title,kind,rows,lead="")=>{
+    const total=rows.reduce((sum,row)=>sum+row.count,0);
+    let index=0,continued=false;
+    do{
+     const heading=`${continued?"":lead}${sectionTitle(title,continued,continued?null:total)}${rows.length?dataHeading(kind):""}`;
+     const first=rows.length?dataRow(rows[index]):'<div class="sdp-data-empty">Bez záznamov</div>';
+     if(!fits(heading+first))page=newPage(true);
+     if(!fits(heading+first))throw new Error(`${title}: záznam sa nezmestí na stranu A4.`);
+     page.blocks.push(heading,first);
+     if(!rows.length)break;
+     index++;
+     while(index<rows.length&&fits(dataRow(rows[index]))){page.blocks.push(dataRow(rows[index]));index++}
+     if(index<rows.length){page=newPage(true);continued=true}
+    }while(index<rows.length)
+   };
+   const addEntry=entry=>{
+    let remainder=entry.work||"—",continuation=false;
+    for(;;){
+     const first=entryHtml(entry,mode,remainder.slice(0,1),continuation);
+     if(!fits(first)){
+      page=newPage(true);
+      const heading=sectionTitle("Vykonané práce",true);
+      if(!fits(heading+first))throw new Error("Záznam práce sa nezmestí na stranu A4.");
+      page.blocks.push(heading)
+     }
+     const full=entryHtml(entry,mode,remainder,continuation);
+     if(fits(full)){page.blocks.push(full);break}
      let low=0,high=remainder.length;
-     while(low<high){const mid=Math.ceil((low+high)/2);if(fits(entryHtml(entry,mode,remainder.slice(0,mid),continuation,weatherMap[entry.date])))low=mid;else high=mid-1}
-     if(low<1)throw new Error("Záznam sa nezmestí na stranu A4.");
+     while(low<high){const mid=Math.ceil((low+high)/2);if(fits(entryHtml(entry,mode,remainder.slice(0,mid),continuation)))low=mid;else high=mid-1}
+     if(low<1)throw new Error("Záznam práce sa nezmestí na stranu A4.");
      let cut=low;
      if(cut<remainder.length){const breakAt=remainder.lastIndexOf(" ",cut);if(breakAt>cut-80)cut=breakAt+1}
-     page.blocks.push(entryHtml(entry,mode,remainder.slice(0,cut),continuation,weatherMap[entry.date]));
-     remainder=remainder.slice(cut);continuation=true;
-     if(!remainder){done=true;break}
-     page=newPage(true)
+     page.blocks.push(entryHtml(entry,mode,remainder.slice(0,cut),continuation));
+     remainder=remainder.slice(cut);
+     if(!remainder)break;
+     continuation=true;
+     page=newPage(true);
+     const heading=sectionTitle("Vykonané práce",true);
+     if(!fits(heading+entryHtml(entry,mode,remainder.slice(0,1),continuation)))throw new Error("Záznam práce sa nezmestí na stranu A4.");
+     page.blocks.push(heading)
     }
+   };
+   const addDocuments=entry=>{
     const docs=Array.isArray(entry.attachments)?entry.attachments:[];
-    if(docs.length){
-     let start=0;
-     while(start<docs.length){
-      let count=docs.length-start,block=documentHtml(entry,docs.slice(start,start+count),start>0);
-      if(fits(block)){page.blocks.push(block);break}
-      if(page.blocks.length){page=newPage(true);continue}
-      while(count>1&&!fits(block=documentHtml(entry,docs.slice(start,start+count),start>0)))count--;
-      if(!fits(block))throw new Error("Príloha má príliš dlhý názov na stranu A4.");
-      page.blocks.push(block);start+=count;
-      if(start<docs.length)page=newPage(true)
-     }
+    let start=0;
+    while(start<docs.length){
+     let count=docs.length-start,block=documentHtml(entry,docs.slice(start,start+count),start>0);
+     if(fits(block)){page.blocks.push(block);break}
+     if(page.blocks.length){page=newPage(true);continue}
+     while(count>1&&!fits(block=documentHtml(entry,docs.slice(start,start+count),start>0)))count--;
+     if(!fits(block))throw new Error("Príloha má príliš dlhý názov na stranu A4.");
+     page.blocks.push(block);start+=count;
+     if(start<docs.length)page=newPage(true)
     }
+   };
+   const groups=new Map();
+   for(const item of records){
+    const date=mode==="day"?firstDate:String(item.date);
+    if(!groups.has(date))groups.set(date,[]);
+    groups.get(date).push({...item,date:String(item.date),companyName:String(item.companyName||"Firma"),work:String(item.work||"")})
+   }
+   for(const [date,dayEntries] of groups){
+    const crew=rowsForDate(crewByDate,date,"crew"),machinery=rowsForDate(machineryByDate,date,"machinery");
+    let lead=mode==="company"?dayHeading(date,weatherMap[date]):"";
+    if(mode==="day"||crew.length){addTable("Osoby na stavenisku","crew",crew,lead);lead=""}
+    if(mode==="day"||machinery.length){addTable("Mechanizmy","machinery",machinery,lead);lead=""}
+    const workHeading=lead+sectionTitle("Vykonané práce");
+    const firstEntry=dayEntries[0],firstWork=entryHtml(firstEntry,mode,(firstEntry.work||"—").slice(0,1),false);
+    if(!fits(workHeading+firstWork))page=newPage(true);
+    if(!fits(workHeading+firstWork))throw new Error("Záznam práce sa nezmestí na stranu A4.");
+    page.blocks.push(workHeading);
+    for(const entry of dayEntries){addEntry(entry);addDocuments(entry)}
    }
    for(const entry of records){
     const urls=(Array.isArray(entry.photos)?entry.photos:[]).map(safeImage).filter(Boolean);
