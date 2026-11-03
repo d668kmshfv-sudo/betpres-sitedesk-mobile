@@ -20,6 +20,7 @@
   .sdp-weather small{display:block;margin-top:1mm;color:#607387;font-size:9px}
   .sdp-entry{display:flow-root;margin-top:3mm;padding-top:1.5mm;border-top:1px solid #aebecb;break-inside:avoid}
   .sdp-entry-head{display:flex;justify-content:space-between;align-items:baseline;gap:6mm}
+  .sdp-entry-head-day{justify-content:flex-end}
   .sdp-entry h2{margin:0;color:#18385e;font-size:11px;line-height:1.3;overflow-wrap:anywhere}
   .sdp-entry-head strong{flex:none;color:#1d587d;font-size:10px}
   .sdp-entry-date{color:#0b598a;font-size:11px;font-weight:800}
@@ -45,9 +46,8 @@
   return `<div class="sdp-weather"><strong>Počasie:</strong> ${escape(value.text||"—")}${range}${value.source||value.station?`<small>${escape([value.source,value.station].filter(Boolean).join(" · "))}</small>`:""}</div>`
  }
  function recordHeader(entry,mode,continuation,weather){
-  const name=String(entry.companyName||"Firma");
   const count=Math.max(0,Number(entry.workersCount)||0);
-  const heading=mode==="day"?`<div class="sdp-entry-head"><h2>${escape(name)}${continuation?" · pokračovanie":""}</h2><strong>${count} pracovníkov</strong></div>`:
+  const heading=mode==="day"?`<div class="sdp-entry-head sdp-entry-head-day">${continuation?'<span>Pokračovanie záznamu</span>':""}<strong>${count} pracovníkov</strong></div>`:
    `<div class="sdp-entry-head"><h2 class="sdp-entry-date">${escape(dateLabel(entry.date))}${continuation?" · pokračovanie":""}</h2><strong>${count} pracovníkov</strong></div>`;
   return `${heading}${!continuation&&mode==="company"?weatherHtml(weather):""}${!continuation&&entry.place?`<div class="sdp-entry-place"><strong>Miesto / objekt:</strong> ${escape(entry.place)}</div>`:""}`
  }
@@ -55,8 +55,7 @@
   return `<section class="sdp-entry">${recordHeader(entry,mode,continuation,weather)}<p>${escape(text||"").replace(/\r\n?/g,"\n")}</p></section>`
  }
  function documentHtml(entry,docs,continuation){
-  const label=`${dateLabel(entry.date)} · ${entry.companyName||"Firma"}`;
-  return `<div class="sdp-docs"><strong>PDF prílohy · ${escape(label)}${continuation?" · pokračovanie":""}</strong><ul>${docs.map(item=>`<li>${escape(item.name||"PDF dokument")}</li>`).join("")}</ul></div>`
+  return `<div class="sdp-docs"><strong>PDF prílohy · ${escape(dateLabel(entry.date))}${continuation?" · pokračovanie":""}</strong><ul>${docs.map(item=>`<li>${escape(item.name||"PDF dokument")}</li>`).join("")}</ul></div>`
  }
  function createMeasurer(){
   const host=document.createElement("div");host.style.cssText="position:fixed;left:-20000px;top:0;width:210mm;visibility:hidden;pointer-events:none;z-index:-1";
@@ -67,20 +66,21 @@
   const limit=gauge.getBoundingClientRect().height;
   return{fits(markup){flow.innerHTML=markup;return flow.getBoundingClientRect().height<=limit-.5},close(){host.remove()}}
  }
- function makeHeader({mode,title,projectName,date,weather,continuation,companyName}){
+ function makeHeader({mode,title,projectName,date,weather,continuation}){
   const meta=mode==="day"?`<span><strong>Stavba:</strong> ${escape(projectName)}</span><span><strong>Dátum:</strong> ${escape(dateLabel(date))}</span>`:
-   `<span><strong>Stavba:</strong> ${escape(projectName)}</span><span><strong>Firma:</strong> ${escape(companyName)}</span>`;
+   `<span><strong>Stavba:</strong> ${escape(projectName)}</span><span>Prehľad prác podľa dní</span>`;
   return `<div class="sdp-kicker">Stavebný denník · BETPRES</div><h1 class="sdp-title">${escape(title)}${continuation?" · pokračovanie":""}</h1><div class="sdp-meta">${meta}</div>${mode==="day"&&!continuation?weatherHtml(weather):""}`
  }
  async function printDiary({mode="day",entries=[],weatherByDate={},projectName="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
   if(!["day","company"].includes(mode))throw new Error("Neznámy typ exportu stavebného denníka.");
   const records=(Array.isArray(entries)?entries:[]).filter(item=>item&&item.date).slice().sort((a,b)=>mode==="company"?String(a.date).localeCompare(String(b.date))||String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"):String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"));
   if(!records.length)return false;
+  const displayTitle=mode==="company"?"Stavebný denník · prehľad prác":title;
   const firstDate=String(records[0].date),weatherMap=weatherByDate&&typeof weatherByDate==="object"?weatherByDate:{};
   const measure=createMeasurer(),pages=[];
   try{
    const newPage=(continuation=false,photo=false)=>{
-    const page={header:makeHeader({mode,title:photo?"Fotodokumentácia · "+title:title,projectName,date:firstDate,weather:weatherMap[firstDate],continuation,companyName:records[0].companyName||""}),blocks:[],photo};
+    const page={header:makeHeader({mode,title:photo?"Fotodokumentácia · "+displayTitle:displayTitle,projectName,date:firstDate,weather:weatherMap[firstDate],continuation}),blocks:[],photo};
     pages.push(page);return page
    };
    let page=newPage();
@@ -120,14 +120,14 @@
     const urls=(Array.isArray(entry.photos)?entry.photos:[]).map(safeImage).filter(Boolean);
     for(let start=0;start<urls.length;start+=4){
      const page=newPage(true,true),pictures=urls.slice(start,start+4).map(url=>`<img src="${url}" alt="Fotografia zo stavby">`).join("");
-     page.blocks.push(`<div class="sdp-meta"><span><strong>Dátum:</strong> ${escape(dateLabel(entry.date))}</span><span><strong>Firma:</strong> ${escape(entry.companyName||"Firma")}</span></div><div class="sdp-photos">${pictures}</div>`)
+     page.blocks.push(`<div class="sdp-meta"><span><strong>Dátum:</strong> ${escape(dateLabel(entry.date))}</span></div><div class="sdp-photos">${pictures}</div>`)
     }
    }
   }finally{measure.close()}
   const total=pages.length,letterhead=safeImage(letterheadImage);
   const pageHtml=pages.map((page,index)=>`<section class="sdp-page">${letterhead?`<img class="sdp-letterhead" src="${letterhead}" alt="">`:""}<div class="sdp-content"><div class="sdp-flow">${page.header}${page.blocks.join("")}</div><div class="sdp-footer"><span>${escape(projectName||"BETPRES")}</span><span>Strana ${index+1} / ${total}</span></div></div></section>`).join("");
-  const html=`<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>${escape(title)}</title><style>${styles}</style></head><body>${pageHtml}</body></html>`;
-  const payload={html,fileName,landscape:false,title};
+  const html=`<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>${escape(displayTitle)}</title><style>${styles}</style></head><body>${pageHtml}</body></html>`;
+  const payload={html,fileName,landscape:false,title:displayTitle};
   if(typeof window.showPdfPreview==="function")void window.showPdfPreview(payload);
   else if(window.betpresDesktop?.exportPdf)void window.betpresDesktop.exportPdf(payload);
   return payload

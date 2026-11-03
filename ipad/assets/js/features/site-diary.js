@@ -113,17 +113,16 @@
  function render(){
   const filter=get("siteDiaryCompanyFilter"),previous=filter.value;
   const roster=rosterForDay(day),allEntries=rows().filter(item=>item.date===day),options=[...new Map([...roster.map(item=>[item.id,{id:item.id,name:item.name}]),...rows().map(item=>[item.companyId,{id:item.companyId,name:companyName(item)}])]).values()].sort((a,b)=>a.name.localeCompare(b.name,"sk"));
-  filter.innerHTML='<option value="">Všetky firmy</option>'+options.map(item=>`<option value="${escape(item.id)}">${escape(item.name)}</option>`).join("");filter.value=options.some(item=>item.id===previous)?previous:"";
+  filter.innerHTML='<option value="">Všetky práce</option>'+options.map(item=>`<option value="${escape(item.id)}">${escape(item.name)}</option>`).join("");filter.value=options.some(item=>item.id===previous)?previous:"";
   const entries=allEntries.filter(item=>!filter.value||item.companyId===filter.value).sort((a,b)=>companyName(a).localeCompare(companyName(b),"sk"));
   if(weatherFormDay!==day||!weatherDirty){setWeather(weatherForDate(day));weatherFormDay=day;weatherDirty=false}
   const weather=weatherForDate(day),weatherRange=weather?.min!==""&&weather?.min!=null&&weather?.max!==""&&weather?.max!=null?` · ${roundedTemp(weather.min)} až ${roundedTemp(weather.max)} °C`:"";
   get("siteDiaryWeatherSummary").textContent=weather?.text?`${weather.text}${weatherRange}`:"Počasie pre tento deň ešte nie je vyplnené.";
   get("siteDiaryLoadWeather").textContent=day<todayISO()?"Načítať merania SHMÚ":"Načítať predpoveď SHMÚ";
-  const allIds=new Set([...roster.map(item=>item.id),...allEntries.map(item=>item.companyId)]),totalWorkers=roster.reduce((sum,item)=>sum+item.count,0)+allEntries.filter(item=>!roster.some(worker=>worker.id===item.companyId)).reduce((sum,item)=>sum+displayedWorkers(item),0);
-  get("siteDiaryDate").value=day;get("siteDiaryDaySummary").textContent=`${dateLabel(day)} · ${allIds.size} ${allIds.size===1?"firma":allIds.size<5?"firmy":"firiem"} · ${totalWorkers} pracovníkov`;
-  get("siteDiaryRoster").innerHTML=roster.map(item=>`<div class="site-diary-roster-item"><span><strong>${escape(item.name)}</strong><small>${item.count} pracovníkov podľa stavu</small></span>${recordFor(day,item.id)?'<span class="site-diary-roster-done">Práce zapísané</span>':`<button type="button" data-site-diary-add-company="${escape(item.id)}">+ Zapísať práce</button>`}</div>`).join("")||'<small>Počty sa zobrazia po vyplnení Stavu pracovníkov pre tento deň.</small>';
+  const totalWorkers=roster.reduce((sum,item)=>sum+item.count,0)+allEntries.filter(item=>!roster.some(worker=>worker.id===item.companyId)).reduce((sum,item)=>sum+displayedWorkers(item),0);
+  get("siteDiaryDate").value=day;get("siteDiaryDaySummary").textContent=`${dateLabel(day)} · ${allEntries.length} ${allEntries.length===1?"pracovný záznam":allEntries.length<5?"pracovné záznamy":"pracovných záznamov"} · ${totalWorkers} pracovníkov`;
   get("siteDiaryExportCompany").disabled=!filter.value||!rows().some(item=>item.companyId===filter.value);
-  get("siteDiaryDayList").innerHTML=entries.map(item=>`<article class="site-diary-card"><div class="site-diary-card-head"><span>${escape(companyName(item))}</span><strong>${displayedWorkers(item)} pracovníkov</strong></div><div class="site-diary-card-meta">${item.place?`<span>⌖ ${escape(item.place)}</span>`:""}</div><p>${escape(item.work)}</p><div class="site-diary-card-foot"><small>${(item.photos||[]).length} foto · ${(item.attachments||[]).length} PDF</small><div><button type="button" data-site-diary-edit="${escape(item.id)}">Upraviť záznam</button></div></div></article>`).join("")||'<div class="site-diary-empty"><strong>Zatiaľ tu nie je opis prác</strong><span>Firmy a počty zo Stavu pracovníkov vidíš vyššie. Pri každej dopíš, čo robila.</span></div>'
+  get("siteDiaryDayList").innerHTML=entries.map(item=>`<article class="site-diary-card"><p class="site-diary-card-work">${escape(item.work)}</p><div class="site-diary-card-meta">${item.place?`<span>⌖ ${escape(item.place)}</span>`:""}<span>${displayedWorkers(item)} pracovníkov</span></div><div class="site-diary-card-foot"><small>${(item.photos||[]).length} foto · ${(item.attachments||[]).length} PDF</small><div><button type="button" data-site-diary-edit="${escape(item.id)}">Upraviť záznam</button></div></div></article>`).join("")||'<div class="site-diary-empty"><strong>Zatiaľ tu nie je opis prác</strong><span>Pridaj, čo sa v tento deň robilo. Počet pracovníkov sa doplní zo Stavu pracovníkov.</span></div>'
  }
  async function copyDay(){
   const source=get("siteDiaryCopySource").value,target=day;
@@ -178,7 +177,7 @@
     let archive=null;
     for(const url of [
      `https://raw.githubusercontent.com/d668kmshfv-sudo/betpres-sitedesk-mobile/main/ipad/assets/data/shmu-history.json?date=${date}&t=${Math.floor(Date.now()/300000)}`,
-     "assets/data/shmu-history.json?v=5.7.1"
+     "assets/data/shmu-history.json?v=5.7.2"
     ]){
      try{const response=await fetch(url,{cache:"no-store"});if(response.ok){const value=await response.json();if(value?.dates?.[date]){archive=value;break}}}catch{}
     }
@@ -215,11 +214,7 @@
    await window.siteDiaryPrint({mode,entries:normalized,weatherByDate,projectName:siteProject()?.name||"BETPRES",title,fileName,letterheadImage:LETTERHEAD_IMAGE})
   }catch(error){alertUser(`Export sa nepodaril: ${error.message||error}`)}
  }
- function dayReportEntries(){
-  const entries=rows().filter(item=>item.date===day),recorded=new Set(entries.map(item=>item.companyId));
-  for(const item of rosterForDay(day))if(!recorded.has(item.id))entries.push({id:`roster:${item.id}`,date:day,companyId:item.id,companyName:item.name,workersCount:item.count,work:"Práce zatiaľ nezapísané.",photos:[],attachments:[]});
-  return entries.sort((a,b)=>companyName(a).localeCompare(companyName(b),"sk"))
- }
+ function dayReportEntries(){return rows().filter(item=>item.date===day).sort((a,b)=>companyName(a).localeCompare(companyName(b),"sk"))}
  get("siteDiaryDate").value=day;get("siteDiaryCopySource").value=new Date(Date.now()-86400000).toISOString().slice(0,10);
  get("siteDiaryPrev").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()-1);day=dateKey(date);render()};
  get("siteDiaryNext").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()+1);day=dateKey(date);render()};
@@ -235,9 +230,8 @@
  get("siteDiaryPhotos").onchange=async event=>{const files=[...(event.target.files||[])].slice(0,Math.max(0,6-photos.length));for(const file of files)try{photos.push(await compressPhoto(file))}catch(error){alertUser(error.message)}event.target.value="";renderAttachments()};
  get("siteDiaryDocuments").onchange=event=>{for(const file of event.target.files||[]){if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf")){alertUser("Vyber PDF dokument.");continue}newFiles.push({id:makeId("site-pdf"),file})}event.target.value="";renderAttachments()};
  get("siteDiaryAttachments").onclick=event=>{const button=event.target.closest("button");if(!button)return;if(button.dataset.siteDiaryRemovePhoto!==undefined)photos.splice(Number(button.dataset.siteDiaryRemovePhoto),1);else if(button.dataset.siteDiaryRemoveDocument)documents=documents.filter(item=>item.id!==button.dataset.siteDiaryRemoveDocument);else if(button.dataset.siteDiaryRemoveNew)newFiles=newFiles.filter(item=>item.id!==button.dataset.siteDiaryRemoveNew);else if(button.dataset.siteDiaryOpenDocument)void openDocument(button.dataset.siteDiaryOpenDocument);renderAttachments()};
- get("siteDiaryRoster").onclick=event=>{const button=event.target.closest("[data-site-diary-add-company]");if(button)openEditor("",button.dataset.siteDiaryAddCompany)};
  get("siteDiaryDayList").onclick=event=>{const button=event.target.closest("[data-site-diary-edit]");if(button)openEditor(button.dataset.siteDiaryEdit)};
  get("siteDiaryExportDay").onclick=()=>void printReport("day",dayReportEntries(),`Stavebný denník · ${dateLabel(day)}`,`stavebny-dennik-${day}.pdf`);
- get("siteDiaryExportCompany").onclick=()=>{const id=get("siteDiaryCompanyFilter").value,entries=rows().filter(item=>item.companyId===id).sort((a,b)=>a.date.localeCompare(b.date));if(id)void printReport("company",entries,`Stavebný denník · ${entries[0]?companyName(entries[0]):"firma"}`,`stavebny-dennik-firma-${id.replace(/[^a-z0-9-]/gi,"-")}.pdf`)};
+ get("siteDiaryExportCompany").onclick=()=>{const id=get("siteDiaryCompanyFilter").value,entries=rows().filter(item=>item.companyId===id).sort((a,b)=>a.date.localeCompare(b.date));if(id)void printReport("company",entries,"Stavebný denník · prehľad prác",`stavebny-dennik-firma-${id.replace(/[^a-z0-9-]/gi,"-")}.pdf`)};
  window.renderSiteDiary=render;window.__BETPRES_SITE_DIARY_READY__=true;render()
 })();
