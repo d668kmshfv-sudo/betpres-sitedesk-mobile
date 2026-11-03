@@ -1,0 +1,188 @@
+/* A quieter reading surface for the construction diary. */
+body.sitedesk-v3 #mobileDiary .page-title,
+body.sitedesk-v3 #mobileDiary .site-diary-panel,
+body.sitedesk-v3 #mobileDiary .site-diary-legacy {
+  width: min(100%, 1120px);
+  margin-right: auto !important;
+  margin-left: auto !important;
+}
+body.sitedesk-v3 #mobileDiary .page-title { margin-bottom: 10px !important; padding: 4px 2px 8px !important; }
+#mobileDiary .site-diary-panel {
+  display: block;
+  padding: 0 22px 8px;
+  border: 1px solid #e3e6ea;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+}
+#mobileDiary .site-diary-daybar {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: end;
+  gap: 12px;
+  padding: 18px 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  background: transparent;
+}
+#mobileDiary .site-diary-daybar label,
+#mobileDiary .site-diary-toolbar label,
+#mobileDiary .site-diary-copy label,
+#mobileDiary .site-diary-weather-fields label {
+  gap: 6px;
+  color: #5d6670;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+body.sitedesk-v3 #mobileDiary .site-diary-daybar button {
+  width: 44px;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border: 1px solid #d9dde2 !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: #334155 !important;
+  font-size: 26px !important;
+  font-weight: 450 !important;
+}
+body.sitedesk-v3 #mobileDiary .site-diary-daybar button:active { background: #edf3f8 !important; }
+#mobileDiary .site-diary-daybar input,
+#mobileDiary .site-diary-toolbar select,
+#mobileDiary .site-diary-copy input { min-height: 44px; font-size: 16px; font-weight: 590; }
+#mobileDiary .site-diary-weather,
+#mobileDiary .site-diary-more {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  background: transparent;
+}
+#mobileDiary .site-diary-weather summary,
+#mobileDiary .site-diary-more summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 10px 30px 10px 0;
+  cursor: pointer;
+  list-style: none;
+  color: #252a31;
+  font-size: 14px;
+  font-weight: 650;
+}
+#mobileDiary .site-diary-weather summary::-webkit-details-marker,
+#mobileDiary .site-diary-more summary::-webkit-details-marker { display: none; }
+#mobileDiary .site-diary-weather summary:focus-visible,
+#mobileDiary .site-diary-more summary:focus-visible {
+  outline: 3px solid rgba(10, 91, 145, .35);
+  outline-offset: -3px;
+  border-radius: 8px;
+}
+#mobileDiary .site-diary-weather summary::after,
+#mobileDiary .site-diary-more summary::after {
+  content: "⌄";
+  position: absolute;
+  right: 4px;
+  color: #647080;
+  font-size: 22px;
+  font-weight: 450;
+  transition: transform 180ms ease;
+}
+#mobileDiary .site-diary-weather[open] summary::after,
+#mobileDiary .site-diary-more[open] summary::after { transform: rotate(180deg); }
+#mobileDiary .site-diary-weather summary span { display: grid; gap: 3px; min-width: 0; }
+#mobileDiary .site-diary-weather summary strong { color: #252a31; font-size: 14px; font-weight: 650; }
+#mobileDiary .site-diary-weather summary small { color: #69737e; font-size: 13px; font-weight: 450; line-height: 1.4; }
+#mobileDiary .site-diary-weather-body,
+#mobileDiary .site-diary-more-body { display: grid; gap: 14px; padding: 2px 0 18px; }
+#mobileDiary .site-diary-weather-top { justify-content: flex-start; }
+body.sitedesk-v3 #mobileDiary .site-diary-weather-top button,
+body.sitedesk-v3 #mobileDiary .site-diary-weather-bottom button { min-height: 44px !important; box-shadow: none !important; }
+#mobileDiary .site-diary-weather-bottom small { font-size: 12px; }
+#mobileDiary .site-diary-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+body.sitedesk-v3 #mobileDiary #siteDiaryAddInline {
+  min-height: 44px !important;
+  padding: 10px 18px !important;
+  border-radius: 11px !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+}
+#mobileDiary .site-diary-records-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 20px 0 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+#mobileDiary .site-diary-records-head h2 { margin: 0; color: #1d1d1f; font-size: 18px; font-weight: 690; letter-spacing: -.02em; }
+#mobileDiary .site-diary-summary { padding: 0; border-radius: 0; background: transparent; color: #69737e; font-size: 13px; font-weight: 500; }
+#mobileDiary .site-diary-day-list { display: block; }
+#mobileDiary .site-diary-card {
+  padding: 17px 0 16px;
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#mobileDiary .site-diary-card .site-diary-card-work { margin: 0; color: #22272e; font-size: 16px; font-weight: 460; line-height: 1.56; }
+#mobileDiary .site-diary-card-meta { gap: 6px 12px; margin-top: 9px; }
+#mobileDiary .site-diary-card-meta span { padding: 0; border-radius: 0; background: transparent; color: #69737e; font-size: 12px; font-weight: 500; }
+#mobileDiary .site-diary-card-meta span + span::before { content: "·"; margin-right: 12px; color: #98a1ab; }
+#mobileDiary .site-diary-card-foot { gap: 12px; margin-top: 7px; padding: 0; border: 0; }
+#mobileDiary .site-diary-card-foot small { color: #7c858f; font-size: 12px; }
+body.sitedesk-v3 #mobileDiary .site-diary-card-foot .site-diary-edit {
+  min-height: 40px !important;
+  padding: 3px 6px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #0a5b91 !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+body.sitedesk-v3 #mobileDiary .site-diary-card-foot .site-diary-edit:active { color: #074a78 !important; opacity: .7; }
+#mobileDiary .site-diary-empty { gap: 5px; padding: 28px 0; border: 0; border-radius: 0; background: transparent; text-align: left; }
+#mobileDiary .site-diary-empty strong { color: #353b42; font-size: 15px; font-weight: 620; }
+#mobileDiary .site-diary-empty span { color: #7a838c; font-size: 13px; line-height: 1.45; }
+#mobileDiary .site-diary-more { margin-top: 4px; border-bottom: 0; }
+body.sitedesk-v3 #mobileDiary .site-diary-actions button,
+body.sitedesk-v3 #mobileDiary .site-diary-copy button { min-height: 44px !important; box-shadow: none !important; font-size: 13px !important; }
+#mobileDiary .site-diary-copy { gap: 10px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+#mobileDiary .site-diary-legacy { margin-top: 14px !important; border-color: #e3e6ea; border-radius: 14px; box-shadow: none; }
+@media (max-width: 800px) {
+  #mobileDiary .site-diary-panel { padding: 0 14px 5px; }
+  #mobileDiary .site-diary-daybar { grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 7px; padding: 12px 0; }
+  #mobileDiary .site-diary-toolbar { grid-template-columns: minmax(0, 1fr); gap: 9px; padding: 14px 0; }
+  #mobileDiary .site-diary-toolbar button { grid-row: 1; width: 100%; }
+  #mobileDiary .site-diary-weather-body,
+  #mobileDiary .site-diary-more-body { gap: 12px; }
+  #mobileDiary .site-diary-weather-top button { max-width: none; }
+  #mobileDiary .site-diary-records-head { padding-top: 17px; }
+  #mobileDiary .site-diary-actions,
+  #mobileDiary .site-diary-copy { grid-template-columns: minmax(0, 1fr); }
+  #mobileDiary .site-diary-actions button,
+  #mobileDiary .site-diary-copy button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #mobileDiary .site-diary-weather summary::after,
+  #mobileDiary .site-diary-more summary::after { transition: none; }
+}
+@media (prefers-contrast: more) {
+  #mobileDiary .site-diary-panel,
+  #mobileDiary .site-diary-card,
+  #mobileDiary .site-diary-daybar,
+  #mobileDiary .site-diary-toolbar { border-color: #596574; }
+}

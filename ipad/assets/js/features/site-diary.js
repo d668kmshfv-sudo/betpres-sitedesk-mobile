@@ -81,7 +81,7 @@
   photos=Array.isArray(item?.photos)?item.photos.map(photo=>({...photo})):[];
   documents=Array.isArray(item?.attachments)?item.attachments.map(document=>({...document})):[];newFiles=[];
   get("siteDiaryPhotos").value="";get("siteDiaryDocuments").value="";renderAttachments();
-  get("siteDiaryModalTitle").textContent=item?"Upraviť denný záznam":"Práce firmy za deň";editor.classList.remove("hidden")
+  get("siteDiaryModalTitle").textContent=item?"Upraviť denný záznam":"Nový záznam prác";editor.classList.remove("hidden")
  }
  async function compressPhoto(file){
   if(!file.type.startsWith("image/"))throw new Error("Vyber fotografiu.");
@@ -120,9 +120,10 @@
   get("siteDiaryWeatherSummary").textContent=weather?.text?`${weather.text}${weatherRange}`:"Počasie pre tento deň ešte nie je vyplnené.";
   get("siteDiaryLoadWeather").textContent=day<todayISO()?"Načítať merania SHMÚ":"Načítať predpoveď SHMÚ";
   const totalWorkers=roster.reduce((sum,item)=>sum+item.count,0)+allEntries.filter(item=>!roster.some(worker=>worker.id===item.companyId)).reduce((sum,item)=>sum+displayedWorkers(item),0);
-  get("siteDiaryDate").value=day;get("siteDiaryDaySummary").textContent=`${dateLabel(day)} · ${allEntries.length} ${allEntries.length===1?"pracovný záznam":allEntries.length<5?"pracovné záznamy":"pracovných záznamov"} · ${totalWorkers} pracovníkov`;
+  const shownWorkers=filter.value?entries.reduce((sum,item)=>sum+displayedWorkers(item),0):totalWorkers;
+  get("siteDiaryDate").value=day;get("siteDiaryDaySummary").textContent=`${entries.length} ${entries.length===1?"záznam":entries.length<5?"záznamy":"záznamov"} · ${shownWorkers} pracovníkov`;
   get("siteDiaryExportCompany").disabled=!filter.value||!rows().some(item=>item.companyId===filter.value);
-  get("siteDiaryDayList").innerHTML=entries.map(item=>`<article class="site-diary-card"><p class="site-diary-card-work">${escape(item.work)}</p><div class="site-diary-card-meta">${item.place?`<span>⌖ ${escape(item.place)}</span>`:""}<span>${displayedWorkers(item)} pracovníkov</span></div><div class="site-diary-card-foot"><small>${(item.photos||[]).length} foto · ${(item.attachments||[]).length} PDF</small><div><button type="button" data-site-diary-edit="${escape(item.id)}">Upraviť záznam</button></div></div></article>`).join("")||'<div class="site-diary-empty"><strong>Zatiaľ tu nie je opis prác</strong><span>Pridaj, čo sa v tento deň robilo. Počet pracovníkov sa doplní zo Stavu pracovníkov.</span></div>'
+  get("siteDiaryDayList").innerHTML=entries.map(item=>`<article class="site-diary-card"><p class="site-diary-card-work">${escape(item.work)}</p><div class="site-diary-card-meta">${item.place?`<span>⌖ ${escape(item.place)}</span>`:""}<span>${displayedWorkers(item)} pracovníkov</span></div><div class="site-diary-card-foot"><small>${(item.photos||[]).length} foto · ${(item.attachments||[]).length} PDF</small><button type="button" class="ghost site-diary-edit" data-site-diary-edit="${escape(item.id)}">Upraviť</button></div></article>`).join("")||'<div class="site-diary-empty"><strong>Zatiaľ tu nie je opis prác</strong><span>Pridaj, čo sa v tento deň robilo. Počet pracovníkov sa doplní zo Stavu pracovníkov.</span></div>'
  }
  async function copyDay(){
   const source=get("siteDiaryCopySource").value,target=day;
@@ -177,7 +178,7 @@
     let archive=null;
     for(const url of [
      `https://raw.githubusercontent.com/d668kmshfv-sudo/betpres-sitedesk-mobile/main/ipad/assets/data/shmu-history.json?date=${date}&t=${Math.floor(Date.now()/300000)}`,
-     "assets/data/shmu-history.json?v=5.7.2"
+     "assets/data/shmu-history.json?v=5.7.3"
     ]){
      try{const response=await fetch(url,{cache:"no-store"});if(response.ok){const value=await response.json();if(value?.dates?.[date]){archive=value;break}}}catch{}
     }
@@ -220,7 +221,7 @@
  get("siteDiaryNext").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()+1);day=dateKey(date);render()};
  get("siteDiaryDate").onchange=event=>{day=event.target.value||todayISO();render()};
  get("siteDiaryCompanyFilter").onchange=render;
- get("siteDiaryAdd").onclick=()=>openEditor();get("siteDiaryAddInline").onclick=()=>openEditor("",get("siteDiaryCompanyFilter").value);
+ get("siteDiaryAddInline").onclick=()=>openEditor("",get("siteDiaryCompanyFilter").value);
  get("siteDiaryCopy").onclick=()=>void copyDay();get("siteDiaryLoadWeather").onclick=()=>void loadWeather();get("siteDiaryWeatherSave").onclick=()=>saveWeather();form.onsubmit=event=>void saveEntry(event);
  for(const id of ["siteDiaryWeatherCity","siteDiaryWeatherText","siteDiaryTempMin","siteDiaryTempMax"])get(id).addEventListener("input",()=>{weatherDirty=true;weatherMeta={source:"Ručný údaj",station:"",retrievedAt:""};get("siteDiaryWeatherSource").textContent="Ručný údaj · ulož počasie pre vybraný deň."});
  get("siteDiaryWorkers").oninput=()=>{get("siteDiaryWorkers").dataset.userEdited="1"};

@@ -115,7 +115,7 @@
     const badge = document.createElement("div");
     badge.id = "ipadWebBadge";
     badge.className = "ipad-web-badge";
-    badge.innerHTML = '<span>Online · 5.7.2</span>';
+    badge.innerHTML = '<span>Online · 5.7.3</span>';
     document.body.appendChild(badge);
   }
 
