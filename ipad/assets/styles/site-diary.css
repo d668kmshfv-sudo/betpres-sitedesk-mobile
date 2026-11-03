@@ -1,16 +1,27 @@
 .site-diary-panel{display:grid;gap:14px;margin:0 0 20px;padding:18px;border:1px solid rgba(20,64,96,.13);border-radius:24px;background:#fff;box-shadow:0 12px 36px rgba(18,46,66,.07)}
 .site-diary-daybar{display:grid;grid-template-columns:52px minmax(0,1fr) 52px;align-items:end;gap:10px;padding:12px;border-radius:18px;background:#edf3f8}
-.site-diary-daybar label,.site-diary-toolbar label,.site-diary-copy label{display:grid;gap:5px;min-width:0;color:#5d6a77;font-size:11px;font-weight:750;letter-spacing:.02em}
+.site-diary-daybar label,.site-diary-toolbar label,.site-diary-copy label,.site-diary-weather-fields label{display:grid;gap:5px;min-width:0;color:#5d6a77;font-size:11px;font-weight:750;letter-spacing:.02em}
 .site-diary-daybar input,.site-diary-toolbar select,.site-diary-copy input{width:100%;min-height:48px;font-size:16px;font-weight:730;color:#17354a}
 .site-diary-daybar button{width:52px;min-height:52px!important;padding:0!important;border-radius:15px!important;background:#0a5b91!important;color:#fff!important;font-size:30px!important}
 .site-diary-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px}.site-diary-toolbar button{min-height:48px!important;white-space:nowrap!important}
 .site-diary-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.site-diary-actions button{min-height:47px!important;white-space:normal!important;line-height:1.2!important}.site-diary-actions button:disabled{opacity:.48!important}
 .site-diary-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:10px;padding:12px;border:1px solid #d7e4ed;border-radius:17px;background:#f6f9fc}.site-diary-copy button{min-height:48px!important;white-space:normal!important}
 .site-diary-summary{padding:11px 13px;border-radius:13px;background:#e8f1f8;color:#0a4f82;font-size:13px;font-weight:790;font-variant-numeric:tabular-nums}
+.site-diary-weather,.site-diary-roster{display:grid;gap:11px;padding:14px;border:1px solid #d5e3ee;border-radius:18px;background:#f7fafc}
+.site-diary-weather-top,.site-diary-weather-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.site-diary-weather-top>div,.site-diary-roster>div:first-child{display:grid;gap:3px}
+.site-diary-weather-top strong,.site-diary-roster strong{color:#183b56;font-size:15px}
+.site-diary-weather-top small,.site-diary-roster small,.site-diary-weather-bottom small{color:#657b8d;font-size:11px;line-height:1.35}
+.site-diary-weather-top button,.site-diary-weather-bottom button{min-height:40px!important;white-space:normal!important}
+.site-diary-weather-fields{display:grid;grid-template-columns:1.2fr 1.5fr .65fr .65fr;gap:8px}
+.site-diary-weather-fields input{min-width:0;min-height:42px;font-size:16px}
+.site-diary-roster-list{display:grid;gap:6px}.site-diary-roster-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border:1px solid #dbe7ee;border-radius:12px;background:#fff}.site-diary-roster-item>span:first-child{display:grid;gap:2px;min-width:0}.site-diary-roster-item strong{overflow-wrap:anywhere;font-size:13px}.site-diary-roster-item button{min-height:38px!important;padding:7px 10px!important;font-size:12px!important}.site-diary-roster-done{color:#257451;font-size:11px;font-weight:750;white-space:nowrap}
+.site-diary-workers-reset{min-height:44px!important;align-self:end!important}
 .site-diary-day-list{display:grid;gap:11px}.site-diary-card{padding:16px;border:1px solid #d8e2ea;border-radius:19px;background:#fff;box-shadow:0 7px 20px rgba(16,47,70,.05)}
 .site-diary-card-head{display:flex;align-items:start;justify-content:space-between;gap:12px}.site-diary-card-head span{color:#172f42;font-size:18px;font-weight:820;line-height:1.2;letter-spacing:-.02em}.site-diary-card-head strong{flex:0 0 auto;padding:6px 9px;border-radius:999px;background:#e8f1f8;color:#0a5b91;font-size:11px}
 .site-diary-card-meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.site-diary-card-meta span{padding:5px 8px;border-radius:9px;background:#f2f4f7;color:#5d6973;font-size:11px;font-weight:680}
 .site-diary-card p{margin:13px 0;white-space:pre-wrap;overflow-wrap:anywhere;color:#253642;font-size:14px;line-height:1.5}.site-diary-card-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;padding-top:12px;border-top:1px solid #e4e9ed}.site-diary-card-foot small{color:#6e7780;font-size:11px}.site-diary-card-foot>div{display:flex;flex-wrap:wrap;gap:7px}.site-diary-card-foot button{min-height:39px!important;padding:7px 11px!important;border-radius:11px!important;font-size:12px!important}
+.site-diary-card-foot button[data-site-diary-edit]{background:#0a5b91!important;border:1px solid #0a5b91!important;color:#fff!important;opacity:1!important}
 .site-diary-empty{display:grid;gap:5px;padding:30px 18px;border:1px dashed #b8cbd9;border-radius:18px;background:#f8fbfd;text-align:center}.site-diary-empty strong{font-size:16px;color:#21445e}.site-diary-empty span{font-size:12px;color:#687984}
 .site-diary-legacy{margin-top:18px;border:1px solid #dbe3e9;border-radius:18px;background:#fff;overflow:hidden}.site-diary-legacy summary{cursor:pointer;padding:16px 18px;color:#244660;font-size:14px;font-weight:760}.site-diary-legacy-body{display:grid;gap:12px;padding:0 16px 16px}.site-diary-legacy-actions{display:flex;justify-content:flex-end}
 .site-diary-weather-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:7px;border-top:1px solid #dce5eb}.site-diary-weather-head strong{color:#163a56;font-size:15px}.site-diary-weather-source{color:#647685;font-size:11px;line-height:1.4}
@@ -20,6 +31,8 @@
  .site-diary-panel{gap:12px;margin:-1px 0 17px;padding:12px;border-radius:20px}.site-diary-daybar{grid-template-columns:45px minmax(0,1fr) 45px;gap:7px;padding:9px}.site-diary-daybar button{width:45px;min-height:48px!important}
  .site-diary-toolbar,.site-diary-copy{grid-template-columns:1fr}.site-diary-toolbar button,.site-diary-copy button{width:100%;min-height:50px!important}
  .site-diary-actions{gap:7px}.site-diary-actions button{font-size:12px!important;padding:9px!important}
+ .site-diary-weather,.site-diary-roster{padding:11px}.site-diary-weather-top{align-items:start}.site-diary-weather-top button{max-width:42%;font-size:11px!important}.site-diary-weather-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.site-diary-weather-fields label:nth-child(-n+2){grid-column:span 2}.site-diary-weather-bottom{align-items:end}.site-diary-weather-bottom button{flex:0 0 auto;font-size:12px!important}
+ .site-diary-roster-item button{flex:0 0 auto}
  .site-diary-card-foot>div{width:100%;display:grid;grid-template-columns:1fr 1fr}.site-diary-card-foot button{min-height:44px!important}
  #siteDiaryModal .site-diary-editor{width:100%!important;max-height:var(--apple-visual-height,100dvh)!important;overflow-y:auto!important;border-radius:0!important}
  #siteDiaryModal .form-grid{grid-template-columns:1fr!important;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}

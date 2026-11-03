@@ -1,0 +1,46 @@
+name: Aktualizácia meraného počasia SHMÚ
+
+on:
+  schedule:
+    # 07:30 CET / 08:30 CEST: previous local day is complete.
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Počet dní spätne na obnovenie (1 až 14)'
+        required: false
+        default: '1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shmu-history
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Načítať minútové merania SHMÚ
+        env:
+          DAYS: ${{ inputs.days || '1' }}
+        run: node scripts/update-shmu-history.mjs --days "$DAYS"
+      - name: Uložiť aktualizovaný archív
+        run: |
+          git add ipad/assets/data/shmu-history.json
+          if git diff --cached --quiet -- ipad/assets/data/shmu-history.json; then
+            echo "Merania sú bez zmeny."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update SHMÚ measured weather history"
+          git pull --rebase origin main
+          git push origin HEAD:main
