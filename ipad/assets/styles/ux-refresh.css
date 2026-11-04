@@ -27,6 +27,7 @@
 #billing .billing-matrix-period strong{font-size:15px;color:#0b4d78}
 #billing .billing-matrix-period button{min-height:34px!important;height:34px!important;padding:0 10px!important;white-space:nowrap}
 #billing .billing-matrix-period #exportBillingPdf{background:#0d5f92!important;color:#fff!important;border-color:#0d5f92!important}
+#billing .billing-matrix-period #billingAddMonth{background:#edf6fc!important;color:#0a548c!important;border-color:#a6c9df!important}
 #billing .billing-year-matrix-help{padding:10px 20px;border-bottom:1px solid #d7e3eb;background:#fff;color:#597184;font-size:12px;font-weight:700}
 #billing .billing-year-matrix-wrap{max-height:min(66vh,720px);overflow:auto;overscroll-behavior:contain;background:#fff}
 #billing .billing-year-matrix{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:11px;font-variant-numeric:tabular-nums}

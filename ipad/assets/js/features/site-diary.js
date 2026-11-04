@@ -345,7 +345,7 @@
     let archive=null;
     for(const url of [
      `https://raw.githubusercontent.com/d668kmshfv-sudo/betpres-sitedesk-mobile/main/ipad/assets/data/shmu-history.json?date=${date}&t=${Math.floor(Date.now()/300000)}`,
-     "assets/data/shmu-history.json?v=5.7.7"
+     "assets/data/shmu-history.json?v=5.7.8"
     ]){
      try{const response=await fetch(url,{cache:"no-store"});if(response.ok){const value=await response.json();if(value?.dates?.[date]){archive=value;break}}}catch{}
     }

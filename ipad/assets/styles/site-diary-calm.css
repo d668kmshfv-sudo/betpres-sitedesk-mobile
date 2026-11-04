@@ -259,3 +259,80 @@ body.sitedesk-v3 #mobileDiary .site-diary-machine-actions button { min-height: 4
   #mobileDiary .site-diary-daybar,
   #mobileDiary .site-diary-toolbar { border-color: #596574; }
 }
+
+/* The day overview and its two common entry actions stay visible together. */
+#mobileDiary .site-diary-primary-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 0 15px;
+  border-bottom: 1px solid #e5e7eb;
+}
+#mobileDiary .site-diary-current-action,
+body.sitedesk-v3 #mobileDiary .site-diary-primary-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 44px !important;
+  margin: 0;
+  padding: 7px 10px !important;
+  border: 1px solid #d6dde5 !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: #185078 !important;
+  font: 650 13px/1.25 system-ui, -apple-system, sans-serif !important;
+  text-align: center;
+  white-space: normal !important;
+}
+#mobileDiary .site-diary-current-action {
+  border-color: #b8cfe0 !important;
+  background: #eaf2f8 !important;
+  color: #173f5b !important;
+}
+body.sitedesk-v3 #mobileDiary #siteDiaryAddInline {
+  border-color: #0a5b91 !important;
+  background: #0a5b91 !important;
+  color: #fff !important;
+}
+body.sitedesk-v3 #mobileDiary .site-diary-primary-actions button:active {
+  transform: scale(.97);
+  filter: brightness(.94);
+  transition: transform 100ms ease-out;
+}
+#mobileDiary .site-diary-toolbar { grid-template-columns: minmax(0, 1fr); }
+
+@media (max-width: 800px) {
+  body.sitedesk-v3 #mobileDiary .page-title { margin-bottom: 6px !important; padding-bottom: 4px !important; }
+  #mobileDiary .page-title h1 { font-size: clamp(23px, 6vw, 28px); line-height: 1.15; }
+  #mobileDiary .site-diary-panel { padding: 0 12px 5px; }
+  #mobileDiary .site-diary-daybar { padding: 9px 0; }
+  #mobileDiary .site-diary-daybar input { min-height: 42px; }
+  #mobileDiary .site-diary-primary-actions { gap: 6px; padding: 9px 0 12px; }
+  #mobileDiary .site-diary-current-action,
+  body.sitedesk-v3 #mobileDiary .site-diary-primary-actions button { padding: 7px 5px !important; font-size: 12px !important; }
+  #mobileDiary .site-diary-weather summary { min-height: 46px; padding-top: 7px; padding-bottom: 7px; }
+  #mobileDiary .site-diary-weather-body { gap: 9px; padding-bottom: 12px; }
+  #mobileDiary .site-diary-weather-fields { gap: 6px; }
+  #mobileDiary .site-diary-weather-fields input { min-height: 40px; }
+  #mobileDiary .site-diary-data-section { padding: 10px 0 8px; }
+  #mobileDiary .site-diary-section-heading { margin-bottom: 7px; }
+  #mobileDiary .site-diary-section-heading h2,
+  #mobileDiary .site-diary-records-head h2 { font-size: 16px; }
+  #mobileDiary .site-diary-records-head { padding: 12px 0 8px; }
+  #mobileDiary .site-diary-card { padding: 11px 0 10px; }
+  #mobileDiary .site-diary-card .site-diary-card-work { font-size: 15px; line-height: 1.45; }
+  #mobileDiary .site-diary-card-meta { margin-top: 5px; }
+  #mobileDiary .site-diary-card-foot { margin-top: 4px; }
+  #mobileDiary .site-diary-toolbar { padding: 11px 0 4px; border-bottom: 0; }
+  #mobileDiary .site-diary-data-row,
+  #mobileDiary .site-diary-machine-table .site-diary-data-row { padding: 7px 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.sitedesk-v3 #mobileDiary .site-diary-primary-actions button:active { transform: none; transition: none; }
+}
+@media (prefers-contrast: more) {
+  #mobileDiary .site-diary-current-action,
+  body.sitedesk-v3 #mobileDiary .site-diary-primary-actions button { border-color: #3c5264 !important; }
+}

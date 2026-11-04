@@ -1,0 +1,37 @@
+#mobileDiary .site-diary-subcontractors{display:grid;gap:10px}
+#mobileDiary .site-diary-subcontract-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,220px);gap:10px}
+#mobileDiary .site-diary-subcontract-controls label,
+#mobileDiary .site-diary-subcontract-custom,
+#mobileDiary .site-diary-subcontract-editor label{display:grid;gap:5px;min-width:0;color:#586a77;font-size:12px;font-weight:680}
+#mobileDiary .site-diary-subcontract-controls select,
+#mobileDiary .site-diary-subcontract-controls input,
+#mobileDiary .site-diary-subcontract-custom input,
+#mobileDiary .site-diary-subcontract-editor textarea{width:100%;min-width:0;min-height:44px;padding:10px 12px;border:1px solid #d5dfe6;border-radius:11px;background:#fff;color:#18384e;font:500 16px/1.4 system-ui,-apple-system,sans-serif}
+#mobileDiary .site-diary-subcontract-editor textarea{min-height:108px;resize:vertical}
+#mobileDiary .site-diary-subcontract-list{display:grid;gap:0}
+#mobileDiary .site-diary-subcontract-row{padding:11px 1px;border-bottom:1px solid #e4e9ed}
+#mobileDiary .site-diary-subcontract-row-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+#mobileDiary .site-diary-subcontract-row-head strong{color:#18384e;font-size:14px}
+#mobileDiary .site-diary-subcontract-row-head small{color:#677987;font-size:11px;white-space:nowrap}
+#mobileDiary .site-diary-subcontract-row p{margin:7px 0 9px;color:#263a49;font-size:14px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+#mobileDiary .site-diary-subcontract-row-actions{display:flex;flex-wrap:wrap;gap:8px}
+#mobileDiary .site-diary-subcontract-row-actions button,
+#mobileDiary .site-diary-subcontract-import-all,
+#mobileDiary .site-diary-subcontract-form-actions button{min-height:44px!important;padding:8px 12px!important;border-radius:10px!important;font-size:12px!important;line-height:1.3!important;white-space:normal!important}
+#mobileDiary .site-diary-subcontract-row-actions button:disabled,
+#mobileDiary .site-diary-subcontract-import-all:disabled{opacity:.55}
+#mobileDiary .site-diary-subcontract-import-all{justify-self:start}
+#mobileDiary .site-diary-subcontract-editor{border-top:1px solid #e4e9ed;padding-top:6px}
+#mobileDiary .site-diary-subcontract-editor summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:#0a5b91;font-size:13px;font-weight:750}
+#mobileDiary .site-diary-subcontract-editor form{display:grid;gap:10px;padding:6px 0 10px}
+#mobileDiary .site-diary-subcontract-form-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}
+#mobileDiary .site-diary-subcontract-row-actions button:active,
+#mobileDiary .site-diary-subcontract-form-actions button:active{transform:scale(.97);transition:transform 100ms ease-out}
+@media(max-width:650px){
+ #mobileDiary .site-diary-subcontract-controls{grid-template-columns:1fr}
+ #mobileDiary .site-diary-subcontract-row-head{align-items:flex-start}
+ #mobileDiary .site-diary-subcontract-row-actions{display:grid;grid-template-columns:1fr 1fr}
+ #mobileDiary .site-diary-subcontract-row-actions button{width:100%}
+ #mobileDiary .site-diary-subcontract-import-all{width:100%}
+}
+@media(prefers-reduced-motion:reduce){#mobileDiary .site-diary-subcontract-row-actions button:active,#mobileDiary .site-diary-subcontract-form-actions button:active{transform:none;transition:none}}
