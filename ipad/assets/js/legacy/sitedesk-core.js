@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.7.6";
+const SITE_DESK_APP_VERSION="5.7.7";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -96,7 +96,7 @@ const normalizeStateList=key=>{
 [
  "projects","companies","assignments","billings","materials","purchases","machinePassport",
  "handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays",
- "documentVersions","calendarEvents","workStatements","workStatementDeletions","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryMachinery","siteDiaryInspections","materialSamples"
+ "documentVersions","calendarEvents","workStatements","workStatementDeletions","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryCrew","siteDiaryMachinery","siteDiaryInspections","materialSamples"
 ].forEach(normalizeStateList);
 if(!Array.isArray(state.defects))state.defects=[];
 
@@ -1291,7 +1291,7 @@ async function cloudPush({force=false,silent=false}={}){
   renderCloudPanel()
  }
 }
-const CLOUD_PROTECTED_COLLECTIONS=["projects","companies","assignments","billings","materials","purchases","machinePassport","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryMachinery","siteDiaryInspections","materialSamples"];
+const CLOUD_PROTECTED_COLLECTIONS=["projects","companies","assignments","billings","materials","purchases","machinePassport","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryCrew","siteDiaryMachinery","siteDiaryInspections","materialSamples"];
 function cloudMissingLocalRecords(remoteData){
  const missing=[];
  for(const key of CLOUD_PROTECTED_COLLECTIONS){
@@ -2058,7 +2058,7 @@ function renderProjectSelectors(){if(!project(state.selectedProjectId))state.sel
 function renderDashboard(){const p=activeProject();if(!p)return;$('dashTitle').textContent=p.name;const bs=state.billings.filter(b=>b.projectId===p.id),hs=state.handovers.filter(h=>h.projectId===p.id),ps=state.purchases.filter(x=>x.projectId===p.id),assignmentRows=state.assignments.filter(a=>a.projectId===p.id),protocols=state.acceptanceProtocols.filter(x=>x.projectId===p.id);const today=todayISO(),month=today.slice(0,7),day=Number(today.slice(8,10)),todaySheet=syncBetpresWorkerRow(month,workerSheet(month,true))&&workerSheet(month,true),workersToday=(todaySheet?.rows||[]).reduce((sum,r)=>sum+(Number(r.values?.[day])||0),0);$('metricWorkersToday').textContent=workersToday;$('metricWorkersDate').textContent=workersToday?`${fmtDateISO(today)} · spolu na stavbe`:`${fmtDateISO(today)} · dnešný stav zatiaľ nevyplnený`;$('metricBilling').textContent=eur.format(bs.reduce((s,x)=>s+Number(x.amount||0),0));$('metricHandovers').textContent=hs.length;if($('metricPurchases'))$('metricPurchases').textContent=ps.length;const missingAcceptance=Math.max(0,assignmentRows.length-new Set(protocols.map(x=>x.companyId)).size);if($('metricAcceptance'))$('metricAcceptance').textContent=protocols.length;if($('metricAcceptanceText'))$('metricAcceptanceText').textContent=`${missingAcceptance} firiem bez protokolu`;
 const recent=[...ps].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);if($('recentPurchases'))$('recentPurchases').innerHTML='';const monthly={};bs.forEach(b=>monthly[b.month]=(monthly[b.month]||0)+Number(b.amount||0));const keys=Object.keys(monthly).sort().slice(-12);const max=Math.max(1,...keys.map(k=>monthly[k]));$('billingChart').innerHTML=keys.length?keys.map(k=>{const m=Number(k.slice(5));return `<div class="bar-group"><div class="bar ${k===keys.at(-1)?'current':''}" style="height:${Math.max(3,monthly[k]/max*90)}%" data-value="${esc(eur.format(monthly[k]))}"></div><small>${monthNames[m-1]}</small></div>`}).join(''):`<div style="align-self:center;color:#789">Zatiaľ bez fakturácie</div>`;const byCompany={};bs.forEach(b=>byCompany[b.companyId]=(byCompany[b.companyId]||0)+Number(b.amount||0));$('topCompanies').innerHTML=Object.entries(byCompany).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v],i)=>`<div class="rank-row"><b>${i+1}.</b><div><strong>${esc(company(id)?.name||'')}</strong><small>${esc(company(id)?.scope||'')}</small></div><span>${eur.format(v)}</span></div>`).join('')||`<p style="color:#789">Zatiaľ bez údajov.</p>`;$('projectCards').innerHTML=state.projects.slice(0,5).map(x=>`<div class="mini-row"><div><strong>${esc(x.name)}</strong><small>${esc(x.address||'')}</small></div><span class="status">${x.id===state.selectedProjectId?'Aktívna':'Stavba'}</span></div>`).join('')}
 function renderProjects(){$("projectsGrid").innerHTML=state.projects.map(p=>`<article class="panel project-card"><h3>${esc(p.name)}</h3><p>${esc(p.address||"Bez adresy")}</p><p class="project-card-manager"><strong>Stavbyvedúci:</strong> ${esc(p.manager||"Neuvedený")}${p.managerPhone?` · ${esc(p.managerPhone)}`:""}</p><div class="project-meta"><span class="chip">${state.assignments.filter(a=>a.projectId===p.id).length} firiem</span><span class="chip">${state.handovers.filter(h=>h.projectId===p.id).length} zápisníc</span><span class="chip">${esc(p.region||"Kraj neuvedený")}</span>${p.startDate||p.endDate?`<span class="chip">${esc(fmtDateISO(p.startDate)||"?")} – ${esc(fmtDateISO(p.endDate)||"?")}</span>`:""}</div><div class="project-card-actions"><button class="ghost" data-activate-project="${p.id}">${p.id===state.selectedProjectId?"Aktívna stavba":"Nastaviť ako aktívnu"}</button><button class="ghost" data-edit-project="${p.id}">Upraviť údaje</button><button class="delete-project" data-delete-project="${p.id}">Vymazať stavbu</button></div></article>`).join("");document.querySelectorAll("[data-activate-project]").forEach(b=>b.onclick=()=>{state.selectedProjectId=b.dataset.activateProject;localStorage.setItem(KEY,JSON.stringify(state));renderAll();toast("Aktívna stavba bola zmenená.")});document.querySelectorAll("[data-edit-project]").forEach(b=>b.onclick=()=>openProjectEditor(b.dataset.editProject));document.querySelectorAll("[data-delete-project]").forEach(b=>b.onclick=()=>deleteProject(b.dataset.deleteProject))}
-function deleteProject(id){const p=project(id);if(!p)return;if(state.projects.length===1){alert("Poslednú stavbu nie je možné vymazať. Najprv vytvor inú stavbu.");return}const typed=prompt(`Vymazanie je trvalé. Pre potvrdenie napíš presný názov stavby:\n\n${p.name}`);if(typed!==p.name){if(typed!==null)alert("Názov sa nezhoduje. Stavba nebola vymazaná.");return}state.projects=state.projects.filter(x=>x.id!==id);state.assignments=state.assignments.filter(x=>x.projectId!==id);state.billings=state.billings.filter(x=>x.projectId!==id);state.materials=state.materials.filter(x=>x.projectId!==id);state.purchases=state.purchases.filter(x=>x.projectId!==id);state.machinePassport=state.machinePassport.filter(x=>x.projectId!==id);state.handovers=state.handovers.filter(x=>x.projectId!==id);state.workerSheets=state.workerSheets.filter(x=>x.projectId!==id);state.betpresTimesheets=state.betpresTimesheets.filter(x=>x.projectId!==id);state.thpTimesheets=state.thpTimesheets.filter(x=>x.projectId!==id);state.companyHourTimesheets=state.companyHourTimesheets.filter(x=>x.projectId!==id);state.companyTimesheets=state.companyTimesheets.filter(x=>x.projectId!==id);state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.projectId!==id);state.siteMeetings=state.siteMeetings.filter(x=>x.projectId!==id);state.controlDays=state.controlDays.filter(x=>x.projectId!==id);state.documentVersions=state.documentVersions.filter(x=>x.projectId!==id);state.calendarEvents=state.calendarEvents.filter(x=>x.projectId!==id);state.workStatements=state.workStatements.filter(x=>x.projectId!==id);state.workStatementDeletions=state.workStatementDeletions.filter(x=>x.projectId!==id);state.workBudgets=state.workBudgets.filter(x=>x.projectId!==id);state.siteDiaryWeather=(state.siteDiaryWeather||[]).filter(x=>x.projectId!==id);state.siteDiaryMachinery=(state.siteDiaryMachinery||[]).filter(x=>x.projectId!==id);state.siteDiaryInspections=(state.siteDiaryInspections||[]).filter(x=>x.projectId!==id);state.materialSamples=state.materialSamples.filter(x=>x.projectId!==id);if(state.selectedProjectId===id)state.selectedProjectId=state.projects[0]?.id||"";save("Stavba a jej naviazané údaje boli vymazané. Firmy zostali v databáze.")}
+function deleteProject(id){const p=project(id);if(!p)return;if(state.projects.length===1){alert("Poslednú stavbu nie je možné vymazať. Najprv vytvor inú stavbu.");return}const typed=prompt(`Vymazanie je trvalé. Pre potvrdenie napíš presný názov stavby:\n\n${p.name}`);if(typed!==p.name){if(typed!==null)alert("Názov sa nezhoduje. Stavba nebola vymazaná.");return}state.projects=state.projects.filter(x=>x.id!==id);state.assignments=state.assignments.filter(x=>x.projectId!==id);state.billings=state.billings.filter(x=>x.projectId!==id);state.materials=state.materials.filter(x=>x.projectId!==id);state.purchases=state.purchases.filter(x=>x.projectId!==id);state.machinePassport=state.machinePassport.filter(x=>x.projectId!==id);state.handovers=state.handovers.filter(x=>x.projectId!==id);state.workerSheets=state.workerSheets.filter(x=>x.projectId!==id);state.betpresTimesheets=state.betpresTimesheets.filter(x=>x.projectId!==id);state.thpTimesheets=state.thpTimesheets.filter(x=>x.projectId!==id);state.companyHourTimesheets=state.companyHourTimesheets.filter(x=>x.projectId!==id);state.companyTimesheets=state.companyTimesheets.filter(x=>x.projectId!==id);state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.projectId!==id);state.siteMeetings=state.siteMeetings.filter(x=>x.projectId!==id);state.controlDays=state.controlDays.filter(x=>x.projectId!==id);state.documentVersions=state.documentVersions.filter(x=>x.projectId!==id);state.calendarEvents=state.calendarEvents.filter(x=>x.projectId!==id);state.workStatements=state.workStatements.filter(x=>x.projectId!==id);state.workStatementDeletions=state.workStatementDeletions.filter(x=>x.projectId!==id);state.workBudgets=state.workBudgets.filter(x=>x.projectId!==id);state.siteDiaryWeather=(state.siteDiaryWeather||[]).filter(x=>x.projectId!==id);state.siteDiaryCrew=(state.siteDiaryCrew||[]).filter(x=>x.projectId!==id);state.siteDiaryMachinery=(state.siteDiaryMachinery||[]).filter(x=>x.projectId!==id);state.siteDiaryInspections=(state.siteDiaryInspections||[]).filter(x=>x.projectId!==id);state.materialSamples=state.materialSamples.filter(x=>x.projectId!==id);if(state.selectedProjectId===id)state.selectedProjectId=state.projects[0]?.id||"";save("Stavba a jej naviazané údaje boli vymazané. Firmy zostali v databáze.")}
 const projectFormDefaults={constructionPermit:"áno",surveyPoints:"geodetickým vytýčením",electricity:"Zo staveniskového rozvádzača",water:"Staveniskové rozvody",documentation:"Bola odovzdaná projektová dokumentácia"};
 function projectFormSet(id,value){if($(id))$(id).value=value??""}
 function resetProjectForm(){
@@ -2424,14 +2424,16 @@ function billingMonthRange(startMonth,endMonth){
  }
  return output
 }
+function billingValidMonth(value){return /^\d{4}-(0[1-9]|1[0-2])$/.test(String(value||""))}
 function billingProjectPeriod(projectRows){
  const currentMonth=todayISO().slice(0,7),p=activeProject()||{},
        recordMonths=[...(Array.isArray(p.billingMonths)?p.billingMonths:[]),...projectRows.map(record=>record.month)].filter(month=>/^\d{4}-\d{2}$/.test(month)).sort(),
        assignmentStarts=activeAssignments().map(item=>item.actualStart||item.contractStart||"").filter(Boolean).map(value=>value.slice(0,7)).sort(),
        assignmentEnds=activeAssignments().map(item=>item.actualEnd||item.contractEnd||"").filter(Boolean).map(value=>value.slice(0,7)).sort(),
-       startMonth=(p.startDate||"").slice(0,7)||assignmentStarts[0]||recordMonths[0]||currentMonth,
+       medicka=p.id==="p1",
+       startMonth=billingValidMonth(p.billingStartMonth)?p.billingStartMonth:(medicka?"2025-05":(p.startDate||"").slice(0,7)||assignmentStarts[0]||recordMonths[0]||currentMonth),
        inferredEnd=assignmentEnds.at(-1)||recordMonths.at(-1)||currentMonth,
-       endMonth=(p.endDate||"").slice(0,7)||([inferredEnd,currentMonth].sort().at(-1));
+       endMonth=billingValidMonth(p.billingEndMonth)?p.billingEndMonth:(medicka?"2026-12":(p.endDate||"").slice(0,7)||([inferredEnd,currentMonth].sort().at(-1)));
  return startMonth<=endMonth?{startMonth,endMonth}:{startMonth:endMonth,endMonth:startMonth}
 }
 function renderBillingTimelineMatrix(projectRows,companies,query="",companyId=""){
@@ -2439,7 +2441,8 @@ function renderBillingTimelineMatrix(projectRows,companies,query="",companyId=""
  if(!body||!foot||!head)return;
  const period=billingProjectPeriod(projectRows),monthKeys=billingMonthRange(period.startMonth,period.endMonth);
  if(periodLabel)periodLabel.textContent=monthKeys.length?`${formatBillingMonth(monthKeys[0])} – ${formatBillingMonth(monthKeys.at(-1))} · ${monthKeys.length} mesiacov`:"Doplň začiatok a koniec stavby";
- if(!$("billingAddMonthValue").value)$("billingAddMonthValue").value=todayISO().slice(0,7);
+ $("billingPeriodStart").value=period.startMonth;
+ $("billingPeriodEnd").value=period.endMonth;
  head.innerHTML=`<tr><th>Firma</th>${monthKeys.map(month=>`<th><span>${esc(monthNames[Number(month.slice(5,7))-1])}</span><small>${esc(month.slice(0,4))}</small></th>`).join("")}<th>Spolu</th></tr>`;
  const visibleCompanies=companies.filter(item=>(!companyId||item.id===companyId)&&(!query||item.name.toLowerCase().includes(query))),
        recordsByCell=new Map();
@@ -2540,12 +2543,13 @@ $("billingCurrentMonth").onclick=()=>{
  $("billingYearFilter").value=todayISO().slice(0,4);
  renderBilling()
 };
-$("billingAddMonth").onclick=()=>{
- const p=activeProject(),month=$("billingAddMonthValue").value;
- if(!p||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)){toast("Vyber mesiac, ktorý chceš pridať.");return}
- const existingMonths=new Set([...(p.billingMonths||[]),...state.billings.filter(record=>record.projectId===p.id).map(record=>record.month)]);
- if(existingMonths.has(month)){toast("Tento mesiac už je v tabuľke.");return}
- p.billingMonths=[...(p.billingMonths||[]),month].sort();save("Mesiac bol pridaný do fakturácie.")
+$("billingSavePeriod").onclick=()=>{
+ const p=activeProject(),start=$("billingPeriodStart").value,end=$("billingPeriodEnd").value;
+ if(!p||!billingValidMonth(start)||!billingValidMonth(end)){alert("Vyber počiatočný aj koncový mesiac fakturácie.");return}
+ if(end<start){alert("Koncový mesiac nemôže byť pred počiatočným.");return}
+ if(billingMonthRange(start,end).length>=240){alert("Vyber kratšie fakturačné obdobie.");return}
+ p.billingStartMonth=start;p.billingEndMonth=end;
+ save("Fakturačné obdobie stavby bolo uložené.")
 };
 $("clearBillingFilters").onclick=()=>{
  $("billingSearch").value="";
@@ -2642,16 +2646,38 @@ function syncBetpresWorkerRow(month,sheet){
  sortWorkerRows(targetSheet);
  return betpresRow
 }
+function workerCarryKey(row){
+ const label=workerCompanyMatchKey(workerRowLabel(row));
+ return row?.companyId?`company:${row.companyId}|${label}`:`name:${label}`
+}
+function syncPreviousWorkerCompanies(sheet,previous){
+ if(!sheet?.workerCarryEnabled||!previous?.rows?.length)return 0;
+ const present=new Set((sheet.rows||[]).filter(row=>!isBetpresWorkerRow(row)).map(workerCarryKey));
+ const excluded=new Set(sheet.excludedWorkerCarryKeys||[]);
+ let added=0;
+ for(const source of previous.rows){
+  if(isBetpresWorkerRow(source))continue;
+  const key=workerCarryKey(source);
+  if(!key||present.has(key)||excluded.has(key))continue;
+  sheet.rows.push({id:uid("wr"),name:source.name||workerRowLabel(source),alias:source.alias||workerRowLabel(source),companyId:source.companyId||"",actualName:source.actualName||company(source.companyId)?.name||"",values:{}});
+  present.add(key);added++
+ }
+ if(added)sortWorkerRows(sheet);
+ return added
+}
 function workerSheet(month=selectedWorkerMonth,create=true){
  let sheet=state.workerSheets.find(x=>x.projectId===state.selectedProjectId&&x.month===month);
+ const prev=create?[...state.workerSheets]
+  .filter(x=>x.projectId===state.selectedProjectId&&x.month<month)
+  .sort((a,b)=>b.month.localeCompare(a.month))[0]:null;
  if(!sheet&&create){
-  const prev=[...state.workerSheets]
-   .filter(x=>x.projectId===state.selectedProjectId&&x.month<month)
-   .sort((a,b)=>b.month.localeCompare(a.month))[0];
   sheet={
    id:uid("ws"),
    projectId:state.selectedProjectId,
    month,
+   workerCarryEnabled:true,
+   excludedWorkerCarryKeys:[],
+   knownAssignmentCompanyIds:[...(prev?.knownAssignmentCompanyIds||[])],
    rows:(prev?.rows||[])
     .filter(row=>!isBetpresWorkerRow(row))
     .map(r=>({
@@ -2668,7 +2694,10 @@ function workerSheet(month=selectedWorkerMonth,create=true){
   state.workerSheets.push(sheet);
   commitDirectState()
  }
- if(sheet)ensureBetpresWorkerRow(sheet);
+ if(sheet){
+  ensureBetpresWorkerRow(sheet);
+  if(create&&syncPreviousWorkerCompanies(sheet,prev))commitDirectState()
+ }
  return sheet
 }
 function workerRowLabel(row){
@@ -2818,7 +2847,7 @@ function renderWorkers(){
       ${workerRowCustomLabel(row)?`<span class="worker-company-alias">${esc(workerRowCustomLabel(row))}</span>`:""}
       ${betpres?`<small class="betpres-sync-note">automaticky z podsmenoviek BETPRES + THP</small>`:""}
      </div>
-     ${betpres?"":`<button data-del-worker-row="${row.id}">Vymazať</button>`}
+     ${betpres?"":`<button type="button" data-del-worker-row="${row.id}" aria-label="Odobrať ${esc(label)} z mesiaca ${esc(month)}" title="Odobrať firmu z tohto mesiaca">Odobrať</button>`}
     </div>
    </td>`;
   for(let day=1;day<=days;day++){
@@ -2869,16 +2898,21 @@ function renderWorkers(){
  });
 
  document.querySelectorAll("[data-del-worker-row]").forEach(button=>{
-  button.onclick=()=>{
-   const row=sheet.rows.find(item=>item.id===button.dataset.delWorkerRow),
-         label=row?workerRowLabel(row):"";
-   if(confirm(`Vymazať „${label}“ z mesiaca ${month}?`)){
-    sheet.rows=sheet.rows.filter(item=>item.id!==button.dataset.delWorkerRow);
-    save("Vymazanie názvu zo stavu pracovníkov")
-   }
-  }
+  button.onclick=()=>removeWorkerCompanyRow(button.dataset.delWorkerRow,month)
  })
 }
+function removeWorkerCompanyRow(rowId,month=selectedWorkerMonth){
+ const sheet=workerSheet(month,false),row=sheet?.rows?.find(item=>item.id===rowId);
+ if(!sheet||!row||isBetpresWorkerRow(row))return false;
+ const label=workerRowLabel(row),hasCounts=Object.values(row.values||{}).some(value=>value!==""&&value!==null&&value!==undefined);
+ if(!confirm(`Odobrať „${label}“ z mesiaca ${month}?${hasCounts?" Zadané počty v tomto mesiaci sa odstránia.":""} Ostatné mesiace zostanú zachované.`))return false;
+ sheet.excludedWorkerCarryKeys=[...new Set([...(sheet.excludedWorkerCarryKeys||[]),workerCarryKey(row)])];
+ if(row.companyId)sheet.knownAssignmentCompanyIds=[...new Set([...(sheet.knownAssignmentCompanyIds||[]),row.companyId])];
+ sheet.rows=sheet.rows.filter(item=>item.id!==rowId);
+ save(`Firma ${label} bola odobratá z mesiaca ${month}.`);
+ return true
+}
+window.removeWorkerCompanyRow=removeWorkerCompanyRow;
 $("workerMonth").onchange=()=>{selectedWorkerMonth=$("workerMonth").value;workerSheet(selectedWorkerMonth,true);betpresTimesheet(selectedWorkerMonth,true);thpTimesheet(selectedWorkerMonth,true);companyHourTimesheet(selectedWorkerMonth,true);companyTimesheet(selectedWorkerMonth,true);renderWorkers();renderBetpresTimesheet();renderThpTimesheet();renderCompanyHoursTimesheet();renderCompanyTimesheets()};$("workerPrevMonth").onclick=()=>{$("workerMonth").value=shiftMonth($("workerMonth").value||todayMonthValue(),-1);$("workerMonth").dispatchEvent(new Event("change"))};$("workerNextMonth").onclick=()=>{$("workerMonth").value=shiftMonth($("workerMonth").value||todayMonthValue(),1);$("workerMonth").dispatchEvent(new Event("change"))};$("workerCurrentMonth").onclick=()=>{$("workerMonth").value=todayMonthValue();$("workerMonth").dispatchEvent(new Event("change"));setTimeout(scrollWorkerCurrentDay,0)};
 function carryWorkerCompaniesFromPreviousMonth(){
  const month=$("workerMonth").value||selectedWorkerMonth||todayMonthValue(),previousMonth=shiftMonth(month,-1),previous=workerSheet(previousMonth,false);
@@ -2886,10 +2920,7 @@ function carryWorkerCompaniesFromPreviousMonth(){
  const target=workerSheet(month,true),targetRows=target.rows.filter(row=>!isBetpresWorkerRow(row));
  let added=0,renamed=0;
  previous.rows.filter(row=>!isBetpresWorkerRow(row)).forEach(source=>{
-  const sourceKeys=[source.actualName,source.alias,source.name].map(workerCompanyMatchKey).filter(Boolean),existing=targetRows.find(row=>source.companyId&&row.companyId===source.companyId)||targetRows.find(row=>{
-   const rowKeys=[row.actualName,row.alias,row.name].map(workerCompanyMatchKey).filter(Boolean);
-   return sourceKeys.some(key=>rowKeys.includes(key))
-  });
+  const existing=targetRows.find(row=>workerCarryKey(row)===workerCarryKey(source));
   if(existing){
    const custom=workerRowCustomLabel(source);
    if(custom&&!workerRowCustomLabel(existing)){existing.name=custom;existing.alias=custom;renamed++}
@@ -2898,7 +2929,7 @@ function carryWorkerCompaniesFromPreviousMonth(){
    return
   }
   const copied={id:uid("wr"),name:source.name||workerRowLabel(source),alias:source.alias||workerRowLabel(source),companyId:source.companyId||"",actualName:source.actualName||company(source.companyId)?.name||"",values:{}};
-  target.rows.push(copied);targetRows.push(copied);added++
+  target.rows.push(copied);targetRows.push(copied);target.excludedWorkerCarryKeys=(target.excludedWorkerCarryKeys||[]).filter(key=>key!==workerCarryKey(source));added++
  });
  sortWorkerRows(target);
  if(!added&&!renamed){alert("Všetky firmy z minulého mesiaca už v tomto mesiaci sú.");return}
@@ -2927,7 +2958,8 @@ $("workerCompanyForm").onsubmit=e=>{
  if(!name){alert("Vyber firmu z databázy alebo zadaj vlastný názov.");return}
  const sheet=workerSheet(selectedWorkerMonth,true);
  if(sheet.rows.some(r=>workerRowLabel(r).toLowerCase()===name.toLowerCase())){alert("Rovnaký názov už v tomto mesiaci existuje.");return}
- sheet.rows.push({id:uid("wr"),name,alias:custom||name,companyId:companyId||"",actualName:dbCompany?.name||"",values:{}});
+ const row={id:uid("wr"),name,alias:custom||name,companyId:companyId||"",actualName:dbCompany?.name||"",values:{}};
+ sheet.rows.push(row);sheet.excludedWorkerCarryKeys=(sheet.excludedWorkerCarryKeys||[]).filter(key=>key!==workerCarryKey(row));
  sortWorkerRows(sheet);$("workerCompanyModal").classList.add("hidden");save("Pridanie firmy do stavu pracovníkov")
 };
 

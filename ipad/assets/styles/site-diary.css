@@ -31,10 +31,10 @@
  .site-diary-actions{gap:7px}.site-diary-actions button{font-size:12px!important;padding:9px!important}
  .site-diary-weather{padding:11px}.site-diary-weather-top{align-items:start}.site-diary-weather-top button{max-width:42%;font-size:11px!important}.site-diary-weather-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.site-diary-weather-fields label:nth-child(-n+2){grid-column:span 2}.site-diary-weather-bottom{align-items:end}.site-diary-weather-bottom button{flex:0 0 auto;font-size:12px!important}
  .site-diary-card-foot>div{width:100%;display:grid;grid-template-columns:1fr 1fr}.site-diary-card-foot button{min-height:44px!important}
- #siteDiaryModal .site-diary-editor{width:100%!important;max-height:var(--apple-visual-height,100dvh)!important;overflow-y:auto!important;border-radius:0!important}
- #siteDiaryModal .form-grid{grid-template-columns:1fr!important;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
- #siteDiaryModal .form-grid>*{grid-column:1!important}
- #siteDiaryModal input:not([type=date]):not([type=file]),#siteDiaryModal textarea,#siteDiaryModal select{font-size:16px!important}
+ #siteDiaryModal .site-diary-editor,#siteDiaryMachineModal .site-diary-editor{width:100%!important;max-height:var(--apple-visual-height,100dvh)!important;overflow-y:auto!important;border-radius:0!important}
+ #siteDiaryModal .form-grid,#siteDiaryMachineModal .form-grid{grid-template-columns:1fr!important;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+ #siteDiaryModal .form-grid>*,#siteDiaryMachineModal .form-grid>*{grid-column:1!important}
+ #siteDiaryModal input:not([type=date]):not([type=file]),#siteDiaryModal textarea,#siteDiaryModal select,#siteDiaryMachineModal input,#siteDiaryMachineModal select{font-size:16px!important}
  #siteDiaryModal textarea{min-height:130px!important;line-height:1.45!important}
 }
 @media(prefers-reduced-motion:reduce){.site-diary-card button,.site-diary-daybar button{transition:none!important}}

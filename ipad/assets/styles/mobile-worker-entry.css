@@ -58,6 +58,8 @@ body.sitedesk-v3 .mobile-worker-attendance-input input.is-invalid{border-color:#
 .mobile-worker-company strong{color:var(--apple-ink);font-size:14px;line-height:1.25;font-weight:780;overflow-wrap:anywhere}
 .mobile-worker-company small{margin-top:3px;color:var(--apple-secondary);font-size:11px;font-weight:650}
 .mobile-worker-company span{margin-top:5px;color:#4f4d9f;font-size:9px;font-weight:760;text-transform:uppercase;letter-spacing:.04em}
+#mobileWorkerDayModal .mobile-worker-remove-company{display:inline-flex;align-items:center;justify-content:center;margin-top:7px;min-height:40px!important;padding:6px 10px!important;border:1px solid rgba(177,54,45,.3)!important;border-radius:10px!important;background:#fff5f4!important;color:#9a2f28!important;box-shadow:none!important;font-size:11px!important;font-weight:700!important}
+#mobileWorkerDayModal .mobile-worker-remove-company:active{background:#ffe8e5!important;transform:scale(.97)}
 body.sitedesk-v3 .mobile-worker-name-input{width:100%!important;min-width:0!important;height:44px!important;min-height:44px!important;padding:8px 10px!important;border:1px solid rgba(60,60,67,.14)!important;border-radius:11px!important;background:#f5f5f7!important;color:var(--apple-ink)!important;font-size:16px!important;font-weight:760!important;letter-spacing:-.01em!important;scroll-margin-block:14px}
 body.sitedesk-v3 .mobile-worker-name-input::placeholder{color:#8e8e93;font-weight:600}
 .mobile-worker-stepper{display:grid;grid-template-columns:52px 78px 52px;gap:7px;align-items:center}

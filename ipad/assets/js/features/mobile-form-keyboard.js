@@ -1,6 +1,6 @@
 (function(){
  "use strict";
- const phone=matchMedia("(max-width: 800px) and (pointer: coarse)"),selectors=["#calendarEventModal","#mobileDiaryModal","#siteDiaryModal"],timers=new WeakMap();
+ const phone=matchMedia("(max-width: 800px) and (pointer: coarse)"),selectors=["#calendarEventModal","#mobileDiaryModal","#siteDiaryModal","#siteDiaryMachineModal"],timers=new WeakMap();
  const textField=element=>element?.matches?.('textarea,input:not([type="hidden"]):not([type="date"]):not([type="time"]):not([type="color"]):not([type="file"]):not([type="checkbox"]):not([type="radio"])');
  function reveal(modal,field){
   if(!modal||!field||!modal.contains(field))return;const card=modal.querySelector(":scope > .modal-card"),label=field.closest("label")||field;if(!card)return;

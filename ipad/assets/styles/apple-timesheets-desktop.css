@@ -4,11 +4,22 @@
   --timesheet-blue:#0a5b91;--timesheet-accent:#0a84ff;--timesheet-ink:#142b3d;
   --timesheet-muted:#657786;--timesheet-line:rgba(60,60,67,.18);--timesheet-fill:#f5f7fa
  }
- body.workers-focus-mode #workers.active{grid-template-rows:54px 64px 50px minmax(0,1fr)!important;gap:9px!important;padding:10px 14px 14px!important;background:#f5f5f7!important}
- body.workers-focus-mode #workers .page-title{height:54px!important;padding:0 2px!important;overflow:visible!important}
- body.workers-focus-mode #workers .page-title h1{font-size:25px!important;letter-spacing:-.025em!important;color:var(--timesheet-ink)!important}
- body.workers-focus-mode #workers .header-actions{align-items:center!important;scrollbar-width:none}
- body.workers-focus-mode #workers .header-actions button{height:40px!important;min-height:40px!important;padding:0 14px!important;border-radius:12px!important;font-size:12px!important}
+ body.workers-focus-mode #workers.active{grid-template-rows:auto 64px 50px minmax(0,1fr)!important;gap:9px!important;padding:10px 14px 14px!important;background:#f5f5f7!important}
+ body.workers-focus-mode #workers .page-title{
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:space-between!important;
+  gap:8px 12px!important;height:auto!important;min-height:54px!important;padding:4px 2px!important;overflow:visible!important
+ }
+ body.workers-focus-mode #workers .page-title>div:first-child{flex:0 0 auto!important;width:auto!important;text-align:left!important}
+ body.workers-focus-mode #workers .page-title h1{font-size:25px!important;letter-spacing:-.025em!important;color:var(--timesheet-ink)!important;text-align:left!important}
+ body.workers-focus-mode #workers .header-actions{
+  flex:1 1 700px!important;width:auto!important;min-width:0!important;max-width:none!important;
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;
+  gap:6px!important;overflow:visible!important;scrollbar-width:none
+ }
+ body.workers-focus-mode #workers .header-actions button{
+  height:34px!important;min-height:34px!important;padding:0 11px!important;
+  border-radius:10px!important;font-size:11px!important;white-space:nowrap
+ }
  body.workers-focus-mode #workers #addCompanyHourTimesheet{background:linear-gradient(180deg,#1682c4,#09629a)!important;color:#fff!important;border-color:#09629a!important;box-shadow:0 8px 20px rgba(10,91,145,.25)!important}
 
  body.workers-focus-mode #workers .worker-mode-tabs{
@@ -102,3 +113,39 @@
 }
 
 @media(min-width:801px) and (prefers-contrast:more){body.workers-focus-mode #workers .worker-table td,body.workers-focus-mode #workers .worker-table th{border-color:#667786!important}}
+
+@media (min-width:801px) and (max-width:1230px){
+ body.workers-focus-mode #workers .page-title{
+  flex-direction:column!important;align-items:stretch!important;justify-content:center!important;
+  gap:6px!important
+ }
+ body.workers-focus-mode #workers .page-title>div:first-child{width:100%!important}
+ body.workers-focus-mode #workers .header-actions{
+  flex:0 0 auto!important;width:100%!important;justify-content:flex-start!important
+ }
+}
+@media (min-width:801px){
+ body.workers-focus-mode #workers #workerCompaniesPanel .worker-company-cell{padding-right:34px!important}
+ body.workers-focus-mode #workers #workerCompaniesPanel .worker-company-cell button{
+  right:3px!important;width:24px!important;min-width:24px!important;height:24px!important;min-height:24px!important;
+  opacity:1!important;background:#fff4f2!important;border:1px solid #d99089!important;color:#9c2f28!important
+ }
+ body.workers-focus-mode #workers #workerCompaniesPanel .worker-company-cell button:after{
+  font-size:16px!important;line-height:20px!important
+ }
+ body.workers-focus-mode #workers #workerCompaniesPanel .worker-company-cell button:focus-visible{
+  outline:2px solid #0a84ff!important;outline-offset:2px!important
+ }
+}
+@media (min-width:801px) and (max-width:1230px){
+ body.workers-focus-mode #workers .worker-mode-tabs button{gap:6px!important;padding:5px 7px!important}
+ body.workers-focus-mode #workers .worker-mode-tabs button>span{
+  width:30px!important;min-width:30px!important;height:30px!important;font-size:17px!important
+ }
+ body.workers-focus-mode #workers .worker-mode-tabs button div{overflow:visible!important}
+ body.workers-focus-mode #workers .worker-mode-tabs button strong{
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important;
+  font-size:11.5px!important;line-height:1.12!important
+ }
+ body.workers-focus-mode #workers .worker-mode-tabs button small{display:none!important}
+}
