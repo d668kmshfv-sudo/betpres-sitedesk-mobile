@@ -31,6 +31,26 @@ Prevzatie zápisov do hlavného denníka má vytvoriť nový hlavný záznam s o
 
 Výzva musí mať konkrétneho adresáta podľa používateľského účtu, nie iba textové označenie funkcie. Odpoveď aj vlastný zápis sa ukladajú osobitne s autorom, časom a textom. Vlastník ich vidí v denníku a v dennom PDF. Odpoveď nie je automaticky formálny elektronický podpis.
 
+## Výzva e-mailom a odpoveď v denníku
+
+Vlastník vyberie stavbu, deň a adresáta (dozor, projektant, statik alebo investor) podľa **konkrétneho e-mailu**. Zapíše predmet, termín a text výzvy. Tlačidlo **Odoslať výzvu e-mailom** musí najprv uložiť výzvu na server s nemenným ID a potom požiadať serverovú funkciu o odoslanie. Klient nesmie držať e-mailový API kľúč. Uloženie výzvy samo osebe nesmie zobrazovať stav „Odoslaná“.
+
+E-mail uvedie stavbu, predmet, termín a odkaz na danú výzvu. Odkaz neudeľuje prístup bez prihlásenia a neobsahuje heslo ani prístupový token. Adresát si vytvorí vlastný účet so svojím e-mailom, potvrdí jeho vlastníctvo a nastaví si heslo sám. Po prihlásení vidí len výzvy na pridelenej stavbe adresované jeho účtu a môže na každú odpovedať samostatne. Prihlásená identita musí byť naviazaná na overený e-mail adresáta; voľne vyplnené meno alebo označenie roly nestačí.
+
+Odpoveď sa uloží ako **nový, samostatný záznam** s ID výzvy, ID účtu autora a časom prideleným serverom. Pôvodnú výzvu ani cudzie odpovede adresát nesmie upraviť alebo zmazať. Ďalšie stanovisko sa pridá ako nový záznam. Vlastník vidí celú výmenu pri výzve; denné PDF obsahuje text výzvy, e-mail adresáta, stav doručenia a jednotlivé odpovede s autormi a časmi. Stav „Vybavené“ nastavuje vlastník až po kontrole odpovede.
+
+Stav doručenia sa musí rozlišovať: **Pripravená**, **Odosielanie**, **Odoslaná poskytovateľovi**, **Odoslanie zlyhalo** a **Zodpovedaná**. O prijatí do schránky sa smie tvrdiť len to, čo poskytovateľ e-mailu skutočne potvrdí. Opakované kliknutie na odoslanie tej istej verzie výzvy nesmie vytvoriť duplicitný e-mail; neúspešné odoslanie musí umožniť vedomý opakovaný pokus. Uložiť treba čas pokusu a identifikátor správy od poskytovateľa bez e-mailového API kľúča.
+
+### Serverové minimum
+
+- Samostatná tabuľka priradení používateľa ku konkrétnej stavbe a prípadne firme; rola „invited_reviewer“ umožní čítať pridelený denník a vkladať vlastné stanoviská.
+- Samostatná tabuľka výziev s identifikátorom stavby, ID účtu adresáta, overeným e-mailom, predmetom, termínom, autorom a stavom odoslania. Odpovede patria do oddelenej tabuľky s ID výzvy, ID účtu autora, textom a serverovým časom. Obe tabuľky musia mať RLS pre čítanie aj zápis.
+- Serverová funkcia na odoslanie e-mailu musí z prihlasovacieho tokenu overiť vlastníka a oprávnenie k stavbe, načítať výzvu zo servera, až potom odoslať cez poskytovateľa s overenou doménou odosielateľa. Príjemcu nesmie prevziať iba z požiadavky prehliadača.
+- Odpoveď je možná iba z účtu uvedeného ako adresát výzvy a len pre pridelenú stavbu. Priame HTTP volanie s cudzím ID výzvy musí skončiť zamietnutím. Prístup k pôvodnému JSON pracovnému priestoru zostáva tejto roli zakázaný.
+- Na zobrazenie e-mailu a stavu odoslania v BETPRES app treba najprv preniesť doterajšie lokálne výzvy do samostatných serverových záznamov. Staré výzvy bez e-mailu zostanú v denníku ako neodoslané; nesmú sa automaticky rozposlať.
+
+Pred zapnutím treba mať prístup k schéme a RLS produkčného Supabase, možnosť nasadiť SQL a serverovú funkciu a e-mailového poskytovateľa s overenou odosielateľskou doménou. Tieto veci zatiaľ v repozitári nie sú; dnešné tlačidlo **Uložiť výzvu** len uloží lokálny zápis a žiadny e-mail neposiela.
+
 ## Technická hranica
 
 Dnes BETPRES app načíta celý pracovný priestor v jednom JSON zázname a uloží ho lokálne. Samotné skrytie menu preto nestačí na obmedzenie prístupu. Budúca oddelená aplikácia nesmie volať existujúce načítanie celého pracovného priestoru ani používať jeho lokálnu cache.
@@ -53,6 +73,8 @@ Odporúčaná schéma: tabuľka priradení používateľ–stavba–firma–rola
 - Zapisovateľ firmy A nevidí denník firmy B ani hlavný denník, nevie vložiť záznam pod firmou B a nevie otvoriť jej prílohy.
 - Prevzatie záznamov firmy A za deň do hlavného denníka zachová ostatné firmy; opakované prevzatie tej istej verzie nevytvorí duplicitu.
 - Prizvaný účastník môže vytvoriť vlastný zápis a odpovedať iba na výzvu adresovanú jeho účtu; nemôže zmeniť cudzí pôvodný text.
+- E-mail sa odošle až po výslovnom kliknutí vlastníka; neúspešné odoslanie zostane označené ako zlyhané. Odkaz bez prihlásenia neotvorí výzvu a adresát A sa nedostane k výzve ani odpovedi adresáta B.
+- Druhé odoslanie tej istej verzie nevytvorí duplicitu. Odpoveď vznikne až po prihlásení adresáta, zobrazí sa vlastníkovi aj v PDF a pôvodný text výzvy ostane zachovaný.
 - Odpoveď zostane po synchronizácii, po aktualizácii aplikácie a zobrazí sa vlastníkovi aj v dennom PDF.
 - Odhlásenie a prihlásenie iného používateľa na rovnakom zariadení neukáže dáta predchádzajúceho účtu.
 

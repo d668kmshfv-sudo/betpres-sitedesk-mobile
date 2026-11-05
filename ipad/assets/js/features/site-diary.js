@@ -134,6 +134,7 @@
  function choices(){
   const map=new Map();
   state.companies.forEach(item=>{if(item.name)map.set(item.id,{id:item.id,name:item.name})});
+  const betpres=betpresCompany();if(![...map.values()].some(item=>norm(item.name).startsWith("betpres")))map.set(betpres.id,{id:betpres.id,name:betpres.name});
   for(const date of [day,get("siteDiaryEntryDate")?.value].filter(Boolean))for(const item of rosterForDay(date))if(!map.has(item.id))map.set(item.id,{id:item.id,name:item.name});
   const months=new Set([day.slice(0,7),get("siteDiaryEntryDate")?.value.slice(0,7)].filter(Boolean));
   (state.workerSheets||[]).filter(sheet=>sheet.projectId===state.selectedProjectId&&months.has(sheet.month)).forEach(sheet=>(sheet.rows||[]).forEach(row=>{
@@ -173,9 +174,10 @@
  }
  function openEditor(id="",chosenCompany=""){
   const item=id?rows().find(record=>record.id===id):null,date=item?.date||day;
-  get("siteDiaryId").value=item?.id||"";get("siteDiaryEntryDate").value=date;fillCompanyOptions(get("siteDiaryEntryCompany"),item?.companyId||chosenCompany);
+   const selectedId=item?.companyId||chosenCompany||betpresCompany().id;
+   get("siteDiaryId").value=item?.id||"";get("siteDiaryEntryDate").value=date;fillCompanyOptions(get("siteDiaryEntryCompany"),selectedId);
   get("siteDiaryCustomCompany").value="";toggleCustomSupplier("siteDiaryEntryCompany","siteDiaryCustomCompanyWrap","siteDiaryCustomCompany");
-  get("siteDiaryWorkers").value=item?displayedWorkers(item):workersAt(date,chosenCompany,selectedCompanyName());get("siteDiaryWorkers").dataset.userEdited=item?.workersManual?"1":"0";
+   get("siteDiaryWorkers").value=item?displayedWorkers(item):workersAt(date,selectedId,selectedCompanyName());get("siteDiaryWorkers").dataset.userEdited=item?.workersManual?"1":"0";
   get("siteDiaryProfession").value=item?.profession||"";get("siteDiaryWork").value=workDescription(item);
   photos=Array.isArray(item?.photos)?item.photos.map(photo=>({...photo})):[];
   documents=Array.isArray(item?.attachments)?item.attachments.map(document=>({...document})):[];newFiles=[];
@@ -195,7 +197,7 @@
  }
  async function saveEntry(event){
   event.preventDefault();if(busy)return;
-  const date=get("siteDiaryEntryDate").value,supplier=selectedWorkCompany(),companyId=supplier.id,companyLabel=supplier.name,work=get("siteDiaryWork").value.trim();
+   const date=get("siteDiaryEntryDate").value,supplier=selectedWorkCompany().id?selectedWorkCompany():betpresCompany(),companyId=supplier.id,companyLabel=supplier.name,work=get("siteDiaryWork").value.trim();
   if(!date||!companyId||!companyLabel||!work){form.reportValidity();return}
   const oldId=get("siteDiaryId").value,existing=oldId?rows().find(item=>item.id===oldId):null,duplicate=recordFor(date,companyId);
   if(duplicate&&duplicate.id!==oldId){alertUser("Táto firma už má v daný deň zápis. Otvor ho cez Upraviť záznam.");return}
@@ -283,7 +285,7 @@
   get("siteDiaryMachineRows").innerHTML=machines.map(item=>`<div class="site-diary-data-row" role="row"><span class="site-diary-data-primary" role="cell">${escape(item.name)}</span><span role="cell">${escape(item.companyName)}</span><strong role="cell">${Math.max(0,Number(item.count)||0)}</strong><span class="site-diary-machine-tools" role="cell"><button type="button" class="ghost" data-site-diary-machine-edit="${escape(item.id)}" aria-label="Upraviť ${escape(item.name)}">Upraviť</button><button type="button" class="ghost" data-site-diary-machine-remove="${escape(item.id)}" aria-label="Odstrániť ${escape(item.name)}">×</button></span></div>`).join("")||'<p class="site-diary-data-empty">Mechanizmy zatiaľ nie sú zapísané.</p>';
   get("siteDiaryDate").value=day;get("siteDiaryDaySummary").textContent=`${entries.length} ${entries.length===1?"záznam":entries.length<5?"záznamy":"záznamov"}`;
   get("siteDiaryExportCompany").disabled=!exportOptions.length;
-  get("siteDiaryDayList").innerHTML=entries.map(item=>`<article class="site-diary-card"><p class="site-diary-card-work">${escape(workDescription(item))}</p><div class="site-diary-card-meta"><span>${displayedWorkers(item)} pracovníkov</span></div><div class="site-diary-card-foot"><small>${(item.photos||[]).length} foto · ${(item.attachments||[]).length} PDF</small><button type="button" class="ghost site-diary-edit" data-site-diary-edit="${escape(item.id)}">Upraviť</button></div></article>`).join("")||'<div class="site-diary-empty"><strong>Zatiaľ tu nie je opis prác</strong><span>Pridaj, čo sa v tento deň robilo. Počet pracovníkov sa doplní zo Stavu pracovníkov.</span></div>'
+  get("siteDiaryDayList").innerHTML=entries.map(item=>`<article class="site-diary-card"><p class="site-diary-card-work">${escape(workDescription(item))}</p><div class="site-diary-card-meta"><span>${displayedWorkers(item)} pracovníkov</span></div><div class="site-diary-card-foot"><button type="button" class="ghost site-diary-edit" data-site-diary-edit="${escape(item.id)}">Upraviť</button></div></article>`).join("")||'<div class="site-diary-empty"><strong>Zatiaľ tu nie je opis prác</strong><span>Pridaj, čo sa v tento deň robilo. Počet pracovníkov sa doplní zo Stavu pracovníkov.</span></div>'
   const inspections=inspectionsForDay(day);get("siteDiaryInspectionTotal").textContent=`${inspections.length} ${inspections.length===1?"výzva":inspections.length<5?"výzvy":"výziev"}`;
   get("siteDiaryInspectionRows").innerHTML=inspections.map(item=>`<article class="site-diary-inspection-row"><div class="site-diary-inspection-main"><strong>${escape(item.subject)}</strong><span>${escape(item.recipient)}${item.person?` · ${escape(item.person)}`:""}${item.dueAt?` · ${escape(inspectionDueLabel(item.dueAt))}`:""}</span>${item.note?`<p>${escape(item.note)}</p>`:""}</div><span class="site-diary-inspection-status${item.status==="done"?" is-done":""}">${item.status==="done"?"Vykonané":"Čaká"}</span><div class="site-diary-machine-tools"><button type="button" class="ghost" data-site-diary-inspection-edit="${escape(item.id)}">Upraviť</button><button type="button" class="ghost" data-site-diary-inspection-remove="${escape(item.id)}" aria-label="Odstrániť výzvu">×</button></div></article>`).join("")||'<p class="site-diary-data-empty">Na tento deň ešte nie je zapísaná žiadna kontrola ani výzva.</p>'
  }
@@ -345,7 +347,7 @@
     let archive=null;
     for(const url of [
      `https://raw.githubusercontent.com/d668kmshfv-sudo/betpres-sitedesk-mobile/main/ipad/assets/data/shmu-history.json?date=${date}&t=${Math.floor(Date.now()/300000)}`,
-     "assets/data/shmu-history.json?v=5.7.8"
+     "assets/data/shmu-history.json?v=5.7.9"
     ]){
      try{const response=await fetch(url,{cache:"no-store"});if(response.ok){const value=await response.json();if(value?.dates?.[date]){archive=value;break}}}catch{}
     }
@@ -383,7 +385,12 @@
    const crewByDate=Object.fromEntries(dates.map(date=>[date,crewForDay(date).filter(item=>!selectedCompanyId||item.companyId===selectedCompanyId)]));
    const machineryByDate=Object.fromEntries(dates.map(date=>[date,machinesForDay(date).filter(item=>!selectedCompanyId||item.companyId===selectedCompanyId).map(item=>({name:item.name,companyName:item.companyName,count:item.count}))]));
    const inspectionsByDate=Object.fromEntries(dates.map(date=>[date,inspectionsForDay(date).map(item=>({recipient:[item.recipient,item.person].filter(Boolean).join(" · "),subject:item.subject,dueDate:item.dueAt,note:item.note,status:item.status}))]));
-   await window.siteDiaryPrint({mode,entries:normalized,weatherByDate,crewByDate,machineryByDate,inspectionsByDate,projectName:siteProject()?.name||"BETPRES",projectLocation:siteProject()?.address||siteProject()?.city||"",title,fileName,letterheadImage:LETTERHEAD_IMAGE})
+   const dayFilesByDate=Object.fromEntries(await Promise.all(dates.map(async date=>{
+    const record=(state.siteDiaryDayAttachments||[]).find(item=>item.projectId===state.selectedProjectId&&item.date===date);
+    const photos=mode==="day"?await Promise.all((record?.photos||[]).map(async photo=>{try{return photo.dataUrl||photo.path&&await cloudPhotoObjectUrl(photo.path)||""}catch{return""}})):[];
+    return[date,{attachments:(record?.attachments||[]).map(item=>({name:item.name})),photos:photos.filter(Boolean)}]
+   })));
+   await window.siteDiaryPrint({mode,entries:normalized,weatherByDate,crewByDate,machineryByDate,inspectionsByDate,dayFilesByDate,projectName:siteProject()?.name||"BETPRES",projectLocation:siteProject()?.address||siteProject()?.city||"",title,fileName,letterheadImage:LETTERHEAD_IMAGE})
   }catch(error){alertUser(`Export sa nepodaril: ${error.message||error}`)}
  }
  function dayReportEntries(){return rows().filter(item=>item.date===day).sort((a,b)=>companyName(a).localeCompare(companyName(b),"sk"))}

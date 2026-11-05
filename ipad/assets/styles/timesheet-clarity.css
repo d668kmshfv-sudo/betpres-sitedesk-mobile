@@ -1,0 +1,234 @@
+/* The BETPRES and THP grids use one consistent sticky-column geometry. */
+@media (min-width: 801px) {
+  /* Give the grid more room without shrinking its editable text. */
+  body.sitedesk-v3.workers-focus-mode #workers.active {
+    grid-template-rows: auto 52px 50px minmax(0, 1fr) !important;
+    gap: 7px !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers .page-title h1 { font-size: 22px !important; }
+  body.sitedesk-v3.workers-focus-mode #workers .worker-mode-tabs {
+    height: 52px !important;
+    min-height: 52px !important;
+    padding: 5px !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers .worker-mode-tabs button {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 5px 10px !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers .worker-mode-tabs button > span { font-size: 16px !important; }
+  body.sitedesk-v3.workers-focus-mode #workers .betpres-timesheet-summary,
+  body.sitedesk-v3.workers-focus-mode #workers .company-hours-summary {
+    height: 54px !important;
+    gap: 7px !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers .betpres-timesheet-summary article,
+  body.sitedesk-v3.workers-focus-mode #workers .company-hours-summary article {
+    min-height: 54px !important;
+    padding: 7px 12px 7px 15px !important;
+    border-radius: 11px !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers .betpres-timesheet-summary span,
+  body.sitedesk-v3.workers-focus-mode #workers .company-hours-summary span {
+    margin-bottom: 2px !important;
+    font-size: 10px !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers .betpres-timesheet-summary strong,
+  body.sitedesk-v3.workers-focus-mode #workers .company-hours-summary strong {
+    font-size: 18px !important;
+    line-height: 1.1 !important;
+  }
+
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table {
+    min-width: 1592px !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table th.employee-personal-number-col,
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table td.employee-personal-number-col {
+    position: sticky !important;
+    left: 0 !important;
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table th.employee-col,
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table td.employee-cell,
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tfoot td.employee-col {
+    position: sticky !important;
+    left: var(--betpres-personal-column-width, 64px) !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    box-sizing: border-box !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table th.employee-col,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table td.employee-cell,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tfoot td.employee-col {
+    position: sticky !important;
+    left: 0 !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    box-sizing: border-box !important;
+  }
+
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th {
+    height: 49px !important;
+    min-height: 49px !important;
+    padding: 5px 2px !important;
+    border: 0 !important;
+    border-right: 1px solid #4c7595 !important;
+    border-bottom: 2px solid #a5bfd2 !important;
+    background: #164c72 !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    font-weight: 750 !important;
+    line-height: 1.1 !important;
+    font-variant-numeric: tabular-nums;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.employee-personal-number-col,
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.employee-col,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.employee-col {
+    z-index: 30 !important;
+    background: #103c5d !important;
+    color: #fff !important;
+    font-size: 11px !important;
+    letter-spacing: .02em !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.employee-col,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.employee-col {
+    padding-left: 14px !important;
+    text-align: left !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.weekend,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.weekend {
+    background: #e6edf2 !important;
+    color: #35536a !important;
+    border-right-color: #c5d2dc !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.holiday,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.holiday {
+    background: #f9e9e5 !important;
+    color: #922f29 !important;
+    border-right-color: #e5c7c3 !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.today-col,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.today-col {
+    background: #0874c5 !important;
+    color: #fff !important;
+    box-shadow: inset 2px 0 0 #70b9ee, inset -2px 0 0 #70b9ee !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th .worker-day-name,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th .worker-day-name {
+    display: block !important;
+    margin: 0 0 2px !important;
+    color: #d5e9f8 !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    letter-spacing: .03em !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.weekend .worker-day-name,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.weekend .worker-day-name { color: #5b7284 !important; }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.holiday .worker-day-name,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.holiday .worker-day-name { color: #aa655e !important; }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.today-col .worker-day-name,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.today-col .worker-day-name { color: #e7f5ff !important; }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel .company-timesheet-day-hint,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel .company-timesheet-day-hint { display: none !important; }
+
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tbody td,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tbody td {
+    border: 0 !important;
+    border-right: 1px solid #dce5eb !important;
+    border-bottom: 1px solid #dce5eb !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tbody tr:hover td,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tbody tr:hover td { background: #eaf4fb !important; }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tbody td.employee-personal-number-col,
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tbody td.employee-cell,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tbody td.employee-cell {
+    z-index: 12 !important;
+    background: #fff !important;
+    border-right: 2px solid #a9c0d0 !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tbody tr:nth-child(even) td.employee-personal-number-col,
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tbody tr:nth-child(even) td.employee-cell,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tbody tr:nth-child(even) td.employee-cell { background: #f7fafc !important; }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel .employee-name,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel .employee-name { color: #172f42 !important; font-size: 13px !important; font-weight: 760 !important; }
+
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tfoot td,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tfoot td {
+    height: 43px !important;
+    min-height: 43px !important;
+    border: 0 !important;
+    border-top: 2px solid #a7c0d1 !important;
+    border-right: 1px solid #c7d9e5 !important;
+    background: #e8f1f7 !important;
+    color: #173d58 !important;
+    font-size: 12px !important;
+    font-weight: 750 !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tfoot td.employee-personal-number-col,
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tfoot td.employee-col,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tfoot td.employee-col {
+    z-index: 21 !important;
+    background: #dceaf3 !important;
+    color: #153c58 !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tfoot td.weekend,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tfoot td.weekend { background: #dce5eb !important; color: #3b5365 !important; }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tfoot td.holiday,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tfoot td.holiday { background: #f7e3df !important; color: #8f3029 !important; }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tfoot td.today-col,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tfoot td.today-col { background: #d4eafd !important; color: #07558f !important; }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table thead th.monthly-total-col,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table thead th.monthly-total-col {
+    z-index: 31 !important;
+    background: #103c5d !important;
+    color: #fff !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tfoot td.monthly-total-col,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tfoot td.monthly-total-col {
+    z-index: 22 !important;
+    background: #dceaf3 !important;
+    color: #123b58 !important;
+  }
+
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tbody tr.employee-timesheet-empty td,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tbody tr.employee-timesheet-empty td,
+  body.sitedesk-v3.workers-focus-mode #workers #betpresTimesheetPanel table.betpres-timesheet-table tbody td.employee-timesheet-empty,
+  body.sitedesk-v3.workers-focus-mode #workers #thpTimesheetPanel table.betpres-timesheet-table tbody td.employee-timesheet-empty {
+    position: static !important;
+    width: auto !important;
+    max-width: none !important;
+    height: 90px !important;
+    padding: 24px 30px 24px 96px !important;
+    border-bottom: 0 !important;
+    background: #f7fafc !important;
+    color: #456072 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+  body.sitedesk-v3.workers-focus-mode #workers .employee-timesheet-empty strong,
+  body.sitedesk-v3.workers-focus-mode #workers .employee-timesheet-empty span { display: block; }
+  body.sitedesk-v3.workers-focus-mode #workers .employee-timesheet-empty strong { color: #26485f; font-size: 15px; }
+  body.sitedesk-v3.workers-focus-mode #workers .employee-timesheet-empty span { margin-top: 3px; color: #687d8e; font-size: 12px; font-weight: 450; }
+}
+
+@media (min-width: 801px) and (prefers-contrast: more) {
+  body.workers-focus-mode #workers #betpresTimesheetPanel .betpres-timesheet-table th,
+  body.workers-focus-mode #workers #betpresTimesheetPanel .betpres-timesheet-table td,
+  body.workers-focus-mode #workers #thpTimesheetPanel .betpres-timesheet-table th,
+  body.workers-focus-mode #workers #thpTimesheetPanel .betpres-timesheet-table td { border-color: #60798b !important; }
+}

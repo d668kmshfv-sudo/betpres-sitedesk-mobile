@@ -336,3 +336,98 @@ body.sitedesk-v3 #mobileDiary .site-diary-primary-actions button:active {
   #mobileDiary .site-diary-current-action,
   body.sitedesk-v3 #mobileDiary .site-diary-primary-actions button { border-color: #3c5264 !important; }
 }
+
+/* Entry actions belong to the records they create. */
+#mobileDiary .site-diary-heading-label {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 9px;
+  min-width: 0;
+}
+#mobileDiary .site-diary-records-head,
+#mobileDiary .site-diary-action-heading { align-items: center; }
+body.sitedesk-v3 #mobileDiary .site-diary-records-head #siteDiaryAddInline,
+body.sitedesk-v3 #mobileDiary .site-diary-action-heading #siteDiaryAddMachine {
+  flex: 0 0 auto;
+  min-height: 44px !important;
+  padding: 7px 11px !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  font-size: 12.5px !important;
+  font-weight: 720 !important;
+  white-space: nowrap !important;
+}
+body.sitedesk-v3 #mobileDiary .site-diary-records-head #siteDiaryAddInline {
+  border-color: #0a5b91 !important;
+  background: #0a5b91 !important;
+  color: #fff !important;
+}
+body.sitedesk-v3 #mobileDiary .site-diary-action-heading #siteDiaryAddMachine {
+  border-color: #a9c7da !important;
+  background: #f0f6fa !important;
+  color: #0a5485 !important;
+}
+body.sitedesk-v3 #mobileDiary .site-diary-records-head button:active,
+body.sitedesk-v3 #mobileDiary .site-diary-action-heading button:active {
+  transform: scale(.97);
+  transition: transform 100ms ease-out;
+}
+@media (max-width: 380px) {
+  #mobileDiary .site-diary-heading-label { display: grid; gap: 0; }
+  #mobileDiary .site-diary-records-head,
+  #mobileDiary .site-diary-action-heading { gap: 6px; }
+  body.sitedesk-v3 #mobileDiary .site-diary-records-head #siteDiaryAddInline,
+  body.sitedesk-v3 #mobileDiary .site-diary-action-heading #siteDiaryAddMachine { padding-inline: 8px !important; font-size: 12px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.sitedesk-v3 #mobileDiary .site-diary-records-head button:active,
+  body.sitedesk-v3 #mobileDiary .site-diary-action-heading button:active { transform: none; transition: none; }
+}
+
+/* Compact record status: the selected week stays visible, the month opens on demand. */
+#mobileDiary .site-diary-missing-days { margin: 0 0 8px; padding: 6px 0 9px; border-bottom: 1px solid #dbe3e9; }
+#mobileDiary .site-diary-missing-week-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; color: #52616c; font-size: 11px; font-weight: 650; }
+#mobileDiary .site-diary-missing-week-head small { color: #6c7882; font-size: 10px; font-weight: 500; }
+#mobileDiary .site-diary-missing-week-head i { display: inline-block; width: 7px; height: 7px; margin-right: 3px; border-radius: 50%; background: #b73533; }
+#mobileDiary .site-diary-missing-week,
+#mobileDiary .site-diary-missing-month-grid,
+#mobileDiary .site-diary-missing-month-labels { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; }
+#mobileDiary .site-diary-missing-week { margin-top: 6px; }
+body.sitedesk-v3 #mobileDiary .site-diary-day-chip { display: grid; place-content: center; gap: 0; min-width: 0; min-height: 44px !important; padding: 3px 0 !important; border: 1px solid #e0e6ea !important; border-radius: 10px !important; background: #f5f7f9 !important; color: #334b5e !important; box-shadow: none !important; font-variant-numeric: tabular-nums; text-align: center; }
+#mobileDiary .site-diary-day-chip strong { font-size: 14px; line-height: 1; }
+#mobileDiary .site-diary-chip-weekday { color: inherit; font-size: 9px; font-weight: 600; line-height: 1.1; opacity: .76; }
+body.sitedesk-v3 #mobileDiary .site-diary-day-chip.recorded { background: #edf5f1 !important; border-color: #c8e0d3 !important; color: #225e42 !important; }
+body.sitedesk-v3 #mobileDiary .site-diary-day-chip.missing { background: #fff0ee !important; border-color: #edc2be !important; color: #a3312d !important; }
+body.sitedesk-v3 #mobileDiary .site-diary-day-chip.selected { box-shadow: inset 0 0 0 2px #0d5d96 !important; border-color: #0d5d96 !important; }
+body.sitedesk-v3 #mobileDiary .site-diary-day-chip.before,
+body.sitedesk-v3 #mobileDiary .site-diary-day-chip.future { opacity: .5; }
+#mobileDiary .site-diary-missing-month { margin-top: 6px; }
+#mobileDiary .site-diary-missing-month summary { display: flex; justify-content: space-between; gap: 8px; min-height: 27px; align-items: center; list-style: none; color: #345e7c; font-size: 11px; cursor: pointer; }
+#mobileDiary .site-diary-missing-month summary::-webkit-details-marker { display: none; }
+#mobileDiary .site-diary-missing-month summary strong { color: #5e6b76; font-size: 10px; font-weight: 550; }
+#mobileDiary .site-diary-missing-month summary strong.has-missing { color: #a3312d; }
+#mobileDiary .site-diary-missing-month-labels { margin: 5px 0 3px; color: #667785; font-size: 10px; text-align: center; }
+#mobileDiary .site-diary-missing-month-grid { padding-bottom: 4px; }
+#mobileDiary .site-diary-missing-month-grid .site-diary-day-chip { min-height: 36px !important; }
+
+/* Daily attachments belong after all diary sections, while old work files remain accessible. */
+#mobileDiary .site-diary-day-files { padding: 12px 0 6px; border-top: 1px solid #dfe6eb; }
+#mobileDiary .site-diary-day-files > p { margin: 0 0 9px; color: #66727c; font-size: 12px; }
+#mobileDiary .site-diary-day-files-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 9px; }
+body.sitedesk-v3 #mobileDiary .site-diary-day-files-actions label { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; border: 1px solid #b9cbd9; border-radius: 9px; background: #f5f9fc; color: #0c527f; font-size: 12px; font-weight: 700; cursor: pointer; }
+#mobileDiary .site-diary-day-files-actions input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+#mobileDiary .site-diary-day-files-actions label:focus-within { outline: 2px solid #0a84ff; outline-offset: 2px; }
+#mobileDiary .site-diary-day-files-list { border: 1px solid #e0e7ed; border-radius: 10px; overflow: hidden; }
+#mobileDiary .site-diary-day-file { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 5px 8px; border-top: 1px solid #e8edf1; background: #fff; }
+#mobileDiary .site-diary-day-file:first-child { border-top: 0; }
+#mobileDiary .site-diary-day-file-icon { color: #52748c; font-size: 17px; }
+#mobileDiary .site-diary-day-file-name { flex: 1; min-width: 0; overflow-wrap: anywhere; color: #263d50; font-size: 12px; }
+#mobileDiary .site-diary-day-file-name small { display: block; color: #748391; font-size: 10px; }
+body.sitedesk-v3 #mobileDiary .site-diary-day-file button { min-width: 44px; min-height: 36px; padding: 5px 7px; border: 0; background: transparent; color: #0c5a8e; box-shadow: none; font-size: 12px; font-weight: 650; }
+body.sitedesk-v3 #mobileDiary .site-diary-day-file button.site-diary-day-file-remove { color: #a63d38; font-size: 18px; }
+@media (max-width: 380px) {
+  #mobileDiary .site-diary-missing-week-head small { font-size: 9px; }
+  #mobileDiary .site-diary-missing-week,
+  #mobileDiary .site-diary-missing-month-grid { gap: 2px; }
+}

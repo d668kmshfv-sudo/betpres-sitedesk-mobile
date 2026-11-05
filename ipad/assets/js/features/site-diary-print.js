@@ -95,7 +95,7 @@
   return `<section class="sdp-entry">${recordHeader(entry,mode,continuation)}<p>${escape(text||"").replace(/\r\n?/g,"\n")}</p></section>`
  }
  function documentHtml(entry,docs,continuation){
-  return `<div class="sdp-docs"><strong>PDF prílohy · ${escape(dateLabel(entry.date))}${continuation?" · pokračovanie":""}</strong><ul>${docs.map(item=>`<li>${escape(item.name||"PDF dokument")}</li>`).join("")}</ul></div>`
+  return `<div class="sdp-docs"><strong>Prílohy · ${escape(dateLabel(entry.date))}${continuation?" · pokračovanie":""}</strong><ul>${docs.map(item=>`<li>${escape(item.name||"Dokument")}</li>`).join("")}</ul></div>`
  }
  function createMeasurer(){
   const host=document.createElement("div");host.style.cssText="position:fixed;left:-20000px;top:0;width:210mm;visibility:hidden;pointer-events:none;z-index:-1";
@@ -112,7 +112,7 @@
    `<span><strong>Stavba:</strong> ${escape(projectName)}</span>${place}<span>Prehľad prác podľa dní</span>`;
   return `<div class="sdp-kicker">Stavebný denník · BETPRES</div><h1 class="sdp-title">${escape(title)}${continuation?" · pokračovanie":""}</h1><div class="sdp-meta">${meta}</div>${mode==="day"&&!continuation?weatherHtml(weather):""}`
  }
- async function printDiary({mode="day",entries=[],weatherByDate={},crewByDate={},machineryByDate={},inspectionsByDate={},projectName="",projectLocation="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
+ async function printDiary({mode="day",entries=[],weatherByDate={},crewByDate={},machineryByDate={},inspectionsByDate={},dayFilesByDate={},projectName="",projectLocation="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
   if(!["day","company"].includes(mode))throw new Error("Neznámy typ exportu stavebného denníka.");
   const records=(Array.isArray(entries)?entries:[]).filter(item=>item&&item.date).slice().sort((a,b)=>mode==="company"?String(a.date).localeCompare(String(b.date))||String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"):String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"));
   if(!records.length)return false;
@@ -229,11 +229,14 @@
     if(!fits(workHeading+firstWork))page=newPage(true);
     if(!fits(workHeading+firstWork))throw new Error("Záznam práce sa nezmestí na stranu A4.");
     page.blocks.push(workHeading);
-    for(const entry of dayEntries){addEntry(entry);addDocuments(entry)}
-    if(mode==="day")addInspections(inspectionsForDate(inspectionsByDate,date))
+    for(const entry of dayEntries)addEntry(entry);
+    if(mode==="day")addInspections(inspectionsForDate(inspectionsByDate,date));
+    const documents=[...dayEntries.flatMap(entry=>Array.isArray(entry.attachments)?entry.attachments:[]),...(mode==="day"&&Array.isArray(dayFilesByDate[date]?.attachments)?dayFilesByDate[date].attachments:[])];
+    if(documents.length)addDocuments({date,attachments:documents})
    }
    for(const entry of records){
-    const urls=(Array.isArray(entry.photos)?entry.photos:[]).map(safeImage).filter(Boolean);
+    const dayPhotos=mode==="day"&&entry===records[0]&&Array.isArray(dayFilesByDate[entry.date]?.photos)?dayFilesByDate[entry.date].photos:[];
+    const urls=[...(Array.isArray(entry.photos)?entry.photos:[]),...dayPhotos].map(safeImage).filter(Boolean);
     for(let start=0;start<urls.length;start+=4){
      const page=newPage(true,true),pictures=urls.slice(start,start+4).map(url=>`<img src="${url}" alt="Fotografia zo stavby">`).join("");
      page.blocks.push(`<div class="sdp-meta"><span><strong>Dátum:</strong> ${escape(dateLabel(entry.date))}</span></div><div class="sdp-photos">${pictures}</div>`)
