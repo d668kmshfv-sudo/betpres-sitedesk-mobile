@@ -431,3 +431,21 @@ body.sitedesk-v3 #mobileDiary .site-diary-day-file button.site-diary-day-file-re
   #mobileDiary .site-diary-missing-week,
   #mobileDiary .site-diary-missing-month-grid { gap: 2px; }
 }
+
+/* Copy a previous entry at the top of the selected day. */
+#mobileDiary .site-diary-copybar { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; padding: 9px 0 10px; border-bottom: 1px solid #e3e9ee; }
+body.sitedesk-v3 #mobileDiary #siteDiaryCopyPrevious { flex: 1 1 auto; min-height: 44px !important; padding: 8px 12px !important; border: 1px solid #adc9dc !important; border-radius: 10px !important; background: #edf5fa !important; color: #0a5686 !important; box-shadow: none !important; font-size: 12.5px !important; font-weight: 700 !important; text-align: center; }
+#mobileDiary #siteDiaryCopyOther { flex: 0 0 auto; min-width: 80px; }
+#mobileDiary #siteDiaryCopyOther[open] { flex-basis: 100%; }
+#mobileDiary #siteDiaryCopyOther summary { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; border: 1px solid #d9e1e7; border-radius: 10px; color: #3c5366; background: #fff; font-size: 12px; font-weight: 650; cursor: pointer; list-style: none; }
+#mobileDiary #siteDiaryCopyOther summary::-webkit-details-marker { display: none; }
+#mobileDiary #siteDiaryCopyOther summary:focus-visible { outline: 2px solid #0a84ff; outline-offset: 2px; }
+#mobileDiary .site-diary-copy-other-body { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; padding: 9px 1px 1px; }
+#mobileDiary .site-diary-copy-other-body label { display: grid; flex: 1 1 180px; min-width: 0; gap: 5px; color: #5d6670; font-size: 11px; font-weight: 620; }
+#mobileDiary .site-diary-copy-other-body input { min-height: 44px; font-size: 16px; }
+body.sitedesk-v3 #mobileDiary #siteDiaryCopy { min-height: 44px !important; padding: 8px 11px !important; border-radius: 10px !important; box-shadow: none !important; font-size: 12px !important; }
+@media (max-width: 380px) {
+  body.sitedesk-v3 #mobileDiary #siteDiaryCopyPrevious { padding-inline: 7px !important; font-size: 11.5px !important; }
+  #mobileDiary #siteDiaryCopyOther { min-width: 66px; }
+  #mobileDiary #siteDiaryCopyOther summary { padding-inline: 8px; font-size: 11.5px; }
+}

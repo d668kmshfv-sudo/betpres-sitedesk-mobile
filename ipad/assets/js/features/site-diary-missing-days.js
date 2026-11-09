@@ -17,7 +17,7 @@
   '<div class="site-diary-missing-month-grid" id="siteDiaryMissingMonthGrid"></div>',
   '</details>'
  ].join("");
- daybar.after(host);
+ (diary.querySelector(".site-diary-copybar")||daybar).after(host);
 
  const get=id=>document.getElementById(id);
  const localDate=value=>{

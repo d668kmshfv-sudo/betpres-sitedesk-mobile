@@ -5,6 +5,7 @@
  let day=todayISO(),photos=[],documents=[],newFiles=[],weatherMeta=null,weatherDirty=false,weatherFormDay="",busy=false;
  const norm=value=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
  const dateLabel=value=>/^\d{4}-\d{2}-\d{2}$/.test(value)?new Intl.DateTimeFormat("sk-SK",{day:"numeric",month:"long",year:"numeric"}).format(new Date(`${value}T12:00:00`)):value;
+ const precedingDate=value=>{const date=new Date(`${value}T12:00:00`);date.setDate(date.getDate()-1);return dateKey(date)};
  const rows=()=>Array.isArray(state.mobileDiary)?state.mobileDiary.filter(item=>item.kind==="siteLog"&&item.projectId===state.selectedProjectId):[];
  const companyName=item=>state.companies.find(company=>company.id===item.companyId)?.name||item.companyName||"Firma";
  const siteProject=()=>state.projects.find(project=>project.id===state.selectedProjectId)||null;
@@ -289,8 +290,8 @@
   const inspections=inspectionsForDay(day);get("siteDiaryInspectionTotal").textContent=`${inspections.length} ${inspections.length===1?"výzva":inspections.length<5?"výzvy":"výziev"}`;
   get("siteDiaryInspectionRows").innerHTML=inspections.map(item=>`<article class="site-diary-inspection-row"><div class="site-diary-inspection-main"><strong>${escape(item.subject)}</strong><span>${escape(item.recipient)}${item.person?` · ${escape(item.person)}`:""}${item.dueAt?` · ${escape(inspectionDueLabel(item.dueAt))}`:""}</span>${item.note?`<p>${escape(item.note)}</p>`:""}</div><span class="site-diary-inspection-status${item.status==="done"?" is-done":""}">${item.status==="done"?"Vykonané":"Čaká"}</span><div class="site-diary-machine-tools"><button type="button" class="ghost" data-site-diary-inspection-edit="${escape(item.id)}">Upraviť</button><button type="button" class="ghost" data-site-diary-inspection-remove="${escape(item.id)}" aria-label="Odstrániť výzvu">×</button></div></article>`).join("")||'<p class="site-diary-data-empty">Na tento deň ešte nie je zapísaná žiadna kontrola ani výzva.</p>'
  }
- async function copyDay(){
-  const source=get("siteDiaryCopySource").value,target=day;
+ async function copyDay(sourceOverride=""){
+  const source=sourceOverride||get("siteDiaryCopySource").value,target=day;
   if(!source){get("siteDiaryCopySource").showPicker?.();return}
   if(source===target){alertUser("Vyber iný zdrojový deň.");return}
   const sourceEntries=rows().filter(item=>item.date===source),sourceMachines=machinesForDay(source);
@@ -347,7 +348,7 @@
     let archive=null;
     for(const url of [
      `https://raw.githubusercontent.com/d668kmshfv-sudo/betpres-sitedesk-mobile/main/ipad/assets/data/shmu-history.json?date=${date}&t=${Math.floor(Date.now()/300000)}`,
-     "assets/data/shmu-history.json?v=5.7.9"
+     "assets/data/shmu-history.json?v=5.7.10"
     ]){
      try{const response=await fetch(url,{cache:"no-store"});if(response.ok){const value=await response.json();if(value?.dates?.[date]){archive=value;break}}}catch{}
     }
@@ -377,8 +378,8 @@
   try{
    const reportEntries=entries.length?entries:[{date:day,work:"Práce zatiaľ nezapísané.",photos:[],attachments:[]}];
    const normalized=await Promise.all(reportEntries.map(async item=>({
-    date:item.date,companyName:companyName(item),workersCount:displayedWorkers(item),work:workDescription(item)||"Práce zatiaľ nezapísané.",
-    attachments:(item.attachments||[]).map(attachment=>({name:attachment.name})),
+    id:item.id,date:item.date,companyName:companyName(item),workersCount:displayedWorkers(item),work:workDescription(item)||"Práce zatiaľ nezapísané.",
+    attachments:(item.attachments||[]).map(attachment=>({id:attachment.id,name:attachment.name,type:attachment.type,path:attachment.path,size:attachment.size,sourceKey:`${item.id}:${attachment.id}`})),
     photos:(await Promise.all((item.photos||[]).map(async photo=>{try{return photo.dataUrl||photo.path&&await cloudPhotoObjectUrl(photo.path)||""}catch{return""}}))).filter(Boolean)
    })));
    const dates=[...new Set(normalized.map(item=>item.date))],weatherByDate=Object.fromEntries(dates.map(date=>[date,weatherForDate(date)]));
@@ -388,19 +389,20 @@
    const dayFilesByDate=Object.fromEntries(await Promise.all(dates.map(async date=>{
     const record=(state.siteDiaryDayAttachments||[]).find(item=>item.projectId===state.selectedProjectId&&item.date===date);
     const photos=mode==="day"?await Promise.all((record?.photos||[]).map(async photo=>{try{return photo.dataUrl||photo.path&&await cloudPhotoObjectUrl(photo.path)||""}catch{return""}})):[];
-    return[date,{attachments:(record?.attachments||[]).map(item=>({name:item.name})),photos:photos.filter(Boolean)}]
+    return[date,{attachments:(record?.attachments||[]).map(item=>({id:item.id,name:item.name,type:item.type,path:item.path,size:item.size,sourceKey:`${record.id}:${item.id}`})),photos:photos.filter(Boolean)}]
    })));
    await window.siteDiaryPrint({mode,entries:normalized,weatherByDate,crewByDate,machineryByDate,inspectionsByDate,dayFilesByDate,projectName:siteProject()?.name||"BETPRES",projectLocation:siteProject()?.address||siteProject()?.city||"",title,fileName,letterheadImage:LETTERHEAD_IMAGE})
   }catch(error){alertUser(`Export sa nepodaril: ${error.message||error}`)}
  }
  function dayReportEntries(){return rows().filter(item=>item.date===day).sort((a,b)=>companyName(a).localeCompare(companyName(b),"sk"))}
- get("siteDiaryDate").value=day;get("siteDiaryCopySource").value=new Date(Date.now()-86400000).toISOString().slice(0,10);prepareMachineForm();prepareInspectionForm();
- get("siteDiaryPrev").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()-1);day=dateKey(date);render()};
- get("siteDiaryNext").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()+1);day=dateKey(date);render()};
- get("siteDiaryDate").onchange=event=>{day=event.target.value||todayISO();render()};
+ get("siteDiaryDate").value=day;get("siteDiaryCopySource").value=precedingDate(day);prepareMachineForm();prepareInspectionForm();
+ get("siteDiaryPrev").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()-1);day=dateKey(date);get("siteDiaryCopySource").value=precedingDate(day);render()};
+ get("siteDiaryNext").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()+1);day=dateKey(date);get("siteDiaryCopySource").value=precedingDate(day);render()};
+ get("siteDiaryDate").onchange=event=>{day=event.target.value||todayISO();get("siteDiaryCopySource").value=precedingDate(day);render()};
  get("siteDiarySaveCrew").onclick=saveCrewFromState;
  get("siteDiaryCompanyFilter").onchange=()=>{if(get("siteDiaryCompanyFilter").value)get("siteDiaryExportCompanySelect").value=get("siteDiaryCompanyFilter").value;render()};
  get("siteDiaryAddInline").onclick=()=>openEditor("",get("siteDiaryCompanyFilter").value);
+ get("siteDiaryCopyPrevious").onclick=()=>{const source=precedingDate(day);get("siteDiaryCopySource").value=source;void copyDay(source)};
  get("siteDiaryCopy").onclick=()=>void copyDay();get("siteDiaryLoadWeather").onclick=()=>void loadWeather();get("siteDiaryWeatherSave").onclick=()=>saveWeather();form.onsubmit=event=>void saveEntry(event);
  for(const id of ["siteDiaryWeatherText","siteDiaryTempMin","siteDiaryTempMax"])get(id).addEventListener("input",()=>{weatherDirty=true;weatherMeta={source:"Ručný údaj",station:"",retrievedAt:""};get("siteDiaryWeatherSource").textContent="Ručný údaj · ulož počasie pre vybraný deň."});
  get("siteDiaryWorkers").oninput=()=>{get("siteDiaryWorkers").dataset.userEdited="1"};

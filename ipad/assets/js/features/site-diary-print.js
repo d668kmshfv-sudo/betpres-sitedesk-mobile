@@ -40,6 +40,12 @@
   .sdp-docs strong{color:#244666}.sdp-docs ul{margin:1mm 0 0;padding-left:5mm}.sdp-docs li{margin:.6mm 0}
   .sdp-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4mm;margin-top:6mm}
   .sdp-photos img{display:block;width:100%;height:52mm;object-fit:contain;border:1px solid #d7e0e8;background:#fff}
+  .sdp-attachment-page{display:flex;flex-direction:column;padding:9mm 10mm 8mm}
+  .sdp-attachment-header{display:flex;justify-content:space-between;gap:6mm;min-height:13mm;padding-bottom:2mm;border-bottom:1px solid #bac8d4;color:#15345a;font-size:9px;line-height:1.3}
+  .sdp-attachment-header strong{display:block;font-size:11px;overflow-wrap:anywhere}
+  .sdp-attachment-header span:last-child{flex:none;text-align:right;color:#52677b}
+  .sdp-attachment-image{display:block;width:190mm;height:0;min-height:0;flex:1 1 0;object-fit:contain}
+  .sdp-attachment-footer{display:flex;justify-content:space-between;gap:5mm;border-top:1px solid #d4dee6;padding-top:2mm;color:#68798b;font-size:9px}
   .sdp-footer{position:absolute;left:16mm;right:16mm;bottom:17mm;display:flex;justify-content:space-between;color:#68798b;font-size:9px}
   @page{size:A4 portrait;margin:0}
   @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
@@ -97,6 +103,73 @@
  function documentHtml(entry,docs,continuation){
   return `<div class="sdp-docs"><strong>Prílohy · ${escape(dateLabel(entry.date))}${continuation?" · pokračovanie":""}</strong><ul>${docs.map(item=>`<li>${escape(item.name||"Dokument")}</li>`).join("")}</ul></div>`
  }
+ const isPdfAttachment=item=>/\.pdf$/i.test(String(item?.name||""))||/\bpdf\b/i.test(String(item?.type||""));
+ let pdfLibraryPromise;
+ async function pdfLibrary(){
+  if(!pdfLibraryPromise){
+   const script=document.querySelector('script[src*="site-diary-print.js"]');
+   if(!script?.src)throw new Error("Modul PDF príloh sa nepodarilo nájsť. Obnov aplikáciu.");
+   const libraryUrl=new URL("../vendor/pdfjs/pdf.mjs",script.src);
+   const workerUrl=new URL("../vendor/pdfjs/pdf.worker.mjs",script.src);
+   pdfLibraryPromise=import(libraryUrl.href).then(library=>{
+    library.GlobalWorkerOptions.workerSrc=workerUrl.href;
+    return library
+   }).catch(error=>{pdfLibraryPromise=null;throw new Error(`Modul PDF príloh sa nepodarilo načítať: ${error.message||error}`)})
+  }
+  return pdfLibraryPromise
+ }
+ async function attachmentBlob(item){
+  if(item.blob instanceof Blob)return item.blob;
+  const key=String(item.sourceKey||"");
+  if(key&&typeof siteDeskGetAttachment==="function"){
+   try{const local=await siteDeskGetAttachment(key);if(local)return local}
+   catch(error){console.warn("BETPRES: lokálnu PDF prílohu sa nepodarilo načítať; skúšam cloud.",error)}
+  }
+  if(item.path&&typeof cloudConfigured==="function"&&cloudConfigured()){
+   await cloudEnsureSession();
+   if(!cloudSession?.access_token)throw new Error("Na načítanie PDF prílohy z cloudu sa prihlás.");
+   const base=normalizeCloudUrl(cloudConfig.url),path=encodeStoragePath(item.path),headers={apikey:cloudConfig.key,Authorization:`Bearer ${cloudSession.access_token}`};
+   for(const prefix of ["authenticated/",""]){
+    const response=await fetch(`${base}/storage/v1/object/${prefix}sitedesk-files/${path}`,{headers,cache:"no-store"});
+    if(response.ok)return response.blob()
+   }
+  }
+  throw new Error(`PDF príloha „${item.name||"Dokument"}“ nie je dostupná v tomto zariadení ani v cloude. Skontroluj synchronizáciu.`)
+ }
+ async function renderPdfAttachment(item,date){
+  const library=await pdfLibrary(),blob=await attachmentBlob(item);
+  if(!blob.size)throw new Error(`PDF príloha „${item.name||"Dokument"}“ je prázdna.`);
+  const task=library.getDocument({data:new Uint8Array(await blob.arrayBuffer()),isEvalSupported:false,useSystemFonts:true});
+  task.onPassword=(updatePassword)=>{
+   const password=window.prompt(`Zadaj heslo pre PDF prílohu „${item.name||"Dokument"}“:`);
+   if(password===null){void task.destroy();return}
+   updatePassword(password)
+  };
+  let pdf;
+  try{
+   pdf=await task.promise;
+   const rendered=[];
+   for(let number=1;number<=pdf.numPages;number++){
+    const source=await pdf.getPage(number),size=source.getViewport({scale:1});
+    const scale=Math.min(2.1,1600/size.width,2200/size.height);
+    const viewport=source.getViewport({scale}),canvas=document.createElement("canvas");
+    canvas.width=Math.max(1,Math.round(viewport.width));canvas.height=Math.max(1,Math.round(viewport.height));
+    const context=canvas.getContext("2d",{alpha:false});
+    if(!context)throw new Error("Prehliadač nepodporuje vykreslenie PDF prílohy.");
+    context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);
+    try{
+     await source.render({canvasContext:context,viewport,background:"#fff"}).promise;
+     rendered.push({date,name:String(item.name||"Dokument"),number,total:pdf.numPages,image:canvas.toDataURL("image/jpeg",.9)})
+    }finally{canvas.width=0;canvas.height=0;source.cleanup()}
+   }
+   return rendered
+  }catch(error){
+   throw new Error(`PDF prílohu „${item.name||"Dokument"}“ sa nepodarilo pridať do exportu: ${error.message||error}`)
+  }finally{if(pdf)await pdf.destroy();else await task.destroy()}
+ }
+ function attachmentPageHtml(item,index,total,projectName){
+  return `<section class="sdp-page sdp-attachment-page"><div class="sdp-attachment-header"><div><span>BETPRES · stavebný denník · príloha</span><strong>${escape(item.name)}</strong></div><span>${escape(dateLabel(item.date))}<br>Strana prílohy ${item.number} / ${item.total}</span></div><img class="sdp-attachment-image" src="${safeImage(item.image)}" alt="Strana ${item.number} prílohy ${escape(item.name)}"><div class="sdp-attachment-footer"><span>${escape(projectName||"BETPRES")}</span><span>Strana ${index+1} / ${total}</span></div></section>`
+ }
  function createMeasurer(){
   const host=document.createElement("div");host.style.cssText="position:fixed;left:-20000px;top:0;width:210mm;visibility:hidden;pointer-events:none;z-index:-1";
   document.body.appendChild(host);
@@ -118,7 +191,7 @@
   if(!records.length)return false;
   const displayTitle=mode==="company"?"Stavebný denník · prehľad prác":title;
   const firstDate=String(records[0].date),weatherMap=weatherByDate&&typeof weatherByDate==="object"?weatherByDate:{};
-  const measure=createMeasurer(),pages=[];
+  const measure=createMeasurer(),pages=[],attachmentQueue=[];
   try{
    const newPage=(continuation=false,photo=false)=>{
     const page={header:makeHeader({mode,title:photo?"Fotodokumentácia · "+displayTitle:displayTitle,projectName,projectLocation,date:firstDate,weather:weatherMap[firstDate],continuation}),blocks:[],photo};
@@ -232,7 +305,10 @@
     for(const entry of dayEntries)addEntry(entry);
     if(mode==="day")addInspections(inspectionsForDate(inspectionsByDate,date));
     const documents=[...dayEntries.flatMap(entry=>Array.isArray(entry.attachments)?entry.attachments:[]),...(mode==="day"&&Array.isArray(dayFilesByDate[date]?.attachments)?dayFilesByDate[date].attachments:[])];
-    if(documents.length)addDocuments({date,attachments:documents})
+    if(documents.length){
+     addDocuments({date,attachments:documents});
+     for(const item of documents)if(isPdfAttachment(item))attachmentQueue.push({...item,date})
+    }
    }
    for(const entry of records){
     const dayPhotos=mode==="day"&&entry===records[0]&&Array.isArray(dayFilesByDate[entry.date]?.photos)?dayFilesByDate[entry.date].photos:[];
@@ -243,9 +319,15 @@
     }
    }
   }finally{measure.close()}
-  const total=pages.length,letterhead=safeImage(letterheadImage);
+  const attachmentPages=[];
+  for(const item of attachmentQueue)attachmentPages.push(...await renderPdfAttachment(item,item.date));
+  const documentTheme=window.betpresDocumentTheme?.()||{};
+  const accent=/^#[0-9a-f]{6}$/i.test(String(documentTheme.accentColor||""))?documentTheme.accentColor:"#15345a";
+  const themedStyles=styles.replaceAll("#15345a",accent).replaceAll("#153a61",accent).replaceAll("#245d87",accent).replaceAll("#617b8a",accent).replaceAll("#1d587d",accent);
+  const total=pages.length+attachmentPages.length,letterhead=safeImage(documentTheme.letterheadImage||letterheadImage);
   const pageHtml=pages.map((page,index)=>`<section class="sdp-page">${letterhead?`<img class="sdp-letterhead" src="${letterhead}" alt="">`:""}<div class="sdp-content"><div class="sdp-flow">${page.header}${page.blocks.join("")}</div><div class="sdp-footer"><span>${escape(projectName||"BETPRES")}</span><span>Strana ${index+1} / ${total}</span></div></div></section>`).join("");
-  const html=`<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>${escape(displayTitle)}</title><style>${styles}</style></head><body>${pageHtml}</body></html>`;
+  const attachmentHtml=attachmentPages.map((item,index)=>attachmentPageHtml(item,pages.length+index,total,projectName)).join("");
+  const html=`<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>${escape(displayTitle)}</title><style>${themedStyles}</style></head><body>${pageHtml}${attachmentHtml}</body></html>`;
   const payload={html,fileName,landscape:false,title:displayTitle};
   if(typeof window.showPdfPreview==="function")void window.showPdfPreview(payload);
   else if(window.betpresDesktop?.exportPdf)void window.betpresDesktop.exportPdf(payload);

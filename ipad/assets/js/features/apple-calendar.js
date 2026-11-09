@@ -41,7 +41,6 @@
     if(event.target.closest("button")||event.button>0)return;
     cancelAnimationFrame(frame);
     gesture={id:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,lastTime:performance.now(),velocity:0,x:0,committed:false,cancelled:false};
-    try{grid.setPointerCapture(event.pointerId)}catch(_error){}
   });
   grid.addEventListener("pointermove",event=>{
     if(!gesture||gesture.id!==event.pointerId||gesture.cancelled)return;
@@ -49,7 +48,8 @@
     if(!gesture.committed){
       if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
       if(Math.abs(dy)>Math.abs(dx)*1.15){gesture.cancelled=true;return}
-      gesture.committed=true
+      gesture.committed=true;
+      try{grid.setPointerCapture(event.pointerId)}catch(_error){}
     }
     event.preventDefault();
     const now=performance.now(),dt=Math.max(8,now-gesture.lastTime);

@@ -1,0 +1,32 @@
+#appearance .document-settings-panel{max-width:1120px}
+#appearance .document-settings-panel .panel-head{align-items:center;flex-wrap:wrap}
+#appearance .document-settings-shared{color:#607486;font-size:11px;font-weight:650}
+#appearance .document-settings-layout{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:start}
+#appearance .document-settings-preview{width:150px;aspect-ratio:210/297;overflow:hidden;border:1px solid #d2dde6;border-radius:8px;background:#fff;box-shadow:0 8px 20px rgba(17,40,61,.1)}
+#appearance .document-settings-preview img{display:block;width:100%;height:100%;object-fit:fill}
+#appearance .document-settings-controls{display:grid;justify-items:start;gap:10px;min-width:0}
+#appearance .document-settings-controls label{display:grid;gap:7px;min-width:min(100%,360px);color:#344d62;font-size:13px;font-weight:720}
+#appearance .document-settings-controls input[type=file]{max-width:100%;background:#f8fafb;font-size:12px}
+#appearance .document-settings-controls small{max-width:510px;color:#657989;font-size:12px;line-height:1.5}
+#appearance .document-settings-controls button{min-height:40px}
+#appearance #documentSettingsStatus{min-height:18px;color:#37657d;font-size:12px}
+#appearance #documentSettingsStatus.is-error{color:#a33232}
+#appearance .document-settings-colors{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid #e1e8ed}
+#appearance .document-settings-colors label{display:flex;align-items:center;gap:10px;min-height:44px;padding:5px 11px;border:1px solid #d9e4eb;border-radius:11px;background:#f8fafb;color:#2e475b;font-size:12px;font-weight:700}
+#appearance .document-settings-colors input[type=color]{width:40px;height:30px;padding:2px;border-radius:7px;cursor:pointer}
+#appearance .project-form-note{margin:0;padding:10px 12px;border:1px solid #d4e6f3;border-radius:9px;background:#f0f7fb;color:#426176;font-size:12px;line-height:1.45}
+
+/* One shared color selection for the dense operational tables. */
+body.sitedesk-v3 #workStatements .work-invoice-banner{background:var(--betpres-work-accent,#0a5b91)!important;color:var(--betpres-work-on,#fff)!important}
+body.sitedesk-v3 #workStatements .work-sheet thead .current-col{background:var(--betpres-work-accent,#0a5b91)!important;color:var(--betpres-work-on,#fff)!important}
+body.sitedesk-v3 #workStatements .work-sheet thead th{border-top-color:var(--betpres-work-accent,#0a5b91)!important}
+body.workers-focus-mode #workers{--timesheet-blue:var(--betpres-worker-accent,#0a5b91);--timesheet-accent:var(--betpres-worker-accent,#0a5b91)}
+body.workers-focus-mode #workers .worker-mode-tabs button.active,
+body.workers-focus-mode #workers .worker-table thead th,
+body.workers-focus-mode #workers .worker-table thead .employee-col,
+body.workers-focus-mode #workers .worker-table thead .company-col{background:var(--betpres-worker-accent,#0a5b91)!important;color:var(--betpres-worker-on,#fff)!important}
+body.workers-focus-mode #workers .worker-table tfoot .monthly-total-col,
+body.workers-focus-mode #workers #companyTimesheetsPanel .worker-table tfoot .company-hour-sum{background:var(--betpres-worker-accent,#0a5b91)!important;color:var(--betpres-worker-on,#fff)!important}
+
+@media(max-width:600px){#appearance .document-settings-layout{grid-template-columns:96px minmax(0,1fr);gap:12px}#appearance .document-settings-preview{width:96px}#appearance .document-settings-colors{display:grid;grid-template-columns:1fr}#appearance .document-settings-colors label{justify-content:space-between}}
+@media(prefers-contrast:more){#appearance .document-settings-colors label,#appearance .document-settings-preview{border-color:#425569}}

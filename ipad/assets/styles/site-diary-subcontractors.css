@@ -35,3 +35,6 @@
  #mobileDiary .site-diary-subcontract-import-all{width:100%}
 }
 @media(prefers-reduced-motion:reduce){#mobileDiary .site-diary-subcontract-row-actions button:active,#mobileDiary .site-diary-subcontract-form-actions button:active{transform:none;transition:none}}
+
+/* Temporarily remove the subcontractor diary from the daily workflow without changing stored records. */
+#mobileDiary #siteDiarySubcontracts{display:none!important}

@@ -1,0 +1,32 @@
+/* Horizontal tables must pass vertical scrolling back to the page. */
+body.sitedesk-v3 #companies .table-wrap,
+body.sitedesk-v3 #acceptance .table-wrap,
+body.sitedesk-v3 #documents .table-wrap {
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#documents .archive-search-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  padding: 12px 15px;
+  border-bottom: 1px solid #dbe4eb;
+}
+#documents .archive-search-toolbar label {
+  display: grid;
+  flex: 1;
+  gap: 5px;
+  min-width: 0;
+  color: #506677;
+  font-size: 12px;
+  font-weight: 700;
+}
+#documents .archive-search-toolbar input { min-height: 40px; background: #fff; }
+#documents .archive-search-count { flex: none; color: #667d8d; font-size: 12px; font-weight: 650; }
+#documents .archive-filter-empty { padding: 22px; color: #587083; text-align: center; font-size: 13px; }
+@media (max-width: 640px) {
+  #documents .archive-search-toolbar { align-items: stretch; flex-direction: column; }
+  #documents .archive-search-count { align-self: flex-start; }
+}

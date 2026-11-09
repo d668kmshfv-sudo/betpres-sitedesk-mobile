@@ -1,4 +1,9 @@
 /* Reading-first work statement layout. The table is the main surface. */
+#workStatements .work-sheet-wrap {
+  /* Leave room at the far right for the vertical scrollbar and complete amounts. */
+  padding-right: 28px !important;
+}
+
 @media (min-width: 801px) {
   body.work-focus-mode #workStatements .page-title {
     position: relative;
