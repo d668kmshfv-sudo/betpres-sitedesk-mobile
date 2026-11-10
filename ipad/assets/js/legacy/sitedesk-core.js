@@ -576,7 +576,7 @@ function siteViewLabel(id){
   workers:"Stav pracovníkov",defects:"Vady a nedorobky",siteMeetings:"Koordinačné porady",controlDays:"Kontrolné dni",billing:"Fakturácia",
   workStatements:"Súpis prác",purchases:"Pasport skladu",concrete:"Betóny",materialSamples:"Vzorkovanie materiálov",documents:"Archív dokumentov",
   handover:"Odovzdanie pracoviska",acceptance:"Preberacie protokoly",
-  projects:"Stavby",companies:"Firmy a zmluvy",subcontractAdmin:"Portál subdodávok",excelImport:"Import z Excelu",appearance:"Vzhľad aplikácie",cloud:"Cloud a databáza",data:"Dáta a záloha"
+  projects:"Stavby",companies:"Firmy a zmluvy",subcontractAdmin:"Portál subdodávok",diaryReviewAdmin:"Prístup dozoru",excelImport:"Import z Excelu",appearance:"Vzhľad aplikácie",cloud:"Cloud a databáza",data:"Dáta a záloha"
  })[id]||"Stavebná evidencia"
 }
 
@@ -2052,6 +2052,7 @@ function renderActiveView(id=activeViewId()){
   case "projects":renderProjects();break;
   case "companies":prepareCompaniesView();break;
   case "subcontractAdmin":window.renderSubcontractAdmin?.();break;
+  case "diaryReviewAdmin":window.renderDiaryReviewAdmin?.();break;
   case "billing":renderBilling();break;
   case "workStatements":prepareWorkStatements();break;
   case "purchases":renderPurchases();break;
@@ -2077,7 +2078,7 @@ function renderAll(){
  updateUndoButton();
  applySiteDesk3UI()
 }
-function renderProjectSelectors(){if(!project(state.selectedProjectId))state.selectedProjectId=state.projects[0]?.id||"";$("globalProject").innerHTML=optionList(state.projects,state.selectedProjectId);$("handoverProject").innerHTML=optionList(state.projects,$("handoverProject").value||state.selectedProjectId);if(activeViewId()==="handover")renderHandoverCompanies()}$("globalProject").onchange=e=>{state.selectedProjectId=e.target.value;const current=JSON.stringify(state);lastCommittedState=current;siteDeskSchedulePersist(current,{backup:false});queueCloudPush();renderAll()};
+function renderProjectSelectors(){if(!project(state.selectedProjectId))state.selectedProjectId=state.projects[0]?.id||"";$("globalProject").innerHTML=optionList(state.projects,state.selectedProjectId);$("handoverProject").innerHTML=optionList(state.projects,$("handoverProject").value||state.selectedProjectId);if(activeViewId()==="handover")renderHandoverCompanies()}$("globalProject").onchange=e=>{state.selectedProjectId=e.target.value;selectedWorkCompanyId="";const current=JSON.stringify(state);lastCommittedState=current;siteDeskSchedulePersist(current,{backup:false});queueCloudPush();renderAll()};
 function renderDashboard(){const p=activeProject();if(!p)return;$('dashTitle').textContent=p.name;const bs=state.billings.filter(b=>b.projectId===p.id),hs=state.handovers.filter(h=>h.projectId===p.id),ps=state.purchases.filter(x=>x.projectId===p.id),assignmentRows=state.assignments.filter(a=>a.projectId===p.id),protocols=state.acceptanceProtocols.filter(x=>x.projectId===p.id);const today=todayISO(),month=today.slice(0,7),day=Number(today.slice(8,10)),todaySheet=syncBetpresWorkerRow(month,workerSheet(month,true))&&workerSheet(month,true),workersToday=(todaySheet?.rows||[]).reduce((sum,r)=>sum+(Number(r.values?.[day])||0),0);$('metricWorkersToday').textContent=workersToday;$('metricWorkersDate').textContent=workersToday?`${fmtDateISO(today)} · spolu na stavbe`:`${fmtDateISO(today)} · dnešný stav zatiaľ nevyplnený`;$('metricBilling').textContent=eur.format(bs.reduce((s,x)=>s+Number(x.amount||0),0));$('metricHandovers').textContent=hs.length;if($('metricPurchases'))$('metricPurchases').textContent=ps.length;const missingAcceptance=Math.max(0,assignmentRows.length-new Set(protocols.map(x=>x.companyId)).size);if($('metricAcceptance'))$('metricAcceptance').textContent=protocols.length;if($('metricAcceptanceText'))$('metricAcceptanceText').textContent=`${missingAcceptance} firiem bez protokolu`;
 const recent=[...ps].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);if($('recentPurchases'))$('recentPurchases').innerHTML='';const monthly={};bs.forEach(b=>monthly[b.month]=(monthly[b.month]||0)+Number(b.amount||0));const keys=Object.keys(monthly).sort().slice(-12);const max=Math.max(1,...keys.map(k=>monthly[k]));$('billingChart').innerHTML=keys.length?keys.map(k=>{const m=Number(k.slice(5));return `<div class="bar-group"><div class="bar ${k===keys.at(-1)?'current':''}" style="height:${Math.max(3,monthly[k]/max*90)}%" data-value="${esc(eur.format(monthly[k]))}"></div><small>${monthNames[m-1]}</small></div>`}).join(''):`<div style="align-self:center;color:#789">Zatiaľ bez fakturácie</div>`;const byCompany={};bs.forEach(b=>byCompany[b.companyId]=(byCompany[b.companyId]||0)+Number(b.amount||0));$('topCompanies').innerHTML=Object.entries(byCompany).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v],i)=>`<div class="rank-row"><b>${i+1}.</b><div><strong>${esc(company(id)?.name||'')}</strong><small>${esc(company(id)?.scope||'')}</small></div><span>${eur.format(v)}</span></div>`).join('')||`<p style="color:#789">Zatiaľ bez údajov.</p>`;$('projectCards').innerHTML=state.projects.slice(0,5).map(x=>`<div class="mini-row"><div><strong>${esc(x.name)}</strong><small>${esc(x.address||'')}</small></div><span class="status">${x.id===state.selectedProjectId?'Aktívna':'Stavba'}</span></div>`).join('')}
 function renderProjects(){$("projectsGrid").innerHTML=state.projects.map(p=>`<article class="panel project-card"><h3>${esc(p.name)}</h3><p>${esc(p.address||"Bez adresy")}</p><p class="project-card-manager"><strong>Stavbyvedúci:</strong> ${esc(p.manager||"Neuvedený")}${p.managerPhone?` · ${esc(p.managerPhone)}`:""}</p><div class="project-meta"><span class="chip">${state.assignments.filter(a=>a.projectId===p.id).length} firiem</span><span class="chip">${state.handovers.filter(h=>h.projectId===p.id).length} zápisníc</span><span class="chip">${esc(p.region||"Kraj neuvedený")}</span>${p.startDate||p.endDate?`<span class="chip">${esc(fmtDateISO(p.startDate)||"?")} – ${esc(fmtDateISO(p.endDate)||"?")}</span>`:""}</div><div class="project-card-actions"><button class="ghost" data-activate-project="${p.id}">${p.id===state.selectedProjectId?"Aktívna stavba":"Nastaviť ako aktívnu"}</button><button class="ghost" data-edit-project="${p.id}">Upraviť údaje</button><button class="delete-project" data-delete-project="${p.id}">Vymazať stavbu</button></div></article>`).join("");document.querySelectorAll("[data-activate-project]").forEach(b=>b.onclick=()=>{state.selectedProjectId=b.dataset.activateProject;save("Aktívna stavba bola zmenená.")});document.querySelectorAll("[data-edit-project]").forEach(b=>b.onclick=()=>openProjectEditor(b.dataset.editProject));document.querySelectorAll("[data-delete-project]").forEach(b=>b.onclick=()=>deleteProject(b.dataset.deleteProject))}
@@ -2718,6 +2719,9 @@ function workerSheet(month=selectedWorkerMonth,create=true){
      alias:r.alias||workerRowLabel(r),
      companyId:r.companyId||"",
      actualName:r.actualName||company(r.companyId)?.name||"",
+     hourlyLinked:Boolean(r.hourlyLinked),
+     hourlySourceRowId:"",
+     hourlyManualDays:[],
      values:{}
     }))
   };
@@ -2806,6 +2810,7 @@ function prepareWorkers(){
  betpresTimesheet(selectedWorkerMonth,true);
  thpTimesheet(selectedWorkerMonth,true);
  companyHourTimesheet(selectedWorkerMonth,true);
+ if(syncHourlyWorkerState(selectedWorkerMonth,sheet))commitDirectState();
  syncBetpresWorkerRow(selectedWorkerMonth,sheet);
  const signature=workerRenderSignature();
  setWorkerMode(selectedWorkerMode,signature!==workerRenderSignatures.get(selectedWorkerMode))
@@ -2815,6 +2820,7 @@ function renderWorkers(){
  const month=$("workerMonth").value||selectedWorkerMonth||todayMonthValue();
  selectedWorkerMonth=month;
  const sheet=workerSheet(month,true);
+ if(syncHourlyWorkerState(month,sheet))commitDirectState();
  syncBetpresWorkerRow(month,sheet);
  sortWorkerRows(sheet);
 
@@ -2878,6 +2884,7 @@ function renderWorkers(){
       <span class="worker-company-main" title="${esc(workerRowMainLabel(row))}">${esc(workerRowMainLabel(row))}</span>
       ${workerRowCustomLabel(row)?`<span class="worker-company-alias">${esc(workerRowCustomLabel(row))}</span>`:""}
       ${betpres?`<small class="betpres-sync-note">automaticky z podsmenoviek BETPRES + THP</small>`:""}
+      ${row.hourlyLinked?`<small class="betpres-sync-note">z hodín · ručne zadaný deň má prednosť</small>`:""}
      </div>
      ${betpres?"":`<button type="button" data-del-worker-row="${row.id}" aria-label="Odobrať ${esc(label)} z mesiaca ${esc(month)}" title="Odobrať firmu z tohto mesiaca">Odobrať</button>`}
     </div>
@@ -2920,7 +2927,8 @@ function renderWorkers(){
    if(input.value!==clean)input.value=clean;
    if(clean==="")delete row.values[day];
    else row.values[day]=Number(clean);
-   commitDirectState();
+   if(row.hourlyLinked){setHourlyWorkerManualDay(row,day,clean);if(clean===""){syncHourlyWorkerState(month,sheet);input.value=row.values?.[day]??""}}
+   commitDirectState();window.queueDiaryReviewPublish?.(`${month}-${String(day).padStart(2,"0")}`);
    const total=sheet.rows.reduce((sum,item)=>sum+(Number(item.values?.[day])||0),0),
          cell=document.querySelector(`[data-worker-total-day="${day}"]`);
    if(cell)cell.textContent=formatWorkHoursCell(total);
@@ -3786,6 +3794,47 @@ function companyHourWorkerHours(worker){return Object.values(worker?.values||{})
 function companyHourRowHours(row){return companyHourWorkers(row).reduce((sum,worker)=>sum+companyHourWorkerHours(worker),0)}
 function companyHourRowAmount(row){return workRound(companyHourRowHours(row)*companyHourRate(row),2)}
 function companyHourDayTotal(row,day){return companyHourWorkers(row).reduce((sum,worker)=>sum+attendanceHours(worker.values?.[day]),0)}
+function setHourlyWorkerManualDay(row,day,value){
+ if(!row?.hourlyLinked)return;
+ const key=String(day),manual=new Set((row.hourlyManualDays||[]).map(String));
+ if(value==="")manual.delete(key);else manual.add(key);
+ row.hourlyManualDays=[...manual]
+}
+function syncHourlyWorkerState(month,statusSheet=workerSheet(month,true)){
+ const hourSheet=companyHourTimesheet(month,false);
+ if(!statusSheet||!hourSheet)return false;
+ statusSheet.rows=Array.isArray(statusSheet.rows)?statusSheet.rows:[];
+ const excluded=new Set(statusSheet.excludedWorkerCarryKeys||[]),days=daysInMonth(month);
+ let changed=false;
+ for(const source of hourSheet.rows||[]){
+  const name=companyHourRowName(source),nameKey=workerCompanyMatchKey(name);
+  if(!nameKey)continue;
+  const candidate={companyId:source.companyId||"",alias:name,name};
+  if(excluded.has(workerCarryKey(candidate)))continue;
+  let target=statusSheet.rows.find(row=>row.hourlySourceRowId===source.id);
+  if(!target)target=statusSheet.rows.find(row=>!isBetpresWorkerRow(row)&&source.companyId&&row.companyId===source.companyId);
+  if(!target)target=statusSheet.rows.find(row=>!isBetpresWorkerRow(row)&&[row.name,row.alias,row.actualName].some(label=>workerCompanyMatchKey(label)===nameKey));
+  if(!target){
+   target={id:uid("wr"),name,alias:name,companyId:source.companyId||"",actualName:company(source.companyId)?.name||"",values:{},hourlyLinked:true,hourlySourceRowId:source.id,hourlyManualDays:[]};
+   statusSheet.rows.push(target);changed=true
+  }else if(!target.hourlyLinked){
+   target.hourlyManualDays=Object.entries(target.values||{}).filter(([,value])=>value!==""&&value!==null&&value!==undefined).map(([day])=>day);
+   target.hourlyLinked=true;changed=true
+  }
+  if(target.hourlySourceRowId!==source.id){target.hourlySourceRowId=source.id;changed=true}
+  if(source.companyId&&!target.companyId){target.companyId=source.companyId;changed=true}
+  target.values=target.values||{};
+  const manual=new Set((target.hourlyManualDays||[]).map(String)),workers=companyHourWorkers(source);
+  for(let day=1;day<=days;day++){
+   if(manual.has(String(day)))continue;
+   const count=workers.filter(worker=>attendanceHours(worker.values?.[day])>0).length,previous=target.values[day];
+   if(count){if(previous!==count){target.values[day]=count;changed=true}}
+   else if(previous!==undefined){delete target.values[day];changed=true}
+  }
+ }
+ if(changed)sortWorkerRows(statusSheet);
+ return changed
+}
 function ensureCompanyHourAssignment(companyId,scope="Hodinové práce"){
  if(!companyId||!state.selectedProjectId)return;
  if(!state.assignments.some(a=>a.projectId===state.selectedProjectId&&a.companyId===companyId)){
@@ -3903,7 +3952,7 @@ if($("companyHourForm"))$("companyHourForm").onsubmit=event=>{
  if(rate<=0){alert("Zadaj platnú hodinovú sadzbu bez DPH.");return}
  if(sheet.rows.some(row=>(companyId&&row.companyId===companyId)||companyHourRowName(row).toLowerCase()===name.toLowerCase())){alert("Táto firma už má v otvorenom mesiaci hodinovú smenovku.");return}
  const row={id:uid("chr"),companyId:companyId||"",companyName:name,hourlyRate:rate,description,workersText:names.join(", "),workers:(names.length?names:[""]).map(workerName=>({id:uid("chw"),name:workerName,values:{}})),values:{},statementItemId:""};
- sheet.rows.push(row);selectedCompanyHourRowId=row.id;$("companyHourModal").classList.add("hidden");save(`Hodinová smenovka firmy ${name} bola pridaná.`)
+ sheet.rows.push(row);syncHourlyWorkerState(month);selectedCompanyHourRowId=row.id;$("companyHourModal").classList.add("hidden");save(`Hodinová smenovka firmy ${name} bola pridaná.`)
 };
 if($("addCompanyHourWorkerTop"))$("addCompanyHourWorkerTop").onclick=()=>{
  const sheet=companyHourTimesheet($("workerMonth").value||selectedWorkerMonth||todayMonthValue(),true),row=sheet.rows.find(item=>item.id===selectedCompanyHourRowId)||(sheet.rows.length===1?sheet.rows[0]:null);
@@ -4027,7 +4076,8 @@ function renderCompanyHoursTimesheet(){
    if(value===""||value===0)delete worker.values[day];else worker.values[day]=value;
    input.value=formatWorkHoursCell(value);
    row.workersText=companyHourWorkerNames(row).join(", ");
-   commitDirectState();
+   syncHourlyWorkerState(month);
+   commitDirectState();window.queueDiaryReviewPublish?.(`${month}-${String(day).padStart(2,"0")}`);
    renderCompanyHoursTimesheet();
    renderDashboard()
   };
@@ -4073,6 +4123,7 @@ function renderCompanyHoursTimesheet(){
     row.workers=companyHourWorkers(row).filter(item=>item.id!==workerId);
     if(!row.workers.length)row.workers.push({id:uid("chw"),name:"",values:{}});
     row.workersText=companyHourWorkerNames(row).join(", ");
+    syncHourlyWorkerState(month);
     save("Pracovník bol vymazaný z firemnej hodinovej smenovky.")
    }
   }
@@ -5840,7 +5891,7 @@ $("executeExcelImport").onclick=()=>{
  save(`Import pasportu dokončený: ${added} dodacích listov pridaných, ${skipped} preskočených.`);$("excelImportStatus").className="import-status success";$("excelImportStatus").textContent=`Pasport skladu: pridané ${added}, preskočené ${skipped}.`
 };
 
-function renderQuickEntry(){if(!$("quickWorkersList"))return;const today=todayISO(),month=today.slice(0,7),day=Number(today.slice(8,10));$("quickDateLabel").textContent=fmtDateISO(today);const sheet=workerSheet(month,true);sortWorkerRows(sheet);$("quickWorkersList").innerHTML=sheet.rows.map(r=>`<div class="quick-worker-row"><strong>${esc(workerRowLabel(r))}</strong><input type="number" min="0" inputmode="numeric" data-quick-worker="${r.id}" value="${esc(r.values?.[day]??"")}"></div>`).join("")||`<div style="color:#789;padding:12px 0">Najprv pridaj firmy alebo skupiny v module Stav pracovníkov.</div>`;document.querySelectorAll("[data-quick-worker]").forEach(inp=>{inp.onfocus=()=>beginDirectUndo("Rýchla úprava pracovníkov");inp.oninput=()=>{const row=sheet.rows.find(r=>r.id===inp.dataset.quickWorker);if(!row)return;row.values=row.values||{};if(inp.value==="")delete row.values[day];else row.values[day]=Number(inp.value);commitDirectState();renderDashboard()};inp.onblur=endDirectUndo})}
+function renderQuickEntry(){if(!$("quickWorkersList"))return;const today=todayISO(),month=today.slice(0,7),day=Number(today.slice(8,10));$("quickDateLabel").textContent=fmtDateISO(today);const sheet=workerSheet(month,true);syncHourlyWorkerState(month,sheet);sortWorkerRows(sheet);$("quickWorkersList").innerHTML=sheet.rows.map(r=>`<div class="quick-worker-row"><strong>${esc(workerRowLabel(r))}</strong><input type="number" min="0" inputmode="numeric" data-quick-worker="${r.id}" value="${esc(r.values?.[day]??"")}"></div>`).join("")||`<div style="color:#789;padding:12px 0">Najprv pridaj firmy alebo skupiny v module Stav pracovníkov.</div>`;document.querySelectorAll("[data-quick-worker]").forEach(inp=>{inp.onfocus=()=>beginDirectUndo("Rýchla úprava pracovníkov");inp.oninput=()=>{const row=sheet.rows.find(r=>r.id===inp.dataset.quickWorker);if(!row)return;row.values=row.values||{};if(inp.value==="")delete row.values[day];else row.values[day]=Number(inp.value);setHourlyWorkerManualDay(row,day,inp.value);if(inp.value===""){syncHourlyWorkerState(month,sheet);inp.value=row.values?.[day]??""}commitDirectState();renderDashboard()};inp.onblur=endDirectUndo})}
 if($("quickPurchaseForm"))$("quickPurchaseForm").onsubmit=e=>{e.preventDefault();alert("Evidencia materiálu bola z aplikácie odstránená.")};
 $("quickTaskForm").onsubmit=e=>{e.preventDefault();const r=state.controlDays.filter(item=>item.projectId===state.selectedProjectId&&coordinationRecordKind(item)==="coordination"&&item.date>=todayISO()).sort((a,b)=>a.date.localeCompare(b.date))[0];if(!r){toast("Najprv vytvor koordinačnú poradu s konkrétnym dátumom.");selectedCoordinationKind="coordination";selectedControlDayDate=todayISO();showView("siteMeetings");return}r.tasks.push({id:uid("ktu"),text:$("quickTaskText").value.trim(),companyId:"",responsible:$("quickTaskResponsible").value.trim(),deadline:$("quickTaskDeadline").value,status:"Bez vyjadrenia",note:"",enteredDate:r.date,enteredMeetingNumber:r.number,originNumber:"",originDate:""});r.updatedAt=new Date().toISOString();e.target.reset();save("Úloha bola pridaná do najbližšej vytvorenej koordinačnej porady.")};
 
@@ -6663,17 +6714,18 @@ function applyWorkOverviewUI(){
 function prepareWorkStatements(){
  const companies=workStatementCompanies();
  if(!companies.length){selectedWorkCompanyId="";renderWorkStatements();return}
- if(!companies.some(c=>c.id===selectedWorkCompanyId)){
-  selectedWorkCompanyId=companies.find(c=>/J\.?B\.?\s*Trend/i.test(c.name))?.id||companies[0].id
- }
+ if(selectedWorkCompanyId&&!companies.some(c=>c.id===selectedWorkCompanyId))selectedWorkCompanyId="";
  selectedWorkPeriod=selectedWorkPeriod||todayMonthValue();
- getWorkStatement(true);renderWorkStatements()
+ if(selectedWorkCompanyId)getWorkStatement(true);
+ renderWorkStatements()
 }
 function renderWorkStatements(){
  if(!$("workStatementBody"))return;
  const companies=workStatementCompanies();
- if(!companies.some(c=>c.id===selectedWorkCompanyId))selectedWorkCompanyId=companies[0]?.id||"";
+ if(selectedWorkCompanyId&&!companies.some(c=>c.id===selectedWorkCompanyId))selectedWorkCompanyId="";
  $("workStatementCompany").innerHTML=optionList(companies,selectedWorkCompanyId,x=>x.name,"Vyber firmu");
+ $("workStatementCompany").value=selectedWorkCompanyId;
+ for(const id of ["addWorkRow","saveWorkStatement","saveAndBillWorkStatement"])if($(id))$(id).disabled=!selectedWorkCompanyId;
  const currentAssignment=assignment(state.selectedProjectId,selectedWorkCompanyId),baseWorkLabel=assignmentDocType(currentAssignment)==="Obj"?"Objednávka":"ZoD",baseWorkId=workDocumentId(baseWorkLabel);
  if($("workStatementSourceFilter")){const current=selectedWorkDocFilter||baseWorkId;$("workStatementSourceFilter").innerHTML=workBudgetOptions(selectedWorkCompanyId);if([...$("workStatementSourceFilter").options].some(o=>o.value===current)){$("workStatementSourceFilter").value=current;selectedWorkDocFilter=current}else{selectedWorkDocFilter=baseWorkId;$("workStatementSourceFilter").value=selectedWorkDocFilter}}
  $("workStatementPeriod").value=selectedWorkPeriod||todayMonthValue();if($("workCurrentPeriodHead"))$("workCurrentPeriodHead").textContent=`Aktuálne obdobie (${selectedWorkPeriod})`;
@@ -6682,7 +6734,7 @@ function renderWorkStatements(){
  $("workStatementContract").value=orderMode?[activeWorkDoc?.label,activeWorkDoc?.title].filter(Boolean).join(" – "):(a?assignmentDocRef(a):"");
  if($("workInvoiceContractNumber"))$("workInvoiceContractNumber").textContent=orderMode?(activeWorkDoc?.label||"Objednávka"):(a?assignmentDocRef(a):"Bez čísla dokladu");
  if(!statement){
-  const emptyMessage=selectedWorkCompanyId?"Súpis pre túto firmu a mesiac neexistuje. Tlačidlom Pridať položku vytvoríš nový súpis.":"Na stavbe nie je dostupná firma.";
+  const emptyMessage=selectedWorkCompanyId?"Súpis pre túto firmu a mesiac neexistuje. Tlačidlom Pridať položku vytvoríš nový súpis.":companies.length?"Vyber firmu, ktorej súpis chceš zobraziť.":"Na stavbe nie je dostupná firma.";
   $("workStatementBody").innerHTML=`<tr class="work-empty-row"><td colspan="${orderMode?7:17}">${emptyMessage}</td></tr>`;
   renderMobileWorkItems(null,[],orderMode,emptyMessage);
   ["workStatementNumber","workStatementObject","workStatementDate","workStatementDateFrom","workStatementDateTo","workStatementScope","workStatementNote"].forEach(id=>{if($(id))$(id).value=""});
@@ -7009,6 +7061,7 @@ if($("workRowFilter"))$("workRowFilter").onchange=()=>{workRowFilter=$("workRowF
  }
 });
 $("addWorkRow").onclick=()=>{
+ if(!selectedWorkCompanyId){$("workStatementCompany").focus();toast("Najprv vyber firmu pre súpis.");return}
  const s=restoreDeletedWorkStatement(),doc=selectedWorkDocument(),item=createBlankWorkItem(doc.label,doc.id);s.items.push(item);s.status="draft";
  syncWorkItemsAcrossCompanyMonths(s,doc.id);
  selectedWorkDocFilter=item.sourceDocId;

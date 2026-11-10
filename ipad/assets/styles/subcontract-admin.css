@@ -58,7 +58,37 @@
 #subcontractAdmin .subcontract-admin-statement-list>div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--sa-line)}
 #subcontractAdmin .subcontract-admin-statement-list span{min-width:0;overflow-wrap:anywhere;color:var(--sa-ink)}
 #subcontractAdmin .subcontract-admin-statement-list strong{flex:none;color:var(--sa-ink);font-variant-numeric:tabular-nums}
+#subcontractAdmin #saPublished{max-height:360px;overflow:auto}
+#subcontractAdmin .subcontract-admin-statement-list{max-height:470px}
+#subcontractAdmin .subcontract-admin-statement-list .sa-review-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,210px);align-items:center;gap:9px}
+#subcontractAdmin .sa-review-line .sa-review-fields{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+#subcontractAdmin .sa-review-line input{width:84px;min-width:0;padding:7px 8px;font-size:13px;text-align:right}
+#subcontractAdmin .sa-review-line input[data-sa-review-note]{width:100%;max-width:210px;text-align:left}
+#subcontractAdmin .sa-review-line button{padding:7px 9px;font-size:11px}
+#subcontractAdmin .sa-review-line.is-revised{background:#fff0ed;border-left:3px solid #d4372b;padding-left:7px}
+#subcontractAdmin .sa-review-line .sa-proposed{display:block;color:var(--sa-muted);font-size:11px}
+#subcontractAdmin .subcontract-admin-hint[data-tone="warning"]{color:#a15b00}
+#subcontractAdmin .subcontract-admin-hint[data-tone="success"]{color:#176a4a}
+@media(max-width:680px){#subcontractAdmin .subcontract-admin-statement-list .sa-review-line{grid-template-columns:1fr}#subcontractAdmin .sa-review-line .sa-review-fields{justify-content:flex-start}}
+#diaryReviewAdmin .diary-review-panel{margin-bottom:14px}
+#diaryReviewAdmin .diary-review-panel>.panel-head{align-items:center}
+#diaryReviewAdmin .subcontract-admin-action-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+#diaryReviewAdmin .subcontract-admin-list-row{padding:10px 0;border-top:1px solid #d9e3ec}
+#diaryReviewAdmin .subcontract-admin-list-row strong{display:block;color:#183b56}
+#diaryReviewAdmin .subcontract-admin-list-row small{display:block;color:#668095}
+#diaryReviewAdmin .diary-review-call{padding:13px 0;border-top:1px solid #d9e3ec}
+#diaryReviewAdmin .diary-review-call>strong{display:block;color:#173c59;font-size:14px}
+#diaryReviewAdmin .diary-review-call>small{display:block;margin-top:3px;color:#658096}
+#diaryReviewAdmin .diary-review-call select{min-width:240px;max-width:100%}
+#diaryReviewAdmin .diary-review-call a.ghost{display:inline-flex;align-items:center;text-decoration:none;border:1px solid #d2dce6;border-radius:8px;padding:8px 11px;color:#15577e;background:#fff}
+#diaryReviewAdmin .diary-review-reply{margin-top:8px;padding:10px;border-left:3px solid #197d60;background:#eef8f4;border-radius:4px}
+#diaryReviewAdmin .diary-review-reply strong{font-size:11px;color:#276451}
+#diaryReviewAdmin .diary-review-reply p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+#diaryReviewAdmin .diary-review-reply small{color:#457865}
+#diaryReviewAdmin .subcontract-admin-status{margin-bottom:14px}
 #subcontractAdmin .subcontract-admin-statement-total{display:flex;justify-content:space-between;gap:12px;margin-top:8px;padding-top:10px;border-top:2px solid #b5c6d5;color:var(--sa-ink)}
 @media(max-width:1000px){#subcontractAdmin .subcontract-admin-grid{grid-template-columns:1fr}}
 @media(max-width:680px){#subcontractAdmin{padding:14px!important}#subcontractAdmin .subcontract-admin-title{align-items:flex-start}#subcontractAdmin .subcontract-admin-picker{display:grid;gap:10px}#subcontractAdmin .subcontract-admin-share{grid-template-columns:1fr}#subcontractAdmin .subcontract-admin-share button{justify-self:start}#subcontractAdmin .subcontract-admin-grid>.panel{padding:14px}}
 @media(prefers-reduced-motion:reduce){#subcontractAdmin button:active:not(:disabled){transform:none;transition:none}}
+.subcontract-admin-setup-steps{max-width:74ch;margin:12px 0 18px;padding-left:22px;color:#496579;font-size:14px;line-height:1.55}
+.subcontract-admin-setup-steps li+li{margin-top:7px}

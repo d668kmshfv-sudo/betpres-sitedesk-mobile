@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="sk">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#f6f8fb"><meta name="color-scheme" content="light">
+ <title>BETPRES · Stavebný denník pre dozor</title>
+ <link rel="icon" href="../ipad/assets/images/app-icon.png"><link rel="stylesheet" href="styles.css?v=1.0.0">
+</head>
+<body>
+ <header class="topbar"><div class="brand"><img src="../ipad/assets/images/navigation-logo.png" alt="BETPRES"><div><strong>Stavebný denník</strong><small>Prístup dozoru a projektanta</small></div></div><div class="top-actions"><span id="userEmail"></span><button type="button" id="logout" class="quiet" hidden>Odhlásiť sa</button></div></header>
+ <main>
+  <div id="message" class="message" role="status" aria-live="polite" hidden></div>
+  <section id="loginView" class="login-shell"><div class="login-card"><p class="eyebrow">ODDELENÝ PRÍSTUP · BETPRES</p><h1>Stavebný denník</h1><p>Prihlás sa účtom, ktorému bol pridelený prístup ku konkrétnej stavbe. Uvidíš denník a výzvy adresované tebe.</p><form id="loginForm"><label>E-mail<input id="email" type="email" autocomplete="username" required></label><label>Heslo<input id="password" type="password" autocomplete="current-password" required minlength="6"></label><button type="submit" class="primary" id="loginButton">Prihlásiť sa</button></form><button type="button" class="text-button" id="toggleSignup">Vytvoriť nový účet</button><p class="login-help">Nový účet treba potvrdiť cez e-mail. Prístup k denníku potom musí udeliť vlastník stavby.</p></div></section>
+  <section id="appView" hidden>
+   <div class="page-head"><div><p class="eyebrow">LEN NA ČÍTANIE · ODPOVEDE NA VÝZVY</p><h1 id="projectTitle">Stavebný denník</h1></div><button type="button" id="refresh" class="quiet">Obnoviť</button></div>
+   <div class="scope-bar"><label>Stavba<select id="scopeSelect"></select></label><span id="accessStatus" class="access-chip">Prístup k denníku</span></div>
+   <div class="layout"><div class="main-column"><div class="date-bar"><button type="button" id="previousDay" class="day-nav" aria-label="Predchádzajúci deň">‹</button><label><span>Vybraný deň</span><input id="dayInput" type="date"></label><button type="button" id="nextDay" class="day-nav" aria-label="Nasledujúci deň">›</button></div>
+    <section class="paper" aria-labelledby="dayHeading"><div class="paper-head"><img src="../ipad/assets/images/navigation-logo.png" alt="BETPRES"><div><p>Denný záznam</p><h2 id="dayHeading">—</h2><span id="dayProject">—</span></div></div><div class="section"><h3>Počasie</h3><div id="weatherContent" class="section-content"></div></div><div class="section"><h3>Pracovníci</h3><div id="crewContent" class="section-content"></div></div><div class="section"><h3>Mechanizmy</h3><div id="machineContent" class="section-content"></div></div><div class="section"><h3>Vykonané práce</h3><div id="workContent" class="section-content"></div></div></section>
+   </div><aside class="side-column"><section class="panel"><div class="panel-head"><div><p class="eyebrow">VYBRANÝ DEŇ</p><h2>Výzvy a odpovede</h2></div><span id="callCount" class="count">0</span></div><div id="dayCalls"></div></section><section class="panel"><div class="panel-head"><div><p class="eyebrow">OSTATNÉ DNI</p><h2>Ďalšie výzvy</h2></div></div><div id="callList"></div></section></aside></div>
+  </section>
+ </main>
+ <dialog id="replyDialog"><form id="replyForm"><div class="dialog-head"><div><p class="eyebrow">ODPOVEĎ NA VÝZVU</p><h2 id="replyTitle">Výzva</h2></div><button type="button" id="closeReply" class="close" aria-label="Zavrieť">×</button></div><p id="replyContext"></p><label>Stanovisko<select id="replyDecision"><option value="acknowledged">Vzali sme na vedomie</option><option value="accepted">Potvrdzujem prevzatie / kontrolu</option><option value="needs_action">Potrebujem doplnenie</option></select></label><label>Odpoveď<textarea id="replyBody" rows="5" required maxlength="8000" placeholder="Napíš stanovisko k výzve…"></textarea></label><div class="dialog-actions"><button type="button" class="quiet" id="cancelReply">Zrušiť</button><button type="submit" class="primary" id="sendReply">Odoslať odpoveď</button></div></form></dialog>
+ <script src="app.js?v=1.0.0"></script>
+</body>
+</html>
