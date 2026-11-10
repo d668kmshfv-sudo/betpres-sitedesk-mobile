@@ -250,7 +250,9 @@ body.ux-zen .ux-focus-toggle{position:relative;z-index:20;background:#fff3d1!imp
   body.sitedesk-v3 .site-sidebar{width:min(286px,86vw)!important}
   .sidebar-collapse{display:none!important}
   body.sitedesk-v3 .site-topbar{height:64px!important;min-height:64px!important;padding:8px 10px!important}
-  .site-topbar-title{min-width:0!important;flex:1}
+  body.sitedesk-v3 .site-topbar-title{min-width:0!important;flex:1 1 auto!important}
+  body.sitedesk-v3 .site-topbar-actions{flex:0 0 auto!important;min-width:max-content!important;margin-left:0!important;gap:6px!important}
+  body.sitedesk-v3 .cloud-quick-status{flex:0 0 40px!important}
   .site-topbar-title>small,.site-topbar-actions .site-command-button,.site-topbar-actions .undo-btn,.site-user{display:none!important}
   .project-picker select{width:100%!important;min-width:0!important;height:42px!important}
   body.sitedesk-v3 .view{padding:10px!important}

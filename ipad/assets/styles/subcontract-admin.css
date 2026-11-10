@@ -1,0 +1,64 @@
+#subcontractAdmin{--sa-ink:#183249;--sa-muted:#607487;--sa-line:#dce5ec;--sa-blue:#0a5b91;--sa-soft:#f5f8fb;max-width:1500px}
+#subcontractAdmin .subcontract-admin-title{margin-bottom:12px}
+#subcontractAdmin .subcontract-admin-title h1{font-size:clamp(24px,2.5vw,31px)}
+#subcontractAdmin .subcontract-admin-intro{max-width:850px;margin:0 0 14px;color:var(--sa-muted);font-size:13px;line-height:1.55}
+#subcontractAdmin .subcontract-admin-status{min-height:38px;margin-bottom:16px;padding:10px 13px;border:1px solid #c9dce9;border-radius:10px;background:#edf5fa;color:#234a66;font-size:13px;font-weight:650}
+#subcontractAdmin .subcontract-admin-status[data-tone=success]{border-color:#b9dcc9;background:#eff8f2;color:#1d6240}
+#subcontractAdmin .subcontract-admin-status[data-tone=warning]{border-color:#e7d7ae;background:#fff9ec;color:#7a5919}
+#subcontractAdmin .subcontract-admin-status[data-tone=error]{border-color:#efc5c3;background:#fff3f2;color:#912c28}
+#subcontractAdmin .subcontract-admin-setup{max-width:760px;padding:24px}
+#subcontractAdmin .subcontract-admin-setup h2{font-size:19px}
+#subcontractAdmin .subcontract-admin-setup p{color:var(--sa-muted);line-height:1.55}
+#subcontractAdmin .subcontract-admin-picker{display:flex;align-items:end;gap:16px;padding:14px 17px}
+#subcontractAdmin .subcontract-admin-picker label{flex:1 1 300px;min-width:0}
+#subcontractAdmin .subcontract-admin-picker>div{flex:1 1 250px;min-width:0}
+#subcontractAdmin .subcontract-admin-picker>div strong,#subcontractAdmin .subcontract-admin-picker>div small{display:block}
+#subcontractAdmin .subcontract-admin-picker>div strong{color:var(--sa-ink);font-size:15px}
+#subcontractAdmin .subcontract-admin-picker>div small{margin-top:4px;color:var(--sa-muted);font-size:11px}
+#subcontractAdmin .subcontract-admin-picker>button{flex:none}
+#subcontractAdmin label{display:grid;gap:6px;color:#435b6e;font-size:12px;font-weight:730}
+#subcontractAdmin input,#subcontractAdmin select,#subcontractAdmin textarea{min-width:0;width:100%;min-height:42px;border:1px solid #ccd9e3;border-radius:10px;background:#fff;color:var(--sa-ink);padding:9px 11px;font:500 14px/1.4 system-ui,-apple-system,sans-serif}
+#subcontractAdmin textarea{resize:vertical;min-height:88px}
+#subcontractAdmin input:focus-visible,#subcontractAdmin select:focus-visible,#subcontractAdmin textarea:focus-visible{outline:2px solid #1673b6;outline-offset:2px}
+#subcontractAdmin button{min-height:40px;border-radius:10px;white-space:normal}
+#subcontractAdmin button:disabled{opacity:.5;cursor:not-allowed}
+#subcontractAdmin button:active:not(:disabled){transform:scale(.98);transition:transform .12s ease-out}
+#subcontractAdmin .subcontract-admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+#subcontractAdmin .subcontract-admin-grid>.panel{min-width:0;padding:18px}
+#subcontractAdmin .panel-head{margin-bottom:12px}
+#subcontractAdmin .panel-head h2{font-size:17px}
+#subcontractAdmin .panel-head p{font-size:10px}
+#subcontractAdmin .subcontract-admin-form{display:grid;gap:10px}
+#subcontractAdmin .subcontract-admin-form>button{justify-self:start}
+#subcontractAdmin .subcontract-admin-hint{margin:10px 0;color:var(--sa-muted);font-size:12px;line-height:1.5}
+#subcontractAdmin .subcontract-admin-share{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:14px;padding-top:14px;border-top:1px solid var(--sa-line)}
+#subcontractAdmin .subcontract-admin-share input{font-size:11px;color:#496579}
+#subcontractAdmin .subcontract-admin-list{margin-top:12px;border-top:1px solid var(--sa-line)}
+#subcontractAdmin .subcontract-admin-list-row{display:flex;justify-content:space-between;align-items:start;gap:12px;padding:10px 1px;border-bottom:1px solid var(--sa-line);font-size:12px}
+#subcontractAdmin .subcontract-admin-list-row strong{min-width:0;color:var(--sa-ink);font-weight:700;overflow-wrap:anywhere;white-space:pre-wrap}
+#subcontractAdmin .subcontract-admin-list-row small{flex:none;color:var(--sa-muted);font-size:11px;text-align:right}
+#subcontractAdmin .subcontract-admin-list-row small button{display:block;margin-top:5px;margin-left:auto;min-height:30px;padding:5px 8px;font-size:10px}
+#subcontractAdmin .subcontract-admin-empty{margin:0;padding:15px 1px;color:var(--sa-muted);font-size:12px}
+#subcontractAdmin .subcontract-admin-count{padding:9px 0;color:#245477;font-size:12px;font-weight:760}
+#subcontractAdmin .subcontract-admin-action-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#subcontractAdmin .subcontract-admin-date{display:flex;gap:8px;align-items:center;max-width:290px;margin-bottom:13px}
+#subcontractAdmin .subcontract-admin-date button{width:42px;min-width:42px;padding:0;font-size:23px}
+#subcontractAdmin .subcontract-admin-date input{text-align:center}
+#subcontractAdmin .subcontract-admin-month{max-width:230px;margin-bottom:13px}
+#subcontractAdmin .subcontract-admin-badge{display:inline-flex;align-items:center;min-height:25px;padding:4px 8px;border-radius:999px;background:#eaf5ee;color:#286347;font-size:11px;font-weight:760;text-align:center}
+#subcontractAdmin .subcontract-admin-badge.locked{background:#f0f2f4;color:#5d6d7b}
+#subcontractAdmin .subcontract-admin-record{margin:0 0 14px;padding:12px;border:1px solid var(--sa-line);border-radius:11px;background:var(--sa-soft);font-size:12px}
+#subcontractAdmin .subcontract-admin-record-date{margin-bottom:10px;color:var(--sa-ink);font-size:13px;font-weight:800}
+#subcontractAdmin .subcontract-admin-record-block{padding:9px 0;border-top:1px solid var(--sa-line)}
+#subcontractAdmin .subcontract-admin-record-block span{display:block;color:var(--sa-muted);font-size:11px;font-weight:760;text-transform:uppercase;letter-spacing:.04em}
+#subcontractAdmin .subcontract-admin-record-block p{margin:5px 0 0;color:var(--sa-ink);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+#subcontractAdmin .subcontract-admin-record-block strong{display:block;margin-top:4px;color:var(--sa-ink);font-size:20px}
+#subcontractAdmin .subcontract-admin-record-block small{color:var(--sa-muted)}
+#subcontractAdmin .subcontract-admin-statement-list{max-height:330px;overflow:auto}
+#subcontractAdmin .subcontract-admin-statement-list>div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--sa-line)}
+#subcontractAdmin .subcontract-admin-statement-list span{min-width:0;overflow-wrap:anywhere;color:var(--sa-ink)}
+#subcontractAdmin .subcontract-admin-statement-list strong{flex:none;color:var(--sa-ink);font-variant-numeric:tabular-nums}
+#subcontractAdmin .subcontract-admin-statement-total{display:flex;justify-content:space-between;gap:12px;margin-top:8px;padding-top:10px;border-top:2px solid #b5c6d5;color:var(--sa-ink)}
+@media(max-width:1000px){#subcontractAdmin .subcontract-admin-grid{grid-template-columns:1fr}}
+@media(max-width:680px){#subcontractAdmin{padding:14px!important}#subcontractAdmin .subcontract-admin-title{align-items:flex-start}#subcontractAdmin .subcontract-admin-picker{display:grid;gap:10px}#subcontractAdmin .subcontract-admin-share{grid-template-columns:1fr}#subcontractAdmin .subcontract-admin-share button{justify-self:start}#subcontractAdmin .subcontract-admin-grid>.panel{padding:14px}}
+@media(prefers-reduced-motion:reduce){#subcontractAdmin button:active:not(:disabled){transform:none;transition:none}}

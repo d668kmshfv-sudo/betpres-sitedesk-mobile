@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="sk">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#123b68">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-title" content="BETPRES Subdodávky">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+ <title>BETPRES · Subdodávky</title>
+ <link rel="manifest" href="manifest.webmanifest">
+ <link rel="icon" href="assets/app-icon.png">
+ <link rel="apple-touch-icon" href="assets/app-icon.png">
+ <link rel="stylesheet" href="styles.css?v=1.0.1">
+ <script src="app.js?v=1.0.1" defer></script>
+</head>
+<body>
+ <div id="gate" class="gate">
+  <div class="gate-brand"><img src="assets/navigation-logo.png" alt="BETPRES"><span>PORTÁL SUBDODÁVATEĽA</span></div>
+  <section id="connectionCard" class="gate-card" hidden>
+   <p class="eyebrow">PRIPOJENIE</p><h1>Pripojiť sa k stavbe</h1>
+   <p class="support">Otvor pozývací odkaz od hlavného zhotoviteľa. Ak už máš údaje o pripojení, vyplň ich tu.</p>
+   <form id="connectionForm">
+    <label>Supabase Project URL<input id="projectUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://projekt.supabase.co" required></label>
+    <label>Verejný publishable / anon kľúč<input id="publishableKey" type="password" autocomplete="off" placeholder="sb_publishable_…" required></label>
+    <button type="submit" class="primary">Uložiť pripojenie</button>
+   </form>
+   <p id="connectionMessage" class="form-message" role="alert"></p>
+  </section>
+  <section id="authCard" class="gate-card" hidden>
+   <p class="eyebrow">PRIHLÁSENIE</p><h1>Tvoj pracovný priestor</h1>
+   <p class="support">Zobrazia sa iba stavby a firmy, ku ktorým ti hlavný zhotoviteľ pridelil prístup.</p>
+   <p class="device-note">Používaj vlastné zariadenie alebo samostatný profil prehliadača. Na zariadení, kde je prihlásený hlavný zhotoviteľ, môžu v prehliadači zostať jeho lokálne údaje.</p>
+   <form id="authForm">
+    <label>E-mail<input id="authEmail" type="email" autocomplete="username" autocapitalize="off" required></label>
+    <label>Heslo<input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></label>
+    <button type="submit" class="primary" id="signInButton">Prihlásiť sa</button>
+   </form>
+   <div class="gate-row"><button type="button" class="plain" id="signUpButton">Vytvoriť účet</button><button type="button" class="plain" id="editConnectionButton">Zmeniť pripojenie</button></div>
+   <p id="authMessage" class="form-message" role="alert"></p>
+  </section>
+ </div>
+
+ <div id="appShell" class="app-shell" hidden>
+  <aside class="sidebar" id="sidebar">
+   <div class="side-brand"><img src="assets/navigation-logo.png" alt="BETPRES"><small>SUBDODÁVKY</small></div>
+   <nav class="side-nav" aria-label="Sekcie portálu">
+    <button type="button" data-view="overview" class="nav-button active"><span aria-hidden="true">⌂</span>Prehľad</button>
+    <button type="button" data-view="diary" class="nav-button"><span aria-hidden="true">▤</span>Stavebný denník</button>
+    <button type="button" data-view="crew" class="nav-button"><span aria-hidden="true">♧</span>Stav pracovníkov</button>
+    <button type="button" data-view="statement" class="nav-button"><span aria-hidden="true">▦</span>Súpis prác</button>
+   </nav>
+   <div class="side-bottom"><span id="signedInEmail"></span><button type="button" class="plain light" id="signOutButton">Odhlásiť sa</button></div>
+  </aside>
+
+  <div class="workspace">
+   <header class="topbar">
+    <button type="button" id="menuButton" class="icon-button menu-button" aria-label="Otvoriť menu" aria-expanded="false">☰</button>
+    <div class="project-choice"><label for="scopeSelect">Stavba · firma</label><select id="scopeSelect"></select></div>
+    <button type="button" id="refreshButton" class="icon-button" aria-label="Načítať najnovšie údaje" title="Načítať najnovšie údaje">↻</button>
+   </header>
+   <main id="mainContent">
+    <div id="noScope" class="empty-state" hidden><h1>Prístup ešte nie je pridelený</h1><p>Prihlásenie funguje. Požiadaj hlavného zhotoviteľa, aby pridal tento e-mail ku konkrétnej firme a stavbe. Potom stlač „Načítať najnovšie údaje“.</p></div>
+    <section id="overviewView" class="view active" aria-labelledby="overviewTitle">
+     <div class="view-head"><div><p class="eyebrow">MOJA STAVBA</p><h1 id="overviewTitle">Denný prehľad</h1></div><span id="overviewDate" class="today-label"></span></div>
+     <div id="scopeClosedBanner" class="notice warning" hidden>Denník tejto firmy je uzatvorený hlavným zhotoviteľom. Záznamy zostávajú na čítanie.</div>
+     <div class="summary-grid"><button type="button" data-go="diary" class="summary-card"><span>DENNÍK</span><strong id="overviewDiary">—</strong><small>Otvoriť dnešný zápis →</small></button><button type="button" data-go="crew" class="summary-card"><span>PRACOVNÍCI DNES</span><strong id="overviewCrew">—</strong><small>Zadať dnešný stav →</small></button><button type="button" data-go="statement" class="summary-card"><span>SÚPIS ZA MESIAC</span><strong id="overviewStatement">—</strong><small>Otvoriť aktuálny mesiac →</small></button></div>
+     <section class="panel"><div class="panel-head"><h2>Čo máš k dispozícii</h2></div><p class="body-copy">Každý deň zapíš vykonané práce a počet pracovníkov. V súpise vyplň mesačné množstvá pri položkách, ktoré ti pridelil hlavný zhotoviteľ. Po uzatvorení zostanú záznamy viditeľné, ale už ich nebude možné meniť.</p></section>
+    </section>
+
+    <div id="dayStrip" class="day-strip" hidden><div><span>VYBRANÝ DEŇ</span><strong id="selectedDayLabel"></strong></div><div class="date-actions"><button type="button" id="previousDay" class="icon-button" aria-label="Predchádzajúci deň">‹</button><input id="dayInput" type="date" aria-label="Vybrať deň"><button type="button" id="nextDay" class="icon-button" aria-label="Nasledujúci deň">›</button></div></div>
+
+    <section id="diaryView" class="view" aria-labelledby="diaryTitle" hidden>
+     <div class="view-head"><div><p class="eyebrow">DENNÉ ZÁZNAMY</p><h1 id="diaryTitle">Stavebný denník</h1></div><span id="diaryStatus" class="status-chip"></span></div>
+     <div id="diaryLockMessage" class="notice warning" hidden></div>
+     <div class="diary-layout"><div><form id="diaryForm" class="panel form-panel"><div class="panel-head"><h2>Vykonané práce</h2><span id="diarySavedAt" class="saved-at"></span></div><label for="diaryWorks">Čo sa dnes vykonalo</label><textarea id="diaryWorks" rows="9" placeholder="Napíš práce vykonané na stavbe…"></textarea><label for="diaryMachinery">Mechanizmy a ďalšie poznámky <small>voliteľné</small></label><textarea id="diaryMachinery" rows="4" placeholder="Použité stroje, dodávky alebo ďalšie dôležité údaje…"></textarea><p id="diaryDraftHint" class="draft-hint" role="status"></p><button type="button" class="secondary restore-draft" id="restoreDiaryDraft" hidden>Obnoviť miestny návrh</button><div class="form-actions"><button type="submit" class="primary" id="saveDiaryButton">Uložiť deň</button></div></form><section class="panel attachment-panel"><div class="panel-head"><h2>Fotografie a dokumenty</h2><span id="attachmentCount" class="saved-at">0 súborov</span></div><p class="muted">Najprv ulož deň. Potom môžeš pridať fotografiu, PDF alebo dokument do 20 MB.</p><input id="attachmentInput" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.pdf,.docx,.xlsx,.txt" aria-label="Pridať súbor k vybranému dňu" disabled><div id="attachmentMessage" class="attachment-message" role="status" aria-live="polite"></div><button type="button" class="secondary" id="retryAttachment" hidden>Skúsiť pripojiť znova</button><div id="attachmentList" class="attachment-list"></div></section><section class="panel export-panel"><div class="panel-head"><h2>Export denníka</h2></div><p class="muted">Každý deň bude na samostatnej strane s miestom na podpis BETPRES a tvojej firmy. Fotografie a strany PDF príloh sa pridajú za daný deň.</p><form id="diaryExportForm"><div class="export-mode"><label><input type="radio" name="diaryExportMode" value="day" checked> Jeden deň</label><label><input type="radio" name="diaryExportMode" value="range"> Obdobie od – do</label></div><div id="exportRange" class="export-range" hidden><label>Od<input id="exportFrom" type="date"></label><label>Do<input id="exportTo" type="date"></label></div><button type="submit" class="secondary" id="exportDiaryButton">Otvoriť PDF / tlač</button></form></section></div><aside class="panel notes-panel"><div class="panel-head"><h2>Záznamy hlavného zhotoviteľa</h2></div><div id="ownerNotes" class="notes-list"></div></aside></div>
+    </section>
+
+    <section id="crewView" class="view" aria-labelledby="crewTitle" hidden>
+     <div class="view-head"><div><p class="eyebrow">DENNÝ STAV</p><h1 id="crewTitle">Stav pracovníkov</h1></div><span id="crewStatus" class="status-chip"></span></div>
+     <div id="crewLockMessage" class="notice warning" hidden></div>
+     <form id="crewForm" class="panel crew-panel"><label for="crewCount">Počet pracovníkov tvojej firmy na stavbe</label><div class="stepper"><button type="button" id="crewMinus" aria-label="Odobrať jedného pracovníka">−</button><input id="crewCount" type="number" min="0" max="9999" step="1" inputmode="numeric" value="0"><button type="button" id="crewPlus" aria-label="Pridať jedného pracovníka">+</button></div><p class="help">Číslo sa vzťahuje na vybraný deň. Môžeš ho zadať klávesnicou alebo tlačidlami.</p><p id="crewDraftHint" class="draft-hint" role="status"></p><button type="button" class="secondary restore-draft" id="restoreCrewDraft" hidden>Obnoviť miestny návrh</button><div class="form-actions"><button type="submit" class="primary" id="saveCrewButton">Uložiť stav</button></div></form>
+    </section>
+
+    <section id="statementView" class="view" aria-labelledby="statementTitle" hidden>
+     <div class="view-head"><div><p class="eyebrow">MESAČNÝ SÚPIS</p><h1 id="statementTitle">Súpis prác</h1></div><span id="statementStatus" class="status-chip"></span></div>
+     <div class="month-strip"><div><span>OBDOBIE</span><strong id="selectedMonthLabel"></strong></div><div class="date-actions"><button type="button" id="previousMonth" class="icon-button" aria-label="Predchádzajúci mesiac">‹</button><input id="monthInput" type="month" aria-label="Vybrať mesiac"><button type="button" id="nextMonth" class="icon-button" aria-label="Nasledujúci mesiac">›</button></div></div>
+     <div id="statementLockMessage" class="notice warning" hidden></div>
+     <div id="statementEmpty" class="empty-state" hidden><h2>Položky ešte nie sú pridelené</h2><p>Hlavný zhotoviteľ ti najprv nahrá položky súpisu. Potom tu budeš vypĺňať vykonané množstvá za jednotlivé mesiace.</p></div>
+     <form id="statementForm" class="statement-form"><div class="panel statement-panel"><div class="statement-table-head"><span>POLOŽKA</span><span>ZML. MNOŽSTVO</span><span>CENA / MJ</span><span>TENTO MESIAC</span><span>SUMA</span></div><div id="statementRows"></div><p id="statementDraftHint" class="draft-hint" role="status"></p><button type="button" class="secondary restore-draft" id="restoreStatementDraft" hidden>Obnoviť miestny návrh</button></div><div class="statement-footer"><div><span>Spolu za mesiac bez DPH</span><strong id="statementTotal">0,00 €</strong></div><div class="statement-actions"><button type="submit" class="primary" id="saveStatementButton">Uložiť súpis</button><button type="button" id="submitStatementButton" class="secondary">Odoslať na schválenie</button></div></div></form>
+    </section>
+   </main>
+  </div>
+  <nav class="mobile-tabs" aria-label="Sekcie portálu"><button type="button" data-view="overview" class="active"><span>⌂</span>Prehľad</button><button type="button" data-view="diary"><span>▤</span>Denník</button><button type="button" data-view="crew"><span>♧</span>Pracovníci</button><button type="button" data-view="statement"><span>▦</span>Súpis</button></nav>
+ </div>
+ <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.7.10";
+const SITE_DESK_APP_VERSION="5.8.0";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -576,7 +576,7 @@ function siteViewLabel(id){
   workers:"Stav pracovníkov",defects:"Vady a nedorobky",siteMeetings:"Koordinačné porady",controlDays:"Kontrolné dni",billing:"Fakturácia",
   workStatements:"Súpis prác",purchases:"Pasport skladu",concrete:"Betóny",materialSamples:"Vzorkovanie materiálov",documents:"Archív dokumentov",
   handover:"Odovzdanie pracoviska",acceptance:"Preberacie protokoly",
-  projects:"Stavby",companies:"Firmy a zmluvy",excelImport:"Import z Excelu",appearance:"Vzhľad aplikácie",cloud:"Cloud a databáza",data:"Dáta a záloha"
+  projects:"Stavby",companies:"Firmy a zmluvy",subcontractAdmin:"Portál subdodávok",excelImport:"Import z Excelu",appearance:"Vzhľad aplikácie",cloud:"Cloud a databáza",data:"Dáta a záloha"
  })[id]||"Stavebná evidencia"
 }
 
@@ -2051,6 +2051,7 @@ function renderActiveView(id=activeViewId()){
   case "quick":renderQuickEntry();break;
   case "projects":renderProjects();break;
   case "companies":prepareCompaniesView();break;
+  case "subcontractAdmin":window.renderSubcontractAdmin?.();break;
   case "billing":renderBilling();break;
   case "workStatements":prepareWorkStatements();break;
   case "purchases":renderPurchases();break;

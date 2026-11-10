@@ -348,7 +348,7 @@
     let archive=null;
     for(const url of [
      `https://raw.githubusercontent.com/d668kmshfv-sudo/betpres-sitedesk-mobile/main/ipad/assets/data/shmu-history.json?date=${date}&t=${Math.floor(Date.now()/300000)}`,
-     "assets/data/shmu-history.json?v=5.7.10"
+     "assets/data/shmu-history.json?v=5.8.0"
     ]){
      try{const response=await fetch(url,{cache:"no-store"});if(response.ok){const value=await response.json();if(value?.dates?.[date]){archive=value;break}}}catch{}
     }
@@ -388,14 +388,25 @@
    const inspectionsByDate=Object.fromEntries(dates.map(date=>[date,inspectionsForDay(date).map(item=>({recipient:[item.recipient,item.person].filter(Boolean).join(" · "),subject:item.subject,dueDate:item.dueAt,note:item.note,status:item.status}))]));
    const dayFilesByDate=Object.fromEntries(await Promise.all(dates.map(async date=>{
     const record=(state.siteDiaryDayAttachments||[]).find(item=>item.projectId===state.selectedProjectId&&item.date===date);
-    const photos=mode==="day"?await Promise.all((record?.photos||[]).map(async photo=>{try{return photo.dataUrl||photo.path&&await cloudPhotoObjectUrl(photo.path)||""}catch{return""}})):[];
+    const photos=mode==="day"||mode==="range"?await Promise.all((record?.photos||[]).map(async photo=>{try{return photo.dataUrl||photo.path&&await cloudPhotoObjectUrl(photo.path)||""}catch{return""}})):[];
     return[date,{attachments:(record?.attachments||[]).map(item=>({id:item.id,name:item.name,type:item.type,path:item.path,size:item.size,sourceKey:`${record.id}:${item.id}`})),photos:photos.filter(Boolean)}]
    })));
    await window.siteDiaryPrint({mode,entries:normalized,weatherByDate,crewByDate,machineryByDate,inspectionsByDate,dayFilesByDate,projectName:siteProject()?.name||"BETPRES",projectLocation:siteProject()?.address||siteProject()?.city||"",title,fileName,letterheadImage:LETTERHEAD_IMAGE})
   }catch(error){alertUser(`Export sa nepodaril: ${error.message||error}`)}
  }
- function dayReportEntries(){return rows().filter(item=>item.date===day).sort((a,b)=>companyName(a).localeCompare(companyName(b),"sk"))}
- get("siteDiaryDate").value=day;get("siteDiaryCopySource").value=precedingDate(day);prepareMachineForm();prepareInspectionForm();
+ function dayReportEntries(){return rangeReportEntries(day,day).sort((a,b)=>companyName(a).localeCompare(companyName(b),"sk"))}
+ function rangeReportEntries(from,to){
+  const byDate=new Map();
+  for(const item of rows())if(item.date>=from&&item.date<=to){if(!byDate.has(item.date))byDate.set(item.date,[]);byDate.get(item.date).push(item)}
+  const result=[];
+  for(let date=from;date<=to;){
+   const records=byDate.get(date)||[];
+   result.push(...(records.length?records:[{date,companyName:"BETPRES s.r.o.",workersCount:0,work:"Práce zatiaľ nezapísané.",photos:[],attachments:[]}]));
+   const next=new Date(`${date}T12:00:00Z`);next.setUTCDate(next.getUTCDate()+1);date=next.toISOString().slice(0,10)
+  }
+  return result
+ }
+ get("siteDiaryDate").value=day;get("siteDiaryCopySource").value=precedingDate(day);get("siteDiaryExportFrom").value=day;get("siteDiaryExportTo").value=day;prepareMachineForm();prepareInspectionForm();
  get("siteDiaryPrev").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()-1);day=dateKey(date);get("siteDiaryCopySource").value=precedingDate(day);render()};
  get("siteDiaryNext").onclick=()=>{const date=new Date(`${day}T12:00:00`);date.setDate(date.getDate()+1);day=dateKey(date);get("siteDiaryCopySource").value=precedingDate(day);render()};
  get("siteDiaryDate").onchange=event=>{day=event.target.value||todayISO();get("siteDiaryCopySource").value=precedingDate(day);render()};
@@ -430,6 +441,14 @@
  get("siteDiaryAttachments").onclick=event=>{const button=event.target.closest("button");if(!button)return;if(button.dataset.siteDiaryRemovePhoto!==undefined)photos.splice(Number(button.dataset.siteDiaryRemovePhoto),1);else if(button.dataset.siteDiaryRemoveDocument)documents=documents.filter(item=>item.id!==button.dataset.siteDiaryRemoveDocument);else if(button.dataset.siteDiaryRemoveNew)newFiles=newFiles.filter(item=>item.id!==button.dataset.siteDiaryRemoveNew);else if(button.dataset.siteDiaryOpenDocument)void openDocument(button.dataset.siteDiaryOpenDocument);renderAttachments()};
  get("siteDiaryDayList").onclick=event=>{const button=event.target.closest("[data-site-diary-edit]");if(button)openEditor(button.dataset.siteDiaryEdit)};
  get("siteDiaryExportDay").onclick=()=>void printReport("day",dayReportEntries(),`Stavebný denník · ${dateLabel(day)}`,`stavebny-dennik-${day}.pdf`);
+ get("siteDiaryExportRange").onclick=()=>{
+  const from=get("siteDiaryExportFrom").value,to=get("siteDiaryExportTo").value;
+  if(!from||!to){alertUser("Vyber začiatok a koniec obdobia.");return}
+  if(from>to){alertUser("Dátum Od musí byť pred dátumom Do.");return}
+  if((Date.parse(`${to}T12:00:00Z`)-Date.parse(`${from}T12:00:00Z`))/86400000>365){alertUser("Naraz môžeš exportovať najviac 366 dní. Vyber kratšie obdobie.");return}
+  const entries=rangeReportEntries(from,to);
+  void printReport("range",entries,`Stavebný denník · ${dateLabel(from)} – ${dateLabel(to)}`,`stavebny-dennik-${from}-az-${to}.pdf`)
+ };
  get("siteDiaryExportCompany").onclick=()=>{const select=get("siteDiaryExportCompanySelect"),id=select.value;if(!id){select.focus();select.showPicker?.();alertUser("Vyber firmu pre PDF export.");return}const entries=rows().filter(item=>item.companyId===id).sort((a,b)=>a.date.localeCompare(b.date));void printReport("company",entries,"Stavebný denník · prehľad prác",`stavebny-dennik-firma-${id.replace(/[^a-z0-9-]/gi,"-")}.pdf`,id)};
  window.renderSiteDiary=render;window.__BETPRES_SITE_DIARY_READY__=true;render()
 })();

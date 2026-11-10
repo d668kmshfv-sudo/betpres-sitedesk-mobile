@@ -1,0 +1,49 @@
+.module-permissions-panel { --mp-line: #d9e2e9; }
+.module-permissions-panel .panel-head { align-items: center; gap: 1rem; }
+.module-permissions-badge {
+  flex: none; border: 1px solid #a96524; border-radius: 999px;
+  color: #7a3f0a; background: #fff6e9; padding: .4rem .7rem;
+  font-size: .78rem; font-weight: 700;
+}
+.module-permissions-warning {
+  border-left: 3px solid #b56b20; background: #fff8ee; color: #553b1d;
+  padding: .75rem .9rem; margin: .8rem 0 1rem; line-height: 1.45;
+}
+.module-permissions-top, .module-permissions-fields {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end; gap: .75rem;
+}
+.module-permissions-top { margin-bottom: .75rem; }
+.module-permissions-top > button { justify-self: start; }
+.module-permissions-top label, .module-permissions-fields label { min-width: 0; }
+.module-permissions-top select, .module-permissions-fields input { width: 100%; }
+.module-permissions-people { display: grid; gap: .45rem; margin: .75rem 0 1rem; }
+.module-permissions-people > p { color: #667886; margin: .25rem 0; }
+.module-permissions-person {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: .5rem; align-items: center; padding: .55rem .7rem;
+  border: 1px solid var(--mp-line); border-radius: .8rem; background: #f8fafc;
+}
+.module-permissions-person strong, .module-permissions-person small { display: block; }
+.module-permissions-person strong { overflow-wrap: anywhere; }
+.module-permissions-person small { margin-top: .18rem; color: #607284; }
+.module-permissions-help { color: #4d6070; margin: .75rem 0; line-height: 1.45; }
+.module-permissions-grid { border: 1px solid var(--mp-line); border-radius: .9rem; overflow: hidden; }
+.module-permissions-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 6.3rem 6.3rem;
+  align-items: center; gap: .45rem; min-height: 2.9rem;
+  padding: .42rem .75rem; background: #fff;
+}
+.module-permissions-row + .module-permissions-row { border-top: 1px solid var(--mp-line); }
+.module-permissions-row:nth-child(even) { background: #f8fafc; }
+.module-permissions-row strong { font-size: .9rem; font-weight: 650; }
+.module-permissions-row label { display: flex; align-items: center; gap: .35rem; font-size: .85rem; }
+.module-permissions-row input { width: 1.1rem; height: 1.1rem; accent-color: #075993; }
+.module-permissions-actions { margin-top: .85rem; display: flex; justify-content: flex-end; }
+@media (max-width: 650px) {
+  .module-permissions-top, .module-permissions-fields { grid-template-columns: 1fr; }
+  .module-permissions-person { grid-template-columns: minmax(0, 1fr) auto; }
+  .module-permissions-person > button:last-child { grid-column: 2; }
+  .module-permissions-row { grid-template-columns: minmax(0, 1fr) 5.1rem 5.9rem; padding-inline: .55rem; }
+  .module-permissions-row label { font-size: .77rem; }
+}

@@ -9,7 +9,7 @@
   .sdp-page{position:relative;width:210mm;height:297mm;overflow:hidden;break-after:page;page-break-after:always}
   .sdp-page:last-child{break-after:auto;page-break-after:auto}
   .sdp-letterhead{position:absolute;inset:0;width:210mm;height:297mm;object-fit:fill}
-  .sdp-content{position:relative;z-index:1;width:210mm;height:297mm;padding:37mm 16mm 31mm;overflow:hidden}
+  .sdp-content{position:relative;z-index:1;width:210mm;height:297mm;padding:37mm 16mm 59mm;overflow:hidden}
   .sdp-flow{display:flow-root;width:178mm;color:#172a3b;font:10px/1.38 Arial,Helvetica,sans-serif}
   .sdp-kicker{color:#31577b;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
   .sdp-title{margin:2mm 0 5mm;color:#15345a;font-size:18px;line-height:1.18;overflow-wrap:anywhere}
@@ -38,6 +38,8 @@
   .sdp-inspection p{margin:.7mm 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:#263b4d;font-size:9.5px;line-height:1.34}
   .sdp-docs{display:flow-root;margin-top:3mm;color:#3b566d;font-size:10px;overflow-wrap:anywhere}
   .sdp-docs strong{color:#244666}.sdp-docs ul{margin:1mm 0 0;padding-left:5mm}.sdp-docs li{margin:.6mm 0}
+  .sdp-signatures{display:grid;grid-template-columns:1fr 1fr;gap:12mm;margin-top:8mm;padding-top:8mm;break-inside:avoid}
+  .sdp-signature{border-top:1px solid #557084;padding-top:2mm;color:#52677b;font-size:9px;font-weight:700}
   .sdp-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4mm;margin-top:6mm}
   .sdp-photos img{display:block;width:100%;height:52mm;object-fit:contain;border:1px solid #d7e0e8;background:#fff}
   .sdp-attachment-page{display:flex;flex-direction:column;padding:9mm 10mm 8mm}
@@ -46,7 +48,7 @@
   .sdp-attachment-header span:last-child{flex:none;text-align:right;color:#52677b}
   .sdp-attachment-image{display:block;width:190mm;height:0;min-height:0;flex:1 1 0;object-fit:contain}
   .sdp-attachment-footer{display:flex;justify-content:space-between;gap:5mm;border-top:1px solid #d4dee6;padding-top:2mm;color:#68798b;font-size:9px}
-  .sdp-footer{position:absolute;left:16mm;right:16mm;bottom:17mm;display:flex;justify-content:space-between;color:#68798b;font-size:9px}
+  .sdp-footer{position:absolute;left:16mm;right:16mm;bottom:58mm;display:flex;justify-content:space-between;color:#68798b;font-size:9px}
   @page{size:A4 portrait;margin:0}
   @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
  `;
@@ -103,6 +105,7 @@
  function documentHtml(entry,docs,continuation){
   return `<div class="sdp-docs"><strong>Prílohy · ${escape(dateLabel(entry.date))}${continuation?" · pokračovanie":""}</strong><ul>${docs.map(item=>`<li>${escape(item.name||"Dokument")}</li>`).join("")}</ul></div>`
  }
+ function signaturesHtml(){return '<div class="sdp-signatures"><div class="sdp-signature">Podpis objednávateľa</div><div class="sdp-signature">Podpis zhotoviteľa</div></div>'}
  const isPdfAttachment=item=>/\.pdf$/i.test(String(item?.name||""))||/\bpdf\b/i.test(String(item?.type||""));
  let pdfLibraryPromise;
  async function pdfLibrary(){
@@ -174,27 +177,29 @@
   const host=document.createElement("div");host.style.cssText="position:fixed;left:-20000px;top:0;width:210mm;visibility:hidden;pointer-events:none;z-index:-1";
   document.body.appendChild(host);
   const root=host.attachShadow({mode:"closed"}),style=document.createElement("style"),flow=document.createElement("div"),gauge=document.createElement("div");
-  style.textContent=styles;flow.className="sdp-flow";gauge.style.height="225mm";
+  style.textContent=styles;flow.className="sdp-flow";gauge.style.height="195mm";
   root.append(style,flow,gauge);
   const limit=gauge.getBoundingClientRect().height;
   return{fits(markup){flow.innerHTML=markup;return flow.getBoundingClientRect().height<=limit-.5},close(){host.remove()}}
  }
  function makeHeader({mode,title,projectName,projectLocation,date,weather,continuation}){
   const place=projectLocation?`<span><strong>Lokalita:</strong> ${escape(projectLocation)}</span>`:"";
-  const meta=mode==="day"?`<span><strong>Stavba:</strong> ${escape(projectName)}</span>${place}<span><strong>Dátum:</strong> ${escape(dateLabel(date))}</span>`:
+  const meta=mode==="day"||mode==="range"?`<span><strong>Stavba:</strong> ${escape(projectName)}</span>${place}<span><strong>Dátum:</strong> ${escape(dateLabel(date))}</span>`:
    `<span><strong>Stavba:</strong> ${escape(projectName)}</span>${place}<span>Prehľad prác podľa dní</span>`;
-  return `<div class="sdp-kicker">Stavebný denník · BETPRES</div><h1 class="sdp-title">${escape(title)}${continuation?" · pokračovanie":""}</h1><div class="sdp-meta">${meta}</div>${mode==="day"&&!continuation?weatherHtml(weather):""}`
+  return `<div class="sdp-kicker">Stavebný denník · BETPRES</div><h1 class="sdp-title">${escape(title)}${continuation?" · pokračovanie":""}</h1><div class="sdp-meta">${meta}</div>${(mode==="day"||mode==="range")&&!continuation?weatherHtml(weather):""}`
  }
  async function printDiary({mode="day",entries=[],weatherByDate={},crewByDate={},machineryByDate={},inspectionsByDate={},dayFilesByDate={},projectName="",projectLocation="",title="Stavebný denník",fileName="stavebny-dennik.pdf",letterheadImage=""}={}){
-  if(!["day","company"].includes(mode))throw new Error("Neznámy typ exportu stavebného denníka.");
-  const records=(Array.isArray(entries)?entries:[]).filter(item=>item&&item.date).slice().sort((a,b)=>mode==="company"?String(a.date).localeCompare(String(b.date))||String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"):String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"));
+  if(!["day","range","company"].includes(mode))throw new Error("Neznámy typ exportu stavebného denníka.");
+  const records=(Array.isArray(entries)?entries:[]).filter(item=>item&&item.date).slice().sort((a,b)=>mode==="company"||mode==="range"?String(a.date).localeCompare(String(b.date))||String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"):String(a.companyName||"").localeCompare(String(b.companyName||""),"sk"));
   if(!records.length)return false;
   const displayTitle=mode==="company"?"Stavebný denník · prehľad prác":title;
   const firstDate=String(records[0].date),weatherMap=weatherByDate&&typeof weatherByDate==="object"?weatherByDate:{};
   const measure=createMeasurer(),pages=[],attachmentQueue=[];
   try{
+   let currentPageDate=firstDate;
    const newPage=(continuation=false,photo=false)=>{
-    const page={header:makeHeader({mode,title:photo?"Fotodokumentácia · "+displayTitle:displayTitle,projectName,projectLocation,date:firstDate,weather:weatherMap[firstDate],continuation}),blocks:[],photo};
+    const pageTitle=mode==="range"?`Stavebný denník · ${dateLabel(currentPageDate)}`:displayTitle;
+    const page={date:currentPageDate,header:makeHeader({mode,title:photo?"Fotodokumentácia · "+pageTitle:pageTitle,projectName,projectLocation,date:currentPageDate,weather:weatherMap[currentPageDate],continuation}),blocks:[],photo};
     pages.push(page);return page
    };
    let page=newPage();
@@ -293,25 +298,32 @@
     groups.get(date).push({...item,date:String(item.date),companyName:String(item.companyName||"Firma"),work:String(item.work||"")})
    }
    for(const [date,dayEntries] of groups){
+    if(mode==="range"&&date!==firstDate){currentPageDate=date;page=newPage()}
     const crew=rowsForDate(crewByDate,date,"crew"),machinery=rowsForDate(machineryByDate,date,"machinery");
     let lead=mode==="company"?dayHeading(date,weatherMap[date]):"";
-    if(mode==="day"||crew.length){addTable("Osoby na stavenisku","crew",crew,lead);lead=""}
-    if(mode==="day"||machinery.length){addTable("Mechanizmy","machinery",machinery,lead);lead=""}
+    if(mode==="day"||mode==="range"||crew.length){addTable("Osoby na stavenisku","crew",crew,lead);lead=""}
+    if(mode==="day"||mode==="range"||machinery.length){addTable("Mechanizmy","machinery",machinery,lead);lead=""}
     const workHeading=lead+sectionTitle("Vykonané práce");
     const firstEntry=dayEntries[0],firstWork=entryHtml(firstEntry,mode,(firstEntry.work||"—").slice(0,1),false);
     if(!fits(workHeading+firstWork))page=newPage(true);
     if(!fits(workHeading+firstWork))throw new Error("Záznam práce sa nezmestí na stranu A4.");
     page.blocks.push(workHeading);
     for(const entry of dayEntries)addEntry(entry);
-    if(mode==="day")addInspections(inspectionsForDate(inspectionsByDate,date));
-    const documents=[...dayEntries.flatMap(entry=>Array.isArray(entry.attachments)?entry.attachments:[]),...(mode==="day"&&Array.isArray(dayFilesByDate[date]?.attachments)?dayFilesByDate[date].attachments:[])];
+    if(mode==="day"||mode==="range")addInspections(inspectionsForDate(inspectionsByDate,date));
+    const documents=[...dayEntries.flatMap(entry=>Array.isArray(entry.attachments)?entry.attachments:[]),...((mode==="day"||mode==="range")&&Array.isArray(dayFilesByDate[date]?.attachments)?dayFilesByDate[date].attachments:[])];
     if(documents.length){
      addDocuments({date,attachments:documents});
      for(const item of documents)if(isPdfAttachment(item))attachmentQueue.push({...item,date})
     }
+    if(!fits(signaturesHtml()))page=newPage(true);
+    if(!fits(signaturesHtml()))throw new Error("Podpisy sa nezmestia na stranu A4.");
+    page.blocks.push(signaturesHtml());
    }
+   const photoDates=new Set();
    for(const entry of records){
-    const dayPhotos=mode==="day"&&entry===records[0]&&Array.isArray(dayFilesByDate[entry.date]?.photos)?dayFilesByDate[entry.date].photos:[];
+    currentPageDate=entry.date;
+    const firstPhotoForDate=!photoDates.has(entry.date);photoDates.add(entry.date);
+    const dayPhotos=(mode==="day"||mode==="range")&&firstPhotoForDate&&Array.isArray(dayFilesByDate[entry.date]?.photos)?dayFilesByDate[entry.date].photos:[];
     const urls=[...(Array.isArray(entry.photos)?entry.photos:[]),...dayPhotos].map(safeImage).filter(Boolean);
     for(let start=0;start<urls.length;start+=4){
      const page=newPage(true,true),pictures=urls.slice(start,start+4).map(url=>`<img src="${url}" alt="Fotografia zo stavby">`).join("");
@@ -324,10 +336,22 @@
   const documentTheme=window.betpresDocumentTheme?.()||{};
   const accent=/^#[0-9a-f]{6}$/i.test(String(documentTheme.accentColor||""))?documentTheme.accentColor:"#15345a";
   const themedStyles=styles.replaceAll("#15345a",accent).replaceAll("#153a61",accent).replaceAll("#245d87",accent).replaceAll("#617b8a",accent).replaceAll("#1d587d",accent);
-  const total=pages.length+attachmentPages.length,letterhead=safeImage(documentTheme.letterheadImage||letterheadImage);
-  const pageHtml=pages.map((page,index)=>`<section class="sdp-page">${letterhead?`<img class="sdp-letterhead" src="${letterhead}" alt="">`:""}<div class="sdp-content"><div class="sdp-flow">${page.header}${page.blocks.join("")}</div><div class="sdp-footer"><span>${escape(projectName||"BETPRES")}</span><span>Strana ${index+1} / ${total}</span></div></div></section>`).join("");
-  const attachmentHtml=attachmentPages.map((item,index)=>attachmentPageHtml(item,pages.length+index,total,projectName)).join("");
-  const html=`<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>${escape(displayTitle)}</title><style>${themedStyles}</style></head><body>${pageHtml}${attachmentHtml}</body></html>`;
+  const letterhead=safeImage(documentTheme.letterheadImage||letterheadImage);
+  const ordered=[];
+  if(mode==="range"){
+   for(const date of [...new Set(records.map(item=>String(item.date)))]){
+    for(const page of pages)if(page.date===date)ordered.push({kind:"diary",page});
+    for(const item of attachmentPages)if(item.date===date)ordered.push({kind:"attachment",item})
+   }
+  }else{
+   for(const page of pages)ordered.push({kind:"diary",page});
+   for(const item of attachmentPages)ordered.push({kind:"attachment",item})
+  }
+  const total=ordered.length;
+  const htmlPages=ordered.map((entry,index)=>entry.kind==="attachment"
+   ?attachmentPageHtml(entry.item,index,total,projectName)
+   :`<section class="sdp-page">${letterhead?`<img class="sdp-letterhead" src="${letterhead}" alt="">`:""}<div class="sdp-content"><div class="sdp-flow">${entry.page.header}${entry.page.blocks.join("")}</div><div class="sdp-footer"><span>${escape(projectName||"BETPRES")}</span><span>Strana ${index+1} / ${total}</span></div></div></section>`).join("");
+  const html=`<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>${escape(displayTitle)}</title><style>${themedStyles}</style></head><body>${htmlPages}</body></html>`;
   const payload={html,fileName,landscape:false,title:displayTitle};
   if(typeof window.showPdfPreview==="function")void window.showPdfPreview(payload);
   else if(window.betpresDesktop?.exportPdf)void window.betpresDesktop.exportPdf(payload);

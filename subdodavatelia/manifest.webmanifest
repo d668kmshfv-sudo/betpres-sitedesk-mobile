@@ -1,0 +1,13 @@
+{
+  "name": "BETPRES · Portál subdodávateľa",
+  "short_name": "BETPRES Sub",
+  "description": "Stavebný denník, pracovníci a mesačné súpisy subdodávateľa.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f8",
+  "theme_color": "#123b68",
+  "icons": [
+    {"src":"assets/app-icon.png","sizes":"any","type":"image/png","purpose":"any maskable"}
+  ]
+}
