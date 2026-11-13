@@ -1,6 +1,6 @@
 (function(){
  "use strict";
- const VERSION="1.0.2";
+ const VERSION="1.0.3";
  const CONNECTION_KEY="betpres-subcontract-connection-v1";
  const SESSION_KEY="betpres-subcontract-session-v1";
  const PREFERRED_SCOPE_KEY="betpres-subcontract-preferred-scope-v1";
@@ -185,8 +185,13 @@
   try{if(state.session?.access_token)await rest("/auth/v1/logout?scope=local",{method:"POST"})}catch{}
   clearPendingOnLogout();saveSession(null);clearPrivateView();showGate();message("authMessage","Bol si odhlásený.",true)
  }
+ async function claimPreferredInvite(){
+  const preferred=safeRead(PREFERRED_SCOPE_KEY);
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(preferred||"")))return;
+  await rest("/rest/v1/rpc/subcontract_claim_invite",{method:"POST",body:{p_scope_id:preferred}})
+ }
  async function enterPortal(){
-  try{await loadScopes();showApp();showView(state.view)}
+  try{await claimPreferredInvite();await loadScopes();showApp();showView(state.view)}
   catch(error){saveSession(null);clearPrivateView();showGate();message("authMessage",error.message)}
  }
  async function loadScopes(){
@@ -216,7 +221,7 @@
  }
  async function refresh(){
   if(!state.session)return;
-  try{await loadScopes();showView(state.view);showToast("Načítané najnovšie údaje.")}
+  try{await claimPreferredInvite();await loadScopes();showView(state.view);showToast("Načítané najnovšie údaje.")}
   catch(error){showToast(error.message)}
  }
  function setDay(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return;state.day=value;$("dayInput").value=value;$("selectedDayLabel").textContent=dayLabel(value);void loadDay()}

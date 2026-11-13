@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.0";
+const SITE_DESK_APP_VERSION="5.8.2";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -694,6 +694,8 @@ const CLOUD_PRE_PULL_BACKUP_KEY=KEY+"-pre-cloud-pull";
 const CLOUD_PRE_PUSH_BACKUP_KEY=KEY+"-pre-cloud-push";
 const CLOUD_LATEST_REQUEST_KEY=KEY+"-load-latest-cloud";
 const SITE_DESK_MOBILE_URL="https://d668kmshfv-sudo.github.io/betpres-sitedesk-mobile/ipad/";
+const SITE_DESK_PUBLIC_PROJECT_URL="https://rnlbgnxyadicbotwgrcp.supabase.co";
+const SITE_DESK_PUBLIC_PROJECT_KEY="sb_publishable_QHWckpS5gKxRIoyWHrX8SQ_92LRxdGp";
 let cloudConfig=loadCloudConfig();
 let cloudSession=loadCloudSession();
 let cloudPushTimer=null;
@@ -729,6 +731,8 @@ if(initialDuplicateWorkCleanup.removed){
 
 function loadCloudConfig(){
  try{
+  const saved=JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||"{}")||{};
+  if(!saved.url&&!saved.key){saved.url=SITE_DESK_PUBLIC_PROJECT_URL;saved.key=SITE_DESK_PUBLIC_PROJECT_KEY}
   return Object.assign({
    url:"",
    key:"",
@@ -742,8 +746,8 @@ function loadCloudConfig(){
    displayName:"",
    lastEmail:"",
    deviceId:localStorage.getItem(KEY+"-device-id")||uid("device")
-  },JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||"{}"),{autoSync:true})
-  }catch{return{url:"",key:"",workspaceName:"Medická – pilot",autoSync:true,lastCloudVersion:0,lastCloudUpdatedAt:"",lastCloudId:"",localDirty:false,currentRole:"none",displayName:"",lastEmail:"",deviceId:uid("device")}}
+  },saved,{autoSync:true})
+  }catch{return{url:SITE_DESK_PUBLIC_PROJECT_URL,key:SITE_DESK_PUBLIC_PROJECT_KEY,workspaceName:"Medická – pilot",autoSync:true,lastCloudVersion:0,lastCloudUpdatedAt:"",lastCloudId:"",localDirty:false,currentRole:"none",displayName:"",lastEmail:"",deviceId:uid("device")}}
 }
 function saveCloudConfig(){
  try{

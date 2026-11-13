@@ -8,7 +8,7 @@
  const month=()=>today().slice(0,7);
  const money=value=>new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR"}).format(Number(value)||0);
  const dateLabel=value=>value&&typeof fmtDateISO==="function"?fmtDateISO(value):value||"—";
- let contextKey="",workspaceId="",scopes=[],scope=null,companyId="",publishedItems=[],dayRecord=null,crewRecord=null,attachments=[],statement=null,statementRows=[],requestVersion=0,isOwner=false;
+ let contextKey="",workspaceId="",scopes=[],scope=null,companyId="",publishedItems=[],invitations=[],dayRecord=null,crewRecord=null,attachments=[],statement=null,statementRows=[],requestVersion=0,isOwner=false;
 
  function notify(message,tone="neutral"){
   const node=$("saStatus");node.textContent=message;node.dataset.tone=tone;
@@ -25,12 +25,12 @@
  function assignedCompanies(){return state.assignments.filter(item=>item.projectId===state.selectedProjectId).map(item=>state.companies.find(c=>c.id===item.companyId)).filter(Boolean).sort((a,b)=>a.name.localeCompare(b.name,"sk"))}
  function renderPicker(){
   const previous=companyId,companies=assignedCompanies();
-  if(!companies.some(item=>item.id===companyId))companyId=companies[0]?.id||"";
-  $("saCompany").innerHTML=companies.map(item=>`<option value="${escape(item.id)}">${escape(item.name)}</option>`).join("")||'<option value="">Najprv priraď firmu ku stavbe</option>';
+  if(!companies.some(item=>item.id===companyId))companyId="";
+  $("saCompany").innerHTML=`<option value="">${companies.length?"Vyber firmu":"Najprv priraď firmu ku stavbe"}</option>`+companies.map(item=>`<option value="${escape(item.id)}">${escape(item.name)}</option>`).join("");
   $("saCompany").value=companyId;
   $("saProjectName").textContent=activeProject()?.name||"Aktuálna stavba";
   $("saCompanyHelp").textContent=companies.length?`${companies.length} firiem priradených k tejto stavbe`:'Firmu pridáš v časti Firmy a zmluvy.';
-  if(previous!==companyId){scope=null;publishedItems=[];statement=null;statementRows=[]}
+  if(previous!==companyId){scope=null;publishedItems=[];invitations=[];statement=null;statementRows=[]}
  }
  function sourceItems(){
   const byId=new Map();let sourceLabel="";
@@ -135,18 +135,40 @@
  async function loadScopeDetails(id){
   const token=++requestVersion;
   try{
-   const [members,items]=await Promise.all([
+   const [members,items,invites]=await Promise.all([
     cloudFetch(`/rest/v1/subcontract_scope_members?scope_id=eq.${id}&select=*&order=created_at.asc`),
-    cloudFetch(`/rest/v1/subcontract_work_items?scope_id=eq.${id}&select=*&order=sort_order.asc`)
+    cloudFetch(`/rest/v1/subcontract_work_items?scope_id=eq.${id}&select=*&order=sort_order.asc`),
+    cloudFetch(`/rest/v1/subcontract_invitations?scope_id=eq.${id}&status=eq.pending&select=email,status,created_at&order=created_at.asc`)
    ]);
    if(token!==requestVersion||scope?.id!==id)return;
    publishedItems=Array.isArray(items)?items:[];
+   invitations=Array.isArray(invites)?invites:[];
    renderMembers(Array.isArray(members)?members:[]);renderPublished();
    await Promise.all([loadDay(id),loadStatement(id)])
   }catch(error){if(token===requestVersion)handleError(error,"Načítanie údajov subdodávky")}
  }
  function renderMembers(rows){
-  $("saMembers").innerHTML=rows.length?rows.map(row=>`<div class="subcontract-admin-list-row"><strong>${escape(row.email||row.user_id||"Účet")}</strong><small>${escape(row.role||"subdodávka")}${isOwner?`<button type="button" class="ghost" data-remove-subcontract-member="${escape(row.user_id)}" data-member-email="${escape(row.email||"")}">Odobrať prístup</button>`:""}</small></div>`).join(""):'<p class="subcontract-admin-empty">Zatiaľ nie je priradený žiadny účet.</p>'
+  const active=rows.map(row=>`<div class="subcontract-admin-list-row"><strong>${escape(row.email||row.user_id||"Účet")}</strong><small>Prístup aktívny${isOwner?`<button type="button" class="ghost" data-remove-subcontract-member="${escape(row.user_id)}" data-member-email="${escape(row.email||"")}">Odobrať prístup</button>`:""}</small></div>`).join("");
+  const pending=invitations.filter(item=>!rows.some(row=>String(row.email||"").toLowerCase()===String(item.email||"").toLowerCase())).map(item=>`<div class="subcontract-admin-list-row"><strong>${escape(item.email)}</strong><small>Pozvanie čaká na potvrdenie e-mailu${isOwner?`<button type="button" class="ghost" data-mail-subcontract-invite="${escape(item.email)}">Pripraviť e-mail</button><button type="button" class="ghost" data-revoke-subcontract-invite="${escape(item.email)}">Zrušiť pozvanie</button>`:""}</small></div>`).join("");
+  $("saMembers").innerHTML=active+pending||'<p class="subcontract-admin-empty">Zatiaľ nie je priradený žiadny účet ani pozvanie.</p>'
+ }
+ function prepareInviteEmail(email){
+  if(!isOwner||!scope||!email)return;
+  const link=portalLink(scope.id);
+  if(!link){notify("Najprv nastav cloudové pripojenie.","warning");return}
+  const subject=`BETPRES · prístup k stavbe ${scope.project_name}`;
+  const body=`Dobrý deň,\n\npre firmu ${scope.company_name} je pripravený stavebný denník, stav pracovníkov a mesačný súpis prác. Otvorte tento odkaz, vytvorte si účet s e-mailom ${email}, potvrďte ho cez správu od Supabase a prihláste sa:\n\n${link}\n\nPrístup platí iba pre túto firmu a túto stavbu.`;
+  location.href=`mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+ }
+ async function revokeInvite(email){
+  if(!isOwner||!scope||!email)return;
+  if(!confirm(`Zrušiť pozvanie pre ${email}?`))return;
+  try{
+   await cloudRpc("subcontract_revoke_invite",{p_scope_id:scope.id,p_email:email});
+   invitations=invitations.filter(item=>item.email!==email);
+   const rows=await cloudFetch(`/rest/v1/subcontract_scope_members?scope_id=eq.${scope.id}&select=*&order=created_at.asc`);
+   renderMembers(Array.isArray(rows)?rows:[]);notify(`Pozvanie pre ${email} bolo zrušené.`,"success")
+  }catch(error){handleError(error,"Zrušenie pozvania")}
  }
  async function removeMember(userId,email){
   if(!scope||!isOwner||!userId)return;
@@ -186,10 +208,14 @@
   const email=$("saMemberEmail").value.trim();if(!email)return;
   const button=$("saInviteForm").querySelector("button");button.disabled=true;
   try{
-   await cloudRpc("subcontract_add_member",{p_scope_id:scope.id,p_email:email});
-   const rows=await cloudFetch(`/rest/v1/subcontract_scope_members?scope_id=eq.${scope.id}&select=*&order=created_at.asc`);
+   await cloudRpc("subcontract_invite",{p_scope_id:scope.id,p_email:email});
+   const [rows,invites]=await Promise.all([
+    cloudFetch(`/rest/v1/subcontract_scope_members?scope_id=eq.${scope.id}&select=*&order=created_at.asc`),
+    cloudFetch(`/rest/v1/subcontract_invitations?scope_id=eq.${scope.id}&status=eq.pending&select=email,status,created_at&order=created_at.asc`)
+   ]);
+   invitations=Array.isArray(invites)?invites:[];
    renderMembers(Array.isArray(rows)?rows:[]);$("saMemberEmail").value="";
-   notify(`Účet ${email} bol priradený iba firme ${currentCompany()?.name||""}.`,"success")
+   notify(`Pozvanie pre ${email} je pripravené. Klikni na „Pripraviť e-mail“ a odošli odkaz.`,"success")
   }catch(error){handleError(error,"Pridanie účtu")}
   finally{button.disabled=false}
  }
@@ -354,7 +380,11 @@
  $("saCompany").addEventListener("change",event=>{companyId=event.target.value;publishedItems=[];statement=null;statementRows=[];renderScope()});
  $("saCreateScope").addEventListener("click",()=>void createScope());
  $("saInviteForm").addEventListener("submit",event=>void invite(event));
- $("saMembers").addEventListener("click",event=>{const button=event.target.closest("[data-remove-subcontract-member]");if(button)void removeMember(button.dataset.removeSubcontractMember,button.dataset.memberEmail)});
+ $("saMembers").addEventListener("click",event=>{
+  const remove=event.target.closest("[data-remove-subcontract-member]");if(remove){void removeMember(remove.dataset.removeSubcontractMember,remove.dataset.memberEmail);return}
+  const mail=event.target.closest("[data-mail-subcontract-invite]");if(mail){prepareInviteEmail(mail.dataset.mailSubcontractInvite);return}
+  const revoke=event.target.closest("[data-revoke-subcontract-invite]");if(revoke)void revokeInvite(revoke.dataset.revokeSubcontractInvite)
+ });
  $("saPublishBudget").addEventListener("click",()=>void publishBudget());
  $("saOpenWork").addEventListener("click",()=>showView("workStatements"));
  $("saCopyLink").addEventListener("click",async()=>{const link=$("saPortalLink").value;if(!link||!isOwner)return;try{await navigator.clipboard.writeText(link);notify("Odkaz na portál bol skopírovaný.","success")}catch{$("saPortalLink").select();document.execCommand("copy");notify("Odkaz na portál bol skopírovaný.","success")}});
