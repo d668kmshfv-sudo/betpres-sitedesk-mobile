@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.2";
+const SITE_DESK_APP_VERSION="5.8.3";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -486,7 +486,7 @@ function showView(id){
  $("sidebar").classList.remove("open");
  scheduleSiteDeskViewRender(id);
  window.scrollTo({top:0,behavior:"auto"})
-}document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();showView(b.dataset.view)}));window.__BETPRES_NAV_READY__=true;document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>showView(b.dataset.go));$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{const m=$(b.dataset.close);m.classList.add("hidden");if(b.dataset.close==="assignCompanyModal"&&$("assignCompanySelect"))$("assignCompanySelect").disabled=false});document.querySelectorAll(".modal").forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.add("hidden")});
+}document.querySelectorAll(".nav-btn").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();if(b.dataset.view==="workStatements"&&activeViewId()!=="workStatements")selectedWorkCompanyId="";showView(b.dataset.view)}));window.__BETPRES_NAV_READY__=true;document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{if(b.dataset.go==="workStatements"&&activeViewId()!=="workStatements")selectedWorkCompanyId="";showView(b.dataset.go)});$("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{const m=$(b.dataset.close);m.classList.add("hidden");if(b.dataset.close==="assignCompanyModal"&&$("assignCompanySelect"))$("assignCompanySelect").disabled=false});document.querySelectorAll(".modal").forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.add("hidden")});
 
 function renderSiteDeskDashboardExtras(){
  const p=activeProject();
@@ -3956,7 +3956,9 @@ if($("companyHourForm"))$("companyHourForm").onsubmit=event=>{
  if(rate<=0){alert("Zadaj platnú hodinovú sadzbu bez DPH.");return}
  if(sheet.rows.some(row=>(companyId&&row.companyId===companyId)||companyHourRowName(row).toLowerCase()===name.toLowerCase())){alert("Táto firma už má v otvorenom mesiaci hodinovú smenovku.");return}
  const row={id:uid("chr"),companyId:companyId||"",companyName:name,hourlyRate:rate,description,workersText:names.join(", "),workers:(names.length?names:[""]).map(workerName=>({id:uid("chw"),name:workerName,values:{}})),values:{},statementItemId:""};
- sheet.rows.push(row);syncHourlyWorkerState(month);selectedCompanyHourRowId=row.id;$("companyHourModal").classList.add("hidden");save(`Hodinová smenovka firmy ${name} bola pridaná.`)
+ const statusSheet=workerSheet(month,true),carryKey=workerCarryKey({companyId:companyId||"",name,alias:name});
+ statusSheet.excludedWorkerCarryKeys=(statusSheet.excludedWorkerCarryKeys||[]).filter(key=>key!==carryKey);
+ sheet.rows.push(row);syncHourlyWorkerState(month,statusSheet);selectedCompanyHourRowId=row.id;$("companyHourModal").classList.add("hidden");save(`Hodinová smenovka firmy ${name} bola pridaná.`)
 };
 if($("addCompanyHourWorkerTop"))$("addCompanyHourWorkerTop").onclick=()=>{
  const sheet=companyHourTimesheet($("workerMonth").value||selectedWorkerMonth||todayMonthValue(),true),row=sheet.rows.find(item=>item.id===selectedCompanyHourRowId)||(sheet.rows.length===1?sheet.rows[0]:null);
@@ -4048,9 +4050,10 @@ function renderCompanyHoursTimesheet(){
    worker.name=input.value.trim();
    row.workersText=companyHourWorkerNames(row).join(", ");
    commitDirectState();
+   if(document.activeElement===input)input.blur();
    renderCompanyHoursTimesheet()
   };
-  input.onblur=()=>{input.dispatchEvent(new Event("change"));endDirectUndo()}
+  input.onblur=endDirectUndo
  });
  document.querySelectorAll("[data-company-hour-rate]").forEach(input=>{
   input.onfocus=()=>beginDirectUndo("Úprava hodinovej sadzby firmy");
@@ -4061,10 +4064,11 @@ function renderCompanyHoursTimesheet(){
    if(rate<=0){alert("Zadaj platnú hodinovú sadzbu firmy bez DPH.");input.value=formatWorkHoursCell(companyHourRate(row));return}
    row.hourlyRate=rate;
    commitDirectState();
+   if(document.activeElement===input)input.blur();
    renderCompanyHoursTimesheet();
    renderDashboard()
   };
-  input.onblur=()=>{input.dispatchEvent(new Event("change"));endDirectUndo()}
+  input.onblur=endDirectUndo
  });
  document.querySelectorAll("[data-company-hour-worker]").forEach(input=>{
   input.onfocus=()=>{
@@ -4082,10 +4086,11 @@ function renderCompanyHoursTimesheet(){
    row.workersText=companyHourWorkerNames(row).join(", ");
    syncHourlyWorkerState(month);
    commitDirectState();window.queueDiaryReviewPublish?.(`${month}-${String(day).padStart(2,"0")}`);
+   if(document.activeElement===input)input.blur();
    renderCompanyHoursTimesheet();
    renderDashboard()
   };
-  input.onblur=()=>{input.dispatchEvent(new Event("change"));endDirectUndo()}
+  input.onblur=endDirectUndo
  });
  document.querySelectorAll("[data-add-company-hour-worker-empty]").forEach(button=>{
   button.onclick=()=>addEmptyCompanyHourWorker(button.dataset.addCompanyHourWorkerEmpty,true)
