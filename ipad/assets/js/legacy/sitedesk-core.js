@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.5";
+const SITE_DESK_APP_VERSION="5.8.6";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -3429,7 +3429,7 @@ function renderSimpleEmployeeTimesheet(config){
  const month=$("workerMonth").value||selectedWorkerMonth||todayMonthValue(),sheet=config.sheet(month,true),[year,mon]=month.split("-").map(Number),days=daysInMonth(month),today=todayISO(),dayNames=["Ne","Po","Ut","St","Št","Pi","So"];
  config.sort(sheet);
  if(config.overtime)sheet.rows.forEach(row=>{row.values=row.values||{};row.overtime=row.overtime||{}});
- let head=`<tr>${config.key==="betpres"?'<th class="employee-personal-number-col">Osobné<br>číslo</th>':""}<th class="employee-col">Meno a pozícia</th>`;
+ let head=`<tr>${config.key==="betpres"?'<th class="employee-personal-number-col">Osobné<br>číslo</th>':""}<th class="employee-col">${config.key==="betpres"?"Meno · profesia · odmena":"Meno a pozícia"}</th>`;
  for(let day=1;day<=days;day++){
   const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
   head+=`<th class="${cls}" title="${esc(holiday||"")}"><span class="worker-day-name">${dayNames[date.getDay()]}</span>${day}<span class="company-timesheet-day-hint">P / O</span>${holiday?`<span class="worker-holiday-name">${esc(holiday)}</span>`:""}</th>`
@@ -3440,7 +3440,9 @@ function renderSimpleEmployeeTimesheet(config){
  bodyEl.innerHTML=sheet.rows.map(row=>{
   row.values=row.values||{};
   row.overtime=row.overtime||{};
-  let total=0,overtimeTotal=0,cells=`<tr>${config.key==="betpres"?`<td class="employee-personal-number-col"><input type="text" inputmode="numeric" maxlength="3" data-betpres-personal-number="${row.id}" value="${esc(row.personalNumber||"")}" aria-label="Osobné číslo pracovníka"></td>`:""}<td class="employee-cell"><div class="employee-identity"><div class="employee-name">${esc(row.name||"")}</div><input class="employee-position-input" data-${config.key}-position="${row.id}" value="${esc(row.position||"")}" placeholder="Pozícia / čo robí" autocomplete="off">${config.key==="betpres"?`<label class="employee-reward-field"><span>Odmena</span><input type="text" inputmode="decimal" maxlength="6" data-betpres-reward="${row.id}" value="${esc(row.rewardPercent??"")}" placeholder="0"><b>%</b></label>`:""}</div><button class="employee-delete-btn" data-del-${config.key}="${row.id}">×</button></td>`;
+  const positionInput=`<input class="employee-position-input" data-${config.key}-position="${row.id}" value="${esc(row.position||"")}" placeholder="Profesia" autocomplete="off" aria-label="Profesia ${esc(row.name||"pracovníka")}">`;
+  const employeeMeta=config.key==="betpres"?`<div class="betpres-employee-meta">${positionInput}<label class="employee-reward-field"><span>Odmena</span><input type="text" inputmode="decimal" maxlength="6" data-betpres-reward="${row.id}" value="${esc(row.rewardPercent??"")}" placeholder="0" aria-label="Odmena v percentách ${esc(row.name||"pracovníka")}"><b>%</b></label></div>`:positionInput;
+  let total=0,overtimeTotal=0,cells=`<tr>${config.key==="betpres"?`<td class="employee-personal-number-col"><input type="text" inputmode="numeric" maxlength="3" data-betpres-personal-number="${row.id}" value="${esc(row.personalNumber||"")}" aria-label="Osobné číslo pracovníka"></td>`:""}<td class="employee-cell"><div class="employee-identity"><div class="employee-name">${esc(row.name||"")}</div>${employeeMeta}</div><button class="employee-delete-btn" data-del-${config.key}="${row.id}" aria-label="Odobrať ${esc(row.name||"pracovníka")} z mesiaca">×</button></td>`;
   for(let day=1;day<=days;day++){
    const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),value=row.values?.[day]??"",cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
    const overtime=row.overtime?.[day]??"",h=attendanceHours(value),oh=attendanceHours(overtime);total+=h;overtimeTotal+=oh;if(h>0||oh>0)workedDays.add(day);
@@ -3565,9 +3567,11 @@ function openEmployeeModal(kind){
  nameInput.oninput=()=>{const found=items.find(item=>item.name.toLocaleLowerCase("sk")===nameInput.value.trim().toLocaleLowerCase("sk"));if(found&&personalNumberInput&&!personalNumberInput.value)personalNumberInput.value=found.personalNumber||"";if(found&&!positionInput.value)positionInput.value=found.position;if(found&&rewardInput&&!rewardInput.value)rewardInput.value=found.rewardPercent??""};
  if(personalNumberInput)personalNumberInput.oninput=()=>{personalNumberInput.value=personalNumberInput.value.replace(/\D/g,"").slice(0,3)};
  if(!isThp){
-  const roster=$("betpresRosterList"),search=$("betpresRosterSearch"),add=$("betpresRosterAdd"),sheet=betpresTimesheet(selectedWorkerMonth,true),present=new Set(sheet.rows.map(betpresEmployeeCarryKey));
+  const roster=$("betpresRosterList"),search=$("betpresRosterSearch"),add=$("betpresRosterAdd"),rosterSection=roster.closest(".betpres-roster-pick"),sheet=betpresTimesheet(selectedWorkerMonth,true),present=new Set(sheet.rows.map(betpresEmployeeCarryKey));
+  const candidates=items.map((item,index)=>({item,index})).filter(({item})=>!present.has(betpresEmployeeCarryKey(item)));
+  rosterSection.classList.toggle("is-exhausted",!candidates.length);
   const renderRoster=()=>{
-   const query=workSearchKey(search.value),available=items.map((item,index)=>({item,index})).filter(({item})=>!present.has(betpresEmployeeCarryKey(item))&&(!query||workSearchKey([item.name,item.personalNumber,item.position].join(" ")).includes(query)));
+   const query=workSearchKey(search.value),available=candidates.filter(({item})=>!query||workSearchKey([item.name,item.personalNumber,item.position].join(" ")).includes(query));
    roster.innerHTML=available.length?available.map(({item,index})=>`<label class="betpres-roster-item"><input type="checkbox" value="${index}"><span><strong>${esc(item.name)}</strong><small>${esc([item.personalNumber?`č. ${item.personalNumber}`:"",item.position].filter(Boolean).join(" · ")||"Pracovník BETPRES")}</small></span></label>`).join(""):`<p class="betpres-roster-empty">${items.length?"Všetci známi pracovníci sú už v mesiaci alebo sa nenašla zhoda.":"Na tejto stavbe ešte nie je zoznam. Pridaj prvého pracovníka nižšie."}</p>`;
    add.disabled=true;add.textContent="Pridať označených"
   };
@@ -3582,7 +3586,7 @@ function openEmployeeModal(kind){
   };
   renderRoster()
  }
- modal.classList.remove("hidden");setTimeout(()=>(!isThp&&items.length?$("betpresRosterSearch"):nameInput).focus(),50)
+ modal.classList.remove("hidden");if(!window.matchMedia("(max-width: 800px) and (pointer: coarse)").matches)setTimeout(()=>(!isThp&&items.length?$("betpresRosterSearch"):nameInput).focus(),50)
 }
 if($("addBetpresEmployee"))$("addBetpresEmployee").onclick=()=>openEmployeeModal("betpres");
 if($("addBetpresEmployeeInline"))$("addBetpresEmployeeInline").onclick=()=>openEmployeeModal("betpres");

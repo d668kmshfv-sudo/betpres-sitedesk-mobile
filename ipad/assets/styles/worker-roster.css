@@ -32,3 +32,104 @@ body.sitedesk-v3 #betpresEmployeeModal .modal-actions { position: static; bottom
   #betpresEmployeeModal .betpres-roster-list { max-height: 24vh; }
   #betpresEmployeeModal #betpresRosterAdd { width: 100%; }
 }
+
+/* Keep each person's name, profession and reward together on one compact row. */
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-timesheet-table th.employee-col,
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-timesheet-table tbody td.employee-cell,
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-timesheet-table tfoot td.employee-col {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+  left: var(--betpres-personal-column-width,54px) !important;
+}
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-timesheet-table tbody td.employee-cell {
+  height: 56px !important;
+  min-height: 56px !important;
+  padding: 3px 5px 3px 8px !important;
+}
+body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-cell .employee-identity {
+  display: inline-grid !important;
+  grid-template-rows: 17px 25px;
+  gap: 1px;
+  width: calc(100% - 31px) !important;
+  max-width: calc(100% - 31px) !important;
+  vertical-align: middle !important;
+}
+body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-cell .employee-name {
+  min-width: 0;
+  font-size: 12px !important;
+  line-height: 17px !important;
+}
+body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-cell .employee-delete-btn {
+  position: absolute !important;
+  float: none !important;
+  top: 50% !important;
+  right: 5px !important;
+  margin: 0 !important;
+  transform: translateY(-50%) !important;
+}
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-employee-meta {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-employee-meta .employee-position-input {
+  width: 100% !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  margin: 0 !important;
+  padding: 0 5px !important;
+  border: 1px solid #d0dce6 !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  color: #415b70 !important;
+  font-size: 10.5px !important;
+  line-height: 22px !important;
+  text-align: left !important;
+}
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-employee-meta .employee-reward-field {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  height: 24px !important;
+  margin: 0 !important;
+  white-space: nowrap;
+  font-size: 9px !important;
+}
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-employee-meta .employee-reward-field input {
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 3px !important;
+  font-size: 10.5px !important;
+}
+
+/* The new-person form uses two short rows instead of four full-width rows. */
+#betpresEmployeeForm {
+  grid-template-columns: clamp(82px,26%,112px) minmax(0,1fr) clamp(80px,24%,108px) !important;
+  gap: 8px 9px !important;
+}
+#betpresEmployeeForm > .betpres-roster-pick,
+#betpresEmployeeForm > .betpres-new-person-title,
+#betpresEmployeeForm > .database-hint,
+#betpresEmployeeForm > .modal-actions { grid-column: 1 / -1 !important; }
+#betpresEmployeeForm > .betpres-personal-field { grid-column: 1 !important; }
+#betpresEmployeeForm > .betpres-name-field { grid-column: 2 / 4 !important; }
+#betpresEmployeeForm > .betpres-position-field { grid-column: 1 / 3 !important; }
+#betpresEmployeeForm > .betpres-reward-field { grid-column: 3 !important; }
+#betpresEmployeeForm > label { min-width: 0; gap: 4px; font-size: 11px; }
+#betpresEmployeeForm > label input { min-width: 0; width: 100%; }
+#betpresEmployeeForm .betpres-roster-pick.is-exhausted { gap: 4px; padding: 10px 12px; }
+#betpresEmployeeForm .betpres-roster-pick.is-exhausted > p,
+#betpresEmployeeForm .betpres-roster-pick.is-exhausted > input,
+#betpresEmployeeForm .betpres-roster-pick.is-exhausted > button { display: none !important; }
+#betpresEmployeeForm .betpres-roster-pick.is-exhausted .betpres-roster-list {
+  max-height: none;
+  border: 0;
+  background: transparent;
+}
+#betpresEmployeeForm .betpres-roster-pick.is-exhausted .betpres-roster-empty { margin: 0; padding: 0; }
