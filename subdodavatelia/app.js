@@ -1,6 +1,6 @@
 (function(){
  "use strict";
- const VERSION="1.0.3";
+ const VERSION="1.0.4";
  const CONNECTION_KEY="betpres-subcontract-connection-v1";
  const SESSION_KEY="betpres-subcontract-session-v1";
  const PREFERRED_SCOPE_KEY="betpres-subcontract-preferred-scope-v1";
@@ -11,8 +11,8 @@
  const decimal=new Intl.NumberFormat("sk-SK",{maximumFractionDigits:3});
  const today=()=>{const date=new Date();return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`};
  const monthNow=()=>today().slice(0,7);
- const viewNames={overview:"overviewView",diary:"diaryView",crew:"crewView",statement:"statementView"};
- const state={connection:null,session:null,scopes:[],scopeId:"",view:"overview",day:today(),month:monthNow(),diary:null,crew:null,ownerNotes:[],attachments:[],pendingAttachments:[],items:[],statement:null,statementRows:[],requestId:0,loading:false};
+ const viewNames={statement:"statementView"};
+ const state={connection:null,session:null,scopes:[],scopeId:"",view:"statement",day:today(),month:monthNow(),diary:null,crew:null,ownerNotes:[],attachments:[],pendingAttachments:[],items:[],statement:null,statementRows:[],requestId:0,loading:false};
  let toastTimer=0,refreshPromise=null,draftStorageWarningShown=false;
 
  function showToast(message){const node=$("toast");node.textContent=message;node.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove("visible"),3500)}
@@ -207,7 +207,7 @@
   return state.scopes
  }
  function showView(name){
-  state.view=viewNames[name]?name:"overview";
+  state.view=viewNames[name]?name:"statement";
   for(const view of document.querySelectorAll(".view")){view.classList.toggle("active",view.id===viewNames[state.view]);view.hidden=!state.scopeId||view.id!==viewNames[state.view]}
   for(const button of document.querySelectorAll("[data-view]"))button.classList.toggle("active",button.dataset.view===state.view);
   $("dayStrip").hidden=!state.scopeId||!["diary","crew"].includes(state.view);

@@ -22,6 +22,15 @@
 .simple-sample-dialog form { display: grid; gap: 13px; }
 .simple-sample-dialog form>label,.simple-sample-signers label { display: grid; gap: 5px; color: #3d5668; font-size: 12px; font-weight: 700; }
 .simple-sample-dialog textarea { min-height: 130px; resize: vertical; }
+.simple-sample-meta-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(150px,210px); gap: 12px; }
+.simple-sample-meta-fields label,.simple-sample-photo-field { display: grid; gap: 6px; color: #3d5668; font-size: 12px; font-weight: 700; }
+.simple-sample-project-field { display: grid; align-content: center; gap: 5px; min-width: 0; padding: 9px 12px; border: 1px solid #d8e4ec; border-radius: 10px; background: #f5f8fa; }
+.simple-sample-project-field span { color: #5c7280; font-size: 11px; }
+.simple-sample-project-field strong { color: #173d5a; overflow-wrap: anywhere; }
+.simple-sample-photo-field { padding: 12px; border: 1px solid #d8e4ec; border-radius: 11px; background: #f8fafb; }
+.simple-sample-photo-field small { color: #607789; font-weight: 400; }
+.simple-sample-photo-preview { display: grid; place-items: center; min-height: 70px; max-width: 280px; overflow: hidden; border: 1px dashed #b8cbd7; border-radius: 9px; color: #607789; font-weight: 400; }
+.simple-sample-photo-preview img { display: block; max-width: 100%; max-height: 180px; object-fit: contain; }
 .simple-sample-signers { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px 12px; margin: 0; padding: 14px; border: 1px solid #d8e4ec; border-radius: 11px; }
 .simple-sample-signers legend { padding: 0 5px; color: #173d5a; font-size: 14px; font-weight: 800; }
 .simple-sample-signers p { grid-column: 1/-1; margin: 0; color: #687e8d; font-size: 11px; }
@@ -36,6 +45,7 @@
   .simple-sample-row-actions { grid-column: 1/-1; justify-content: flex-end; }
   .simple-sample-toolbar { align-items: stretch; flex-direction: column; gap: 5px; }
   .simple-sample-signers { grid-template-columns: 1fr; }
+  .simple-sample-meta-fields { grid-template-columns: 1fr; }
   .simple-sample-form-actions { flex-wrap: wrap; }
   .simple-sample-form-actions>div { width: 100%; }
   .simple-sample-form-actions>div button { flex: 1; }

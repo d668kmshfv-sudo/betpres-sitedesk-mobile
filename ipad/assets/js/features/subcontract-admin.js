@@ -76,8 +76,14 @@
   $("saInviteForm").classList.toggle("hidden",!isOwner);
   $("saShare").classList.toggle("hidden",!isOwner);
   $("saOwnerOnlyHint").classList.toggle("hidden",isOwner);
+  if(!isOwner){
+   const email=cloudSessionUser()?.email||"aktuálny účet";
+   $("saOwnerOnlyHint").innerHTML=`Prihlásený účet <strong>${escape(email)}</strong> môže spravovať údaje firmy, ale pozvania vytvára vlastník pracovného priestoru. <button type="button" class="ghost" id="saSwitchOwnerAccount">Prepnúť účet v Cloud a databáza</button>`;
+   $("saSwitchOwnerAccount").onclick=()=>showView("cloud")
+  }
   $("saCreateScope").classList.toggle("hidden",Boolean(scope)||!companyId);
   $("saScopeContent").classList.toggle("hidden",!scope);
+  $("saExportDiary").disabled=!scope;
   if(!companyId)notify("Na tejto stavbe zatiaľ nie je priradená firma.","warning");
   else if(!scope)notify(`Firma ${currentCompany()?.name||""} ešte nemá oddelený priestor. Zriaď ho, potom jej priraď účet.`,"neutral");
   else notify(`Oddelený priestor firmy ${scope.company_name||currentCompany()?.name||""} je pripravený.`,"success");
@@ -88,6 +94,7 @@
   $("saDiaryLock").textContent=scope.diary_closed_at?"Celý denník uzatvorený":"Denník otvorený";
   $("saDiaryLock").classList.toggle("locked",Boolean(scope.diary_closed_at));
   $("saCloseDiary").disabled=Boolean(scope.diary_closed_at);
+  $("saExportDiary").disabled=false;
   void loadScopeDetails(scope.id)
  }
  function portalLink(id){
@@ -157,7 +164,7 @@
   const link=portalLink(scope.id);
   if(!link){notify("Najprv nastav cloudové pripojenie.","warning");return}
   const subject=`BETPRES · prístup k stavbe ${scope.project_name}`;
-  const body=`Dobrý deň,\n\npre firmu ${scope.company_name} je pripravený stavebný denník, stav pracovníkov a mesačný súpis prác. Otvorte tento odkaz, vytvorte si účet s e-mailom ${email}, potvrďte ho cez správu od Supabase a prihláste sa:\n\n${link}\n\nPrístup platí iba pre túto firmu a túto stavbu.`;
+  const body=`Dobrý deň,\n\npre firmu ${scope.company_name} je pripravený mesačný súpis prác. Otvorte tento odkaz, vytvorte si účet s e-mailom ${email}, potvrďte ho cez správu od Supabase a prihláste sa:\n\n${link}\n\nPrístup platí iba pre súpisy tejto firmy a tejto stavby.`;
   location.href=`mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
  }
  async function revokeInvite(email){
@@ -220,6 +227,113 @@
   finally{button.disabled=false}
  }
  function nextDay(value,delta){const d=new Date(`${value}T12:00:00Z`);d.setUTCDate(d.getUTCDate()+delta);return d.toISOString().slice(0,10)}
+ function splitDiaryText(value,limit=650){
+  let rest=String(value||"").trim();const parts=[];
+  while(rest.length>limit){let cut=Math.max(rest.lastIndexOf("\n",limit),rest.lastIndexOf(" ",limit));if(cut<limit/3)cut=limit;parts.push(rest.slice(0,cut).trim());rest=rest.slice(cut).trim()}
+  if(rest)parts.push(rest);return parts
+ }
+ function diaryPageStyle(accent){return `@page{size:A4 portrait;margin:0}*{box-sizing:border-box}html,body{margin:0;color:#173248;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.sa-pdf-page{position:relative;width:210mm;height:297mm;overflow:hidden;break-after:page;page-break-after:always}.sa-pdf-page:last-child{break-after:auto;page-break-after:auto}.sa-pdf-letterhead{position:absolute;inset:0;width:210mm;height:297mm;object-fit:fill}.sa-pdf-content{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:47mm 15mm 25mm}.sa-pdf-kicker{font-size:9px;font-weight:800;letter-spacing:.1em;color:${accent}}.sa-pdf-content h1{margin:3mm 0 5mm;color:${accent};font-size:19px}.sa-pdf-meta{display:grid;grid-template-columns:1fr 1fr;gap:2mm 5mm;padding:3mm 0;border-top:1px solid #bacbd5;border-bottom:1px solid #bacbd5;font-size:10px}.sa-pdf-meta b{color:#587184}.sa-pdf-content h2{margin:7mm 0 2mm;padding:2mm 3mm;background:${accent};color:white;font-size:11px}.sa-pdf-text{font-size:11px;line-height:1.48;white-space:pre-wrap;overflow-wrap:anywhere}.sa-pdf-signatures{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:auto;padding-top:12mm}.sa-pdf-signatures div{min-height:18mm;padding-top:2mm;border-top:1px solid #8195a3;font-size:10px}.sa-pdf-signatures strong{display:block}.sa-pdf-footer{position:absolute;bottom:16mm;left:15mm;right:15mm;color:#6b8392;font-size:9px;display:flex;justify-content:space-between}.sa-pdf-attachment-image{display:block;max-width:100%;max-height:183mm;margin:8mm auto 0;object-fit:contain}.sa-pdf-attachment-name{font-size:11px;color:#526b7c;overflow-wrap:anywhere}`}
+ function diaryPage({day,sections,pageNumber,pageTotal,attachmentName="",attachmentImage=""},company,project,style,dayIndex,dayCount){
+  const content=attachmentImage?`<h2>Príloha denníka</h2><div class="sa-pdf-attachment-name">${escape(attachmentName)}</div><img class="sa-pdf-attachment-image" src="${escape(attachmentImage)}" alt="${escape(attachmentName)}">`:sections.map(section=>`<h2>${escape(section.title)}</h2><div class="sa-pdf-text">${escape(section.text)}</div>`).join("");
+  return `<section class="sa-pdf-page">${style.letterhead?`<img class="sa-pdf-letterhead" src="${escape(style.letterhead)}" alt="">`:""}<div class="sa-pdf-content"><div class="sa-pdf-kicker">STAVEBNÝ DENNÍK SUBDODÁVATEĽA · DEŇ ${dayIndex+1} / ${dayCount}</div><h1>Denný zápis${pageTotal>1?` · strana ${pageNumber}/${pageTotal}`:""}</h1><div class="sa-pdf-meta"><span><b>Stavba:</b> ${escape(project)}</span><span><b>Dátum:</b> ${escape(dateLabel(day))}</span><span><b>Subdodávateľ:</b> ${escape(company)}</span><span><b>Stav:</b> ${escape(style.status)}</span></div>${content}<div class="sa-pdf-signatures"><div><strong>BETPRES · hlavný zhotoviteľ</strong>Podpis a dátum</div><div><strong>${escape(company)}</strong>Podpis a dátum</div></div><div class="sa-pdf-footer"><span>${escape(company)} · ${escape(dateLabel(day))}</span><span>BETPRES</span></div></div></section>`
+ }
+ async function attachmentImagePages(item){
+  if(!item.path||!String(item.mime_type||"").startsWith("image/")&&item.mime_type!=="application/pdf")return[];
+  await cloudEnsureSession();
+  const url=`${normalizeCloudUrl(cloudConfig.url)}/storage/v1/object/authenticated/subcontract-private/${encodeStoragePath(item.path)}`;
+  const response=await fetch(url,{headers:{apikey:cloudConfig.key,Authorization:`Bearer ${cloudSession.access_token}`},cache:"no-store"});
+  if(!response.ok)throw new Error(`Príloha ${item.name} sa nedá načítať (${response.status}).`);
+  if(String(item.mime_type||"").startsWith("image/")){
+   const blob=await response.blob();
+   const source=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error(`Fotografia ${item.name} sa nedá načítať.`));reader.readAsDataURL(blob)});
+   return[{attachmentName:item.name,attachmentImage:source}]
+  }
+  const library=await import(new URL("assets/js/vendor/pdfjs/pdf.mjs",document.baseURI).href);
+  library.GlobalWorkerOptions.workerSrc=new URL("assets/js/vendor/pdfjs/pdf.worker.mjs",document.baseURI).href;
+  const task=library.getDocument({data:new Uint8Array(await response.arrayBuffer()),isEvalSupported:false,useSystemFonts:true});
+  const pdf=await task.promise,pages=[];
+  try{
+   for(let number=1;number<=pdf.numPages;number++){
+    const source=await pdf.getPage(number),size=source.getViewport({scale:1}),scale=Math.min(1.8,1500/size.width,2000/size.height),viewport=source.getViewport({scale}),canvas=document.createElement("canvas");
+    canvas.width=Math.max(1,Math.round(viewport.width));canvas.height=Math.max(1,Math.round(viewport.height));
+    const context=canvas.getContext("2d",{alpha:false});if(!context)throw new Error("Prehliadač nevie vykresliť PDF prílohu.");
+    context.fillStyle="#fff";context.fillRect(0,0,canvas.width,canvas.height);
+    await source.render({canvasContext:context,viewport,background:"#fff"}).promise;
+    pages.push({attachmentName:`${item.name} · strana ${number}/${pdf.numPages}`,attachmentImage:canvas.toDataURL("image/jpeg",.86)});
+    canvas.width=0;canvas.height=0;source.cleanup()
+   }
+  }finally{await pdf.destroy()}
+  return pages
+ }
+ async function exportSubcontractDiary(){
+  if(!scope)return;
+  const from=$("saExportFrom").value,to=$("saExportTo").value;
+  if(!from||!to||from>to){notify("Vyber platné obdobie denníka od – do.","warning");return}
+  const span=Math.round((Date.parse(`${to}T12:00:00Z`)-Date.parse(`${from}T12:00:00Z`))/86400000)+1;
+  if(span>366){notify("Naraz možno exportovať najviac 366 dní.","warning");return}
+  const button=$("saExportDiary"),selectedScope=scope;button.disabled=true;button.textContent="Pripravujem PDF…";
+  try{
+   const id=encodeURIComponent(selectedScope.id),daysFilter=`scope_id=eq.${id}&day=gte.${from}&day=lte.${to}&select=*`;
+   const [days,crews,notes,files]=await Promise.all([
+    cloudFetch(`/rest/v1/subcontract_diary_days?${daysFilter}&order=day.asc`),
+    cloudFetch(`/rest/v1/subcontract_daily_crew?${daysFilter}&order=day.asc`),
+    cloudFetch(`/rest/v1/subcontract_owner_notes?${daysFilter}&order=day.asc,created_at.asc`),
+    cloudFetch(`/rest/v1/subcontract_attachments?scope_id=eq.${id}&select=diary_day_id,name,mime_type,path&order=created_at.asc`)
+   ]);
+   const dayMap=new Map((days||[]).map(item=>[item.day,item])),crewMap=new Map((crews||[]).map(item=>[item.day,item]));
+   const noteMap=new Map(),fileMap=new Map();
+   for(const note of notes||[]){if(!noteMap.has(note.day))noteMap.set(note.day,[]);noteMap.get(note.day).push(note)}
+   for(const file of files||[]){if(!fileMap.has(file.diary_day_id))fileMap.set(file.diary_day_id,[]);fileMap.get(file.diary_day_id).push(file)}
+   const dateKeys=[...new Set([...dayMap.keys(),...crewMap.keys(),...noteMap.keys()])].sort();
+   if(!dateKeys.length){notify("V tomto období subdodávateľ nemá žiadny denný zápis.","warning");return}
+   const theme=window.betpresDocumentTheme?.()||{},accent=/^#[0-9a-f]{6}$/i.test(theme.accentColor||"")?theme.accentColor:"#123b68";
+   const style={accent,letterhead:theme.letterheadImage||typeof LETTERHEAD_IMAGE!=="undefined"&&LETTERHEAD_IMAGE||""};
+   const pages=[];
+   for(const [dayIndex,day] of dateKeys.entries()){
+    const entry=dayMap.get(day),crew=crewMap.get(day),notesForDay=noteMap.get(day)||[],filesForDay=fileMap.get(entry?.id)||[];
+    style.status=entry?.status==="closed"||selectedScope.diary_closed_at?"Uzatvorený":"Rozpracovaný";
+    const sections=[];
+    for(const part of splitDiaryText(entry?.works||"Bez zápisu vykonaných prác."))sections.push({title:"Vykonané práce",text:part});
+    const professions=Object.entries(crew?.professions||{}).filter(([,count])=>Number(count)>0).map(([name,count])=>`${name}: ${count}`).join(" · ");
+    sections.push({title:"Pracovníci",text:`${crew?.worker_count??"Nezadané"}${professions?`\n${professions}`:""}`});
+    if(entry?.machinery)for(const part of splitDiaryText(entry.machinery))sections.push({title:"Mechanizmy a poznámky",text:part});
+    for(const note of notesForDay)for(const part of splitDiaryText(note.body))sections.push({title:"Záznam hlavného zhotoviteľa",text:part});
+    if(filesForDay.length)sections.push({title:"Prílohy dňa",text:filesForDay.map(item=>item.name).join("\n")});
+    const textPages=[[]],measureStyle=document.createElement("style"),measureHost=document.createElement("div");
+    measureStyle.textContent=diaryPageStyle(accent);
+    measureHost.style.cssText="position:fixed;left:-10000px;top:0;width:210mm;visibility:hidden;pointer-events:none";
+    document.head.appendChild(measureStyle);document.body.appendChild(measureHost);
+    try{
+     const fits=parts=>{
+      measureHost.innerHTML=diaryPage({day,sections:parts,pageNumber:1,pageTotal:1},selectedScope.company_name,selectedScope.project_name,style,dayIndex,dateKeys.length);
+      const content=measureHost.querySelector(".sa-pdf-content");
+      return content&&content.scrollHeight<=content.clientHeight+2
+     };
+     const append=section=>{
+      const current=textPages[textPages.length-1],candidate=[...current,section];
+      if(fits(candidate)){current.push(section);return}
+      if(current.length){textPages.push([]);append(section);return}
+      if(section.text.length>60){
+       const halves=splitDiaryText(section.text,Math.max(60,Math.floor(section.text.length/2)));
+       if(halves.length>1){for(const half of halves)append({...section,text:half});return}
+      }
+      throw new Error(`Záznam ${dateLabel(day)} obsahuje text, ktorý sa nezmestí na A4.`)
+     };
+     for(const section of sections)append(section)
+    }finally{measureHost.remove();measureStyle.remove()}
+    const imagePages=[];
+    for(const file of filesForDay)imagePages.push(...await attachmentImagePages(file));
+    const pageTotal=textPages.length+imagePages.length;
+    textPages.forEach((part,index)=>pages.push(diaryPage({day,sections:part,pageNumber:index+1,pageTotal},selectedScope.company_name,selectedScope.project_name,style,dayIndex,dateKeys.length)));
+    imagePages.forEach((part,index)=>pages.push(diaryPage({day,sections:[],pageNumber:textPages.length+index+1,pageTotal,...part},selectedScope.company_name,selectedScope.project_name,style,dayIndex,dateKeys.length)))
+   }
+   const html=`<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>Denník ${escape(selectedScope.company_name)}</title><style>${diaryPageStyle(accent)}</style></head><body>${pages.join("")}</body></html>`;
+   const fileName=`dennik-${String(selectedScope.company_name||"subdodavatel").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/gi,"-").toLowerCase()}-${from}-${to}.pdf`;
+   notify(`Pripravený denník firmy ${selectedScope.company_name}: ${dateKeys.length} dní.`,"success");
+   void window.showPdfPreview({html,fileName,title:`Denník ${selectedScope.company_name} · ${from} – ${to}`,landscape:false})
+  }catch(error){handleError(error,"Export denníka")}
+  finally{button.disabled=false;button.textContent="PDF denníka firmy"}
+ }
  async function loadDay(id){
   if(!scope||scope.id!==id)return;
   const date=$("saDiaryDate").value||today();
@@ -375,6 +489,19 @@
   if(key!==contextKey){contextKey=key;void refresh()}
   else renderSource()
  }
+ const diaryExportControls=document.createElement("div");
+ diaryExportControls.className="subcontract-admin-export-controls";
+ diaryExportControls.innerHTML='<label>Od<input id="saExportFrom" type="date" aria-label="Export denníka od"></label><label>Do<input id="saExportTo" type="date" aria-label="Export denníka do"></label><button type="button" class="ghost" id="saExportCurrentDay">Vybraný deň</button><button type="button" id="saExportDiary" disabled>PDF denníka firmy</button>';
+ $("saDiaryDetail").before(diaryExportControls);
+ const diaryArchive=$("saDiaryDetail").closest("article");
+ diaryArchive.querySelector(".panel-head h2").textContent="Archív denníka firmy";
+ $("saDiaryLock").classList.add("hidden");
+ $("saNoteForm").classList.add("hidden");
+ $("saCloseDay").closest(".subcontract-admin-action-row").classList.add("hidden");
+ $("saStatementDetail").closest("article").style.order="-1";
+ $("saExportFrom").value=today();$("saExportTo").value=today();
+ $("saExportCurrentDay").addEventListener("click",()=>{const day=$("saDiaryDate").value||today();$("saExportFrom").value=day;$("saExportTo").value=day});
+ $("saExportDiary").addEventListener("click",()=>void exportSubcontractDiary());
  $("saRefresh").addEventListener("click",()=>void refresh());
  $("saOpenCloud").addEventListener("click",()=>showView("cloud"));
  $("saCompany").addEventListener("change",event=>{companyId=event.target.value;publishedItems=[];statement=null;statementRows=[];renderScope()});

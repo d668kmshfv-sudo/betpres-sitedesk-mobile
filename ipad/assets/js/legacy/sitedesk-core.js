@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.3";
+const SITE_DESK_APP_VERSION="5.8.4";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -72,6 +72,26 @@ function siteDeskStoreRecoverySnapshot(snapshotKey,serialized){
  siteDeskSaveDbSnapshot(serialized,snapshotKey);
  return storedLocally
 }
+function mergedDefectDeletions(...sources){
+ const byId=new Map();
+ for(const source of sources){
+  for(const item of Array.isArray(source)?source:[]){
+   const id=String(item?.id||"").trim();if(!id)continue;
+   const previous=byId.get(id),deletedAt=String(item.deletedAt||"");
+   if(!previous||deletedAt>previous.deletedAt)byId.set(id,{id,projectId:String(item.projectId||previous?.projectId||""),deletedAt});
+  }
+ }
+ return[...byId.values()].sort((a,b)=>a.id.localeCompare(b.id))
+}
+function applyDefectDeletions(target,...additional){
+ if(!target||typeof target!=="object")return{removed:0,markers:0};
+ const before=Array.isArray(target.defects)?target.defects.length:0,
+       previous=Array.isArray(target.defectDeletions)?target.defectDeletions:[];
+ target.defectDeletions=mergedDefectDeletions(previous,...additional);
+ const deleted=new Set(target.defectDeletions.map(item=>item.id));
+ if(Array.isArray(target.defects))target.defects=target.defects.filter(item=>!deleted.has(item?.id));
+ return{removed:before-(target.defects?.length||0),markers:target.defectDeletions.length}
+}
 async function siteDeskRestoreDbSnapshotIfNeeded(){
  const db=await siteDeskOpenDb();if(!db)return false;
  const row=await new Promise(resolve=>{try{const req=db.transaction(SITE_DESK_SNAPSHOT_STORE,"readonly").objectStore(SITE_DESK_SNAPSHOT_STORE).get(KEY);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>resolve(null)}catch{resolve(null)}});
@@ -80,8 +100,11 @@ async function siteDeskRestoreDbSnapshotIfNeeded(){
  if(local&&row.localStorageSaved!==false)return false;
  try{
   const restored=JSON.parse(row.value);if(!Array.isArray(restored.projects)||!Array.isArray(restored.companies))return false;
-  state=restored;lastCommittedState=row.value;
-  try{localStorage.setItem(KEY,row.value);void siteDeskSaveDbSnapshot(row.value,KEY,{localStorageSaved:true})}catch{}
+  let localState=null;try{localState=JSON.parse(local||"null")}catch{}
+  applyDefectDeletions(restored,localState?.defectDeletions);
+  const restoredSerialized=JSON.stringify(restored);
+  state=restored;lastCommittedState=restoredSerialized;
+  try{localStorage.setItem(KEY,restoredSerialized);void siteDeskSaveDbSnapshot(restoredSerialized,KEY,{localStorageSaved:true})}catch{}
   cloudLocalDirty=true;cloudConfig.localDirty=true;saveCloudConfig();
   return true
  }catch{return false}
@@ -99,6 +122,7 @@ const normalizeStateList=key=>{
  "documentVersions","calendarEvents","workStatements","workStatementDeletions","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryCrew","siteDiaryMachinery","siteDiaryInspections","siteDiarySubcontracts","siteDiaryDayAttachments","materialSamples"
 ].forEach(normalizeStateList);
 if(!Array.isArray(state.defects))state.defects=[];
+applyDefectDeletions(state);
 
 const BACH_WORK_STATEMENTS_CLEANUP="remove-bach-corporation-work-statements-2026-09-04";
 function cleanupBachCorporationWorkStatements(currentState){
@@ -1131,6 +1155,7 @@ async function cloudUploadDiaryAttachment(entry,attachment,workspaceId){
 }
 async function cloudPrepareState(workspaceId){
  const cloudData=typeof structuredClone==="function"?structuredClone(state):clone(state);
+ applyDefectDeletions(cloudData);
  let localStateChanged=false;
  for(const defect of (state.defects||[]).map(item=>({...item,photos:[...(item.photos||[])]}))){
   const cloudDefect=cloudData.defects.find(item=>item.id===defect.id);
@@ -1185,6 +1210,13 @@ async function cloudPrepareState(workspaceId){
    delete cloudPhoto.dataUrl
   }
  }
+ for(const sample of state.materialSamples||[]){
+  const localPhoto=sample.photo,cloudSample=cloudData.materialSamples?.find(item=>item.id===sample.id);
+  if(!localPhoto||!cloudSample)continue;
+  if(localPhoto.dataUrl&&!localPhoto.path){await cloudUploadPhoto(sample,localPhoto,workspaceId,"material-samples");localStateChanged=true}
+  cloudSample.photo={...localPhoto};
+  delete cloudSample.photo.dataUrl
+ }
  if(localStateChanged){
   const serialized=JSON.stringify(state);
   lastCommittedState=serialized;
@@ -1192,10 +1224,10 @@ async function cloudPrepareState(workspaceId){
  }
  return cloudData
 }
-function cloudLocalDefectChanges(remoteDefects){
+function cloudLocalDefectChanges(remoteDefects,deletedIds=new Set()){
  const remoteById=new Map((Array.isArray(remoteDefects)?remoteDefects:[]).filter(item=>item?.id).map(item=>[item.id,item]));
  return(state.defects||[]).filter(localItem=>{
-  if(!localItem?.id)return false;
+  if(!localItem?.id||deletedIds.has(localItem.id))return false;
   const remoteItem=remoteById.get(localItem.id);
   return!remoteItem||cloudDefectMergeStamp(localItem)>cloudDefectMergeStamp(remoteItem)
  })
@@ -1203,7 +1235,13 @@ function cloudLocalDefectChanges(remoteDefects){
 async function cloudPrepareDefectPatch(remote,workspaceId){
  const cloudData=clone(remote.data||{});
  if(!Array.isArray(cloudData.defects))cloudData.defects=[];
- const changes=cloudLocalDefectChanges(cloudData.defects),cloudIndex=new Map(cloudData.defects.map((item,index)=>[item.id,index]));
+ const remoteMarkers=mergedDefectDeletions(cloudData.defectDeletions),remoteMarkerIds=new Set(remoteMarkers.map(item=>item.id));
+ const removedFromRemote=new Set(cloudData.defects.filter(item=>remoteMarkerIds.has(item?.id)).map(item=>item.id));
+ applyDefectDeletions(cloudData,state.defectDeletions);
+ const deletedIds=new Set(cloudData.defectDeletions.map(item=>item.id));
+ for(const item of remote.data?.defects||[])if(deletedIds.has(item?.id))removedFromRemote.add(item.id);
+ const newDeletions=cloudData.defectDeletions.filter(item=>!remoteMarkerIds.has(item.id));
+ const changes=cloudLocalDefectChanges(cloudData.defects,deletedIds),cloudIndex=new Map(cloudData.defects.map((item,index)=>[item.id,index]));
  for(const localDefect of changes){
   const cloudDefect=clone(localDefect);cloudDefect.photos=Array.isArray(cloudDefect.photos)?cloudDefect.photos:[];
   for(let index=0;index<(localDefect.photos||[]).length;index++){
@@ -1218,23 +1256,24 @@ async function cloudPrepareDefectPatch(remote,workspaceId){
   if(existingIndex===undefined){cloudIndex.set(localDefect.id,cloudData.defects.length);cloudData.defects.push(cloudDefect)}
   else cloudData.defects[existingIndex]=cloudDefect
  }
- return{cloudData,changes}
+ return{cloudData,changes,deletionCount:new Set([...newDeletions.map(item=>item.id),...removedFromRemote]).size}
 }
 async function cloudPushDefectPatch(initialRemote){
  let remote=initialRemote;
  for(let attempt=0;attempt<2;attempt++){
   const prepared=await cloudPrepareDefectPatch(remote,remote.id);
-  if(!prepared.changes.length)return{saved:false,count:0};
+  const changeCount=prepared.changes.length+prepared.deletionCount;
+  if(!changeCount)return{saved:false,count:0};
   const result=await cloudRpc("sitedesk_save_workspace",{
    p_workspace_id:remote.id,
    p_expected_version:Number(remote.data_version||0),
    p_data:prepared.cloudData,
    p_device_id:cloudConfig.deviceId,
-   p_description:`Mobilné vady · ${prepared.changes.length} zmien`
+   p_description:`Mobilné vady · ${changeCount} zmien`
   }),saveResult=Array.isArray(result)?result[0]:result;
   if(saveResult?.success){
    const serialized=JSON.stringify(state);lastCommittedState=serialized;siteDeskSchedulePersist(serialized,{backup:false});
-   return{saved:true,count:prepared.changes.length,dataVersion:Number(saveResult.data_version||Number(remote.data_version||0)+1),updatedAt:saveResult.updated_at||new Date().toISOString()}
+   return{saved:true,count:changeCount,dataVersion:Number(saveResult.data_version||Number(remote.data_version||0)+1),updatedAt:saveResult.updated_at||new Date().toISOString()}
   }
   if(attempt===0){remote=await cloudGetWorkspace();if(!remote?.data)break}
  }
@@ -1257,6 +1296,10 @@ async function cloudPush({force=false,silent=false}={}){
 
   if(!remote){
    throw new Error("Pracovný priestor nie je dostupný. Vlastník musí najprv pridať tento účet do tímu.")
+  }
+  if(Array.isArray(remote.data?.defectDeletions)&&remote.data.defectDeletions.length){
+   const adopted=mergeRemoteDefectsIntoLocal([],remote.data.defectDeletions);
+   if(adopted.changed&&activeViewId()==="defects")renderDefects()
   }
 
   const role=await cloudLoadCurrentRole(remote.id);
@@ -1318,9 +1361,10 @@ async function cloudPush({force=false,silent=false}={}){
 const CLOUD_PROTECTED_COLLECTIONS=["projects","companies","assignments","billings","materials","purchases","machinePassport","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryCrew","siteDiaryMachinery","siteDiaryInspections","siteDiarySubcontracts","siteDiaryDayAttachments","materialSamples"];
 function cloudMissingLocalRecords(remoteData){
  const missing=[];
+ const remotelyDeletedDefects=new Set(mergedDefectDeletions(remoteData.defectDeletions).map(item=>item.id));
  for(const key of CLOUD_PROTECTED_COLLECTIONS){
   const remoteIds=new Set((Array.isArray(remoteData[key])?remoteData[key]:[]).map(item=>item?.id).filter(Boolean));
-  for(const item of Array.isArray(state[key])?state[key]:[]){if(item?.id&&!remoteIds.has(item.id))missing.push({key,id:item.id})}
+  for(const item of Array.isArray(state[key])?state[key]:[]){if(item?.id&&!remoteIds.has(item.id)&&(key!=="defects"||!remotelyDeletedDefects.has(item.id)))missing.push({key,id:item.id})}
  }
  return missing
 }
@@ -1338,11 +1382,14 @@ async function cloudPull({silent=false,replaceLocal=false}={}){
   if(cloudLocalRevision!==revisionBeforePull||(cloudLocalDirty&&!replaceLocal))throw new Error("V tomto zariadení sú neodoslané zmeny. Načítanie cloudu bolo zastavené, aby sa nestratili.");
   const imported=remote.data;
   if(!Array.isArray(imported.projects)||!Array.isArray(imported.companies))throw new Error("Cloudový záznam nemá platný formát BETPRES APP.");
+  const remoteDeletionIds=new Set(mergedDefectDeletions(imported.defectDeletions).map(item=>item.id));
+  const localDeletionMarkers=mergedDefectDeletions(state.defectDeletions),localDeletionsToUpload=localDeletionMarkers.filter(item=>!remoteDeletionIds.has(item.id)).length;
   const missing=siteDeskHadLocalState||cloudLocalDirty?cloudMissingLocalRecords(imported):[];
   if(missing.length&&!replaceLocal)throw new Error(`V tomto zariadení je ${missing.length} záznamov, ktoré chýbajú v cloude. Automatické načítanie bolo zastavené, aby sa nestratili. Najprv zosynchronizuj alebo skontroluj zálohu.`);
   preserveDefectRecovery();
   siteDeskStoreRecoverySnapshot(CLOUD_PRE_PULL_BACKUP_KEY,JSON.stringify(state));
   if(missing.length){for(const {key,id} of missing){if(!Array.isArray(imported[key]))imported[key]=[];const item=state[key].find(record=>record.id===id);if(item)imported[key].push(clone(item))}}
+  applyDefectDeletions(imported,localDeletionMarkers);
   if(imported.projects.some(project=>project.id===state.selectedProjectId))imported.selectedProjectId=state.selectedProjectId;
   state=imported;
   window.applyBetpresDocumentSettings?.();
@@ -1362,7 +1409,7 @@ async function cloudPull({silent=false,replaceLocal=false}={}){
   saveCloudConfig();
   await cloudLoadTeamContext(remote);
   renderAll();
-  if(missing.length)queueCloudPush(`Zachované lokálne záznamy (${missing.length})`);
+  if(missing.length||localDeletionsToUpload)queueCloudPush(`Zachované lokálne zmeny (${missing.length+localDeletionsToUpload})`);
   if(bachCleanup.removed)queueCloudPush(`Vymazané súpisy prác Bach corporation (${bachCleanup.removed})`);
   cloudSetQuickStatus("connected",`Cloud v${cloudConfig.lastCloudVersion}`);
   setCloudMessage("cloudSyncMessage",`Cloudové dáta boli načítané. Verzia ${cloudConfig.lastCloudVersion}.${missing.length?` Zachované lokálne záznamy: ${missing.length}.`:""}`,"success");
@@ -1636,12 +1683,14 @@ function cloudDefectMergeStamp(item){
  const value=Date.parse(item?.updatedAt||item?.createdAt||"");
  return Number.isFinite(value)?value:0
 }
-function mergeRemoteDefectsIntoLocal(remoteDefects){
+function mergeRemoteDefectsIntoLocal(remoteDefects,remoteDeletions=[]){
  if(!Array.isArray(remoteDefects))return{added:0,updated:0,changed:false};
+ const previousMarkerCount=mergedDefectDeletions(state.defectDeletions).length;
+ const deletionResult=applyDefectDeletions(state,remoteDeletions),deletedIds=new Set(state.defectDeletions.map(item=>item.id));
  const localById=new Map((state.defects||[]).filter(item=>item?.id).map(item=>[item.id,item]));
  let added=0,updated=0;
  for(const remoteItem of remoteDefects){
-  if(!remoteItem?.id)continue;
+  if(!remoteItem?.id||deletedIds.has(remoteItem.id))continue;
   const localItem=localById.get(remoteItem.id);
   if(!localItem){
    const incoming=clone(remoteItem);state.defects.push(incoming);localById.set(incoming.id,incoming);added++;continue
@@ -1651,7 +1700,7 @@ function mergeRemoteDefectsIntoLocal(remoteDefects){
   const incoming=JSON.stringify(remoteItem),current=JSON.stringify(localItem);
   if(incoming!==current){Object.assign(localItem,clone(remoteItem));updated++}
  }
- const changed=Boolean(added||updated);
+ const changed=Boolean(added||updated||deletionResult.removed||deletionResult.markers!==previousMarkerCount);
  if(changed){
   const serialized=JSON.stringify(state);lastCommittedState=serialized;siteDeskSchedulePersist(serialized,{backup:true});preserveDefectRecovery()
  }
@@ -1667,11 +1716,11 @@ async function cloudRefreshDefectsForExport(){
         localVersion=Number(cloudConfig.lastCloudVersion||0);
   if(!remote?.data)return{ok:true,refreshed:false};
   if(remoteVersion<=localVersion){
-   const merged=mergeRemoteDefectsIntoLocal(remote.data.defects);
+   const merged=mergeRemoteDefectsIntoLocal(remote.data.defects,remote.data.defectDeletions);
    return{ok:true,refreshed:merged.changed,...merged}
   }
   if(cloudLocalDirty){
-   const merged=mergeRemoteDefectsIntoLocal(remote.data.defects);
+   const merged=mergeRemoteDefectsIntoLocal(remote.data.defects,remote.data.defectDeletions);
    if(merged.changed){
     setCloudMessage("cloudSyncMessage",`Mobilné vady boli bezpečne doplnené (${merged.added} nových, ${merged.updated} aktualizovaných). Ostatné lokálne zmeny zostali zachované.`,"success");
     return{ok:true,refreshed:true,partial:true,...merged}
@@ -1797,10 +1846,13 @@ function preserveDefectRecovery(){
  }).catch(()=>siteDeskSaveDbSnapshot(localSnapshot,snapshotKey))
 }
 async function openDefectRecovery(){
- const candidates=(await defectRecoveryCandidatesAll()).filter(item=>!state.defects.some(existing=>existing.id===item.id)).sort((a,b)=>Number(b.projectId===state.selectedProjectId)-Number(a.projectId===state.selectedProjectId)||String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||"")));
+ const deletedIds=new Set(mergedDefectDeletions(state.defectDeletions).map(item=>item.id));
+ const candidates=(await defectRecoveryCandidatesAll())
+  .filter(item=>!deletedIds.has(item.id)&&!state.defects.some(existing=>existing.id===item.id))
+  .sort((a,b)=>Number(b.projectId===state.selectedProjectId)-Number(a.projectId===state.selectedProjectId)||String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||"")));
  const dialog=document.createElement("dialog");
  dialog.style.cssText="width:min(640px,92vw);max-height:85dvh;overflow:auto;border:1px solid #c5d6e6;border-radius:16px;padding:20px;color:#123756";
- dialog.innerHTML=`<h2>Vady zo záloh v tomto zariadení</h2><p>Prehľadané bolo bežné úložisko aj databáza telefónu. Nájdených chýbajúcich záznamov zo všetkých stavieb: ${candidates.length}.</p><p>Vyber iba vady, ktoré chceš vrátiť. Záloha môže obsahovať aj úmyselne odstránené záznamy.</p><div>${candidates.map((item,index)=>`<label style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #ddd"><input type="checkbox" data-recovery-index="${index}" style="width:22px;min-width:22px"><span><strong>${esc(item.number||"")} ${esc(item.location||"")}</strong><br>${esc(item.description||item.type||"Vada")}<br><small>${esc(project(item.projectId)?.name||"Neznáma stavba")} · ${esc(item.createdAt?.slice(0,10)||"")} · Fotografie: ${(item.photos||[]).length}</small></span></label>`).join("")||"<p>V dostupných lokálnych zálohách sa nenašli žiadne chýbajúce vady. Skontroluj ešte cloudovú históriu a zariadenie, na ktorom boli vady vytvorené.</p>"}</div><div style="display:flex;gap:12px;margin-top:16px"><button data-restore>Obnoviť vybrané vady</button><button data-close>Zavrieť</button></div>`;
+ dialog.innerHTML=`<h2>Vady zo záloh v tomto zariadení</h2><p>Prehľadané bolo bežné úložisko aj databáza telefónu. Nájdených chýbajúcich záznamov zo všetkých stavieb: ${candidates.length}.</p><p>Vyber iba vady, ktoré chceš vrátiť. Úmyselne vymazané vady sa v tomto zozname nezobrazujú.</p><div>${candidates.map((item,index)=>`<label style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #ddd"><input type="checkbox" data-recovery-index="${index}" style="width:22px;min-width:22px"><span><strong>${esc(item.number||"")} ${esc(item.location||"")}</strong><br>${esc(item.description||item.type||"Vada")}<br><small>${esc(project(item.projectId)?.name||"Neznáma stavba")} · ${esc(item.createdAt?.slice(0,10)||"")} · Fotografie: ${(item.photos||[]).length}</small></span></label>`).join("")||"<p>V dostupných lokálnych zálohách sa nenašli žiadne chýbajúce vady. Skontroluj ešte cloudovú históriu a zariadenie, na ktorom boli vady vytvorené.</p>"}</div><div style="display:flex;gap:12px;margin-top:16px"><button data-restore>Obnoviť vybrané vady</button><button data-close>Zavrieť</button></div>`;
  dialog.querySelector("[data-restore]").disabled=!candidates.length;
  dialog.querySelector("[data-close]").onclick=()=>dialog.close();
  dialog.querySelector("[data-restore]").onclick=()=>{
@@ -1880,9 +1932,12 @@ function renderDefects(){
  document.querySelectorAll("[data-edit-defect]").forEach(button=>button.onclick=()=>openDefectEditor(button.dataset.editDefect));
  document.querySelectorAll("[data-delete-defect]").forEach(button=>button.onclick=()=>{
   if(confirm("Vymazať túto vadu?")){
+   const deletedId=button.dataset.deleteDefect,deletedRecord=state.defects.find(item=>item.id===deletedId);
+   if(!deletedRecord)return;
    preserveDefectRecovery();
-   state.defects=state.defects.filter(item=>item.id!==button.dataset.deleteDefect);
-   selectedDefectIds.delete(button.dataset.deleteDefect);
+   state.defectDeletions=mergedDefectDeletions(state.defectDeletions,[{id:deletedId,projectId:deletedRecord.projectId,deletedAt:new Date().toISOString()}]);
+   state.defects=state.defects.filter(item=>item.id!==deletedId);
+   selectedDefectIds.delete(deletedId);
    save("Vada bola vymazaná.")
   }
  });
@@ -6084,7 +6139,7 @@ $("importJson").onchange=async event=>{
   state=imported;window.applyBetpresDocumentSettings?.();save("Záloha bola importovaná.")
  }catch(error){alert(`Zálohu sa nepodarilo importovať: ${error.message||error}`)}finally{event.target.value=""}
 };
-$("restoreAutoBackup").onclick=()=>{const backup=localStorage.getItem(AUTO_BACKUP_KEY);if(!backup){alert("Automatická záloha zatiaľ neexistuje.");return}if(!confirm("Obnoviť poslednú automatickú zálohu? Aktuálne údaje sa nahradia."))return;try{const restored=JSON.parse(backup);if(!Array.isArray(restored.projects)||!Array.isArray(restored.companies))throw new Error("Neplatná záloha");siteDeskStoreRecoverySnapshot(`${KEY}-pre-auto-restore`,JSON.stringify(state));state=restored;window.applyBetpresDocumentSettings?.();save("Automatická záloha bola obnovená.")}catch{alert("Automatická záloha je poškodená.")}};
+$("restoreAutoBackup").onclick=()=>{const backup=localStorage.getItem(AUTO_BACKUP_KEY);if(!backup){alert("Automatická záloha zatiaľ neexistuje.");return}if(!confirm("Obnoviť poslednú automatickú zálohu? Aktuálne údaje sa nahradia."))return;try{const restored=JSON.parse(backup);if(!Array.isArray(restored.projects)||!Array.isArray(restored.companies))throw new Error("Neplatná záloha");siteDeskStoreRecoverySnapshot(`${KEY}-pre-auto-restore`,JSON.stringify(state));applyDefectDeletions(restored,state.defectDeletions);state=restored;window.applyBetpresDocumentSettings?.();save("Automatická záloha bola obnovená.")}catch{alert("Automatická záloha je poškodená.")}};
 $("resetData").onclick=()=>{if(confirm("Obnoviť demo údaje? Aktuálne údaje sa vymažú.")){state=clone(seed);window.applyBetpresDocumentSettings?.();save("Demo údaje boli obnovené.")}};
 
 function creditNumber(v){const m=String(v||"").replace(/\s/g,"").replace("€","").replace(",",".").match(/-?\d+(?:\.\d+)?/);return m?Number(m[0]):0}

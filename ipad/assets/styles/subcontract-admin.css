@@ -31,6 +31,12 @@
 #subcontractAdmin .subcontract-admin-form{display:grid;gap:10px}
 #subcontractAdmin .subcontract-admin-form>button{justify-self:start}
 #subcontractAdmin .subcontract-admin-hint{margin:10px 0;color:var(--sa-muted);font-size:12px;line-height:1.5}
+#subcontractAdmin #saOwnerOnlyHint{padding:10px 12px;border:1px solid #e5d9bd;border-radius:10px;background:#fffbf2;color:#6d552c}
+#subcontractAdmin #saOwnerOnlyHint button{margin-left:8px;min-height:34px}
+#subcontractAdmin .subcontract-admin-export-controls{display:flex;align-items:end;flex-wrap:wrap;gap:8px;margin:0 0 12px;padding:10px;border:1px solid #d8e4ec;border-radius:10px;background:#f7fafc}
+#subcontractAdmin .subcontract-admin-export-controls label{display:grid;gap:4px;color:var(--sa-muted);font-size:11px;font-weight:700}
+#subcontractAdmin .subcontract-admin-export-controls input{min-height:36px}
+#subcontractAdmin .subcontract-admin-export-controls button{min-height:36px}
 #subcontractAdmin .subcontract-admin-share{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:14px;padding-top:14px;border-top:1px solid var(--sa-line)}
 #subcontractAdmin .subcontract-admin-share input{font-size:11px;color:#496579}
 #subcontractAdmin .subcontract-admin-list{margin-top:12px;border-top:1px solid var(--sa-line)}
