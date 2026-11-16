@@ -1,0 +1,34 @@
+/* Monthly BETPRES crew selection, with the day editor available on desktop and phone. */
+#betpresEmployeeModal .modal-card { width: min(620px,calc(100vw - 24px)); max-height: calc(100dvh - 28px); overflow: auto; }
+#betpresEmployeeModal .betpres-roster-pick { display: grid; gap: 9px; padding: 13px; border: 1px solid #d6e2eb; border-radius: 14px; background: #f7fafc; }
+#betpresEmployeeModal .betpres-roster-pick h3 { margin: 0; color: #17334b; font-size: 16px; }
+#betpresEmployeeModal .betpres-roster-pick p { margin: 0; color: #607284; font-size: 12px; line-height: 1.35; }
+#betpresEmployeeModal #betpresRosterSearch { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #c7d5e0; border-radius: 10px; background: #fff; color: #193349; font-size: 14px; }
+#betpresEmployeeModal .betpres-roster-list { display: grid; max-height: min(29vh,245px); overflow: auto; border: 1px solid #d8e1e9; border-radius: 10px; background: #fff; }
+#betpresEmployeeModal .betpres-roster-item { display: flex; align-items: center; gap: 11px; min-height: 48px; padding: 8px 11px; border-bottom: 1px solid #e7edf2; cursor: pointer; }
+#betpresEmployeeModal .betpres-roster-item:last-child { border-bottom: 0; }
+#betpresEmployeeModal .betpres-roster-item:has(input:checked) { background: #eaf4fc; }
+#betpresEmployeeModal .betpres-roster-item input { width: 19px; height: 19px; margin: 0; accent-color: #0a5b91; flex: 0 0 auto; }
+#betpresEmployeeModal .betpres-roster-item span { display: grid; gap: 2px; min-width: 0; }
+#betpresEmployeeModal .betpres-roster-item strong { color: #17334b; font-size: 14px; line-height: 1.2; }
+#betpresEmployeeModal .betpres-roster-item small { color: #65778a; font-size: 11px; }
+#betpresEmployeeModal .betpres-roster-empty { padding: 12px; }
+#betpresEmployeeModal #betpresRosterAdd { min-height: 42px; justify-self: start; background: #0a5b91; }
+#betpresEmployeeModal #betpresRosterAdd:disabled { background: #d5e0e7; color: #6d8190; cursor: default; }
+#betpresEmployeeModal .betpres-new-person-title { margin: 5px 0 0; padding-top: 11px; border-top: 1px solid #dce6ee; color: #27445a; font-size: 13px; font-weight: 750; }
+body.sitedesk-v3 #betpresEmployeeModal .modal-actions { position: static; bottom: auto; background: none !important; }
+#mobileWorkerDayModal .mobile-worker-category-tabs { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+@media (min-width: 801px) {
+  .mobile-worker-month-picker { display: none; }
+  body.workers-focus-mode #workers .worker-mode-tabs { justify-content: flex-start; }
+  body.workers-focus-mode #workers .worker-mode-tabs button { flex: 0 1 260px !important; }
+}
+@media (max-width: 800px) {
+  #workers .mobile-worker-month-picker { display: grid; grid-template-columns: 44px minmax(0,1fr) 44px; gap: 8px; align-items: end; padding: 10px 13px; border-top: 1px solid #e1e7ec; background: #fff; }
+  #workers .mobile-worker-month-picker label { display: grid; gap: 3px; color: #5c7183; font-size: 11px; font-weight: 700; }
+  #workers .mobile-worker-month-picker input { width: 100%; min-height: 42px; padding: 6px 9px; border: 1px solid #cbd8e2; border-radius: 10px; background: #f8fafc; color: #19364d; font-size: 16px; font-weight: 750; text-align: center; }
+  #workers .mobile-worker-month-picker button { min-height: 42px; padding: 0; border-radius: 10px; background: #e6f1f8; color: #0a5b91; font-size: 25px; }
+  #betpresEmployeeModal .modal-card { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); padding-bottom: max(16px,env(safe-area-inset-bottom)); }
+  #betpresEmployeeModal .betpres-roster-list { max-height: 24vh; }
+  #betpresEmployeeModal #betpresRosterAdd { width: 100%; }
+}

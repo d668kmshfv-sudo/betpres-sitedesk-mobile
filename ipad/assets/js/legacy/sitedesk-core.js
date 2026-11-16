@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.4";
+const SITE_DESK_APP_VERSION="5.8.5";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -497,6 +497,7 @@ function scheduleSiteDeskViewRender(id){
 }
 function showView(id){
  if(id==="purchases"||id==="concrete")id="dashboard";
+ if(id==="mobileDiary"||id==="diaryReviewAdmin")id="dashboard";
  const mobileLayout=window.matchMedia("(max-width: 800px)").matches;
  if(mobileLayout&&["billing","siteMeetings","controlDays","workStatements"].includes(id))id="dashboard";
  const requestedView=id;
@@ -3069,64 +3070,16 @@ function betpresEmployeeCarryKey(row){
  const name=String(row?.name||"").trim().toLocaleLowerCase("sk").replace(/\s+/g," ");
  return name?`name:${name}`:""
 }
-function carryBetpresEmployees(sheet,month){
- if(!sheet||sheet.workerCarryVersion==="betpres-workers-v1")return;
- const previous=[...state.betpresTimesheets]
-  .filter(item=>item!==sheet&&item.projectId===state.selectedProjectId&&item.month<month&&Array.isArray(item.rows)&&item.rows.some(row=>betpresEmployeeCarryKey(row)))
-  .sort((a,b)=>b.month.localeCompare(a.month))[0];
- if(!previous)return;
- const keys=new Set((sheet.rows||[]).map(betpresEmployeeCarryKey).filter(Boolean));
- let added=0;
- (previous?.rows||[]).forEach((row,index)=>{
-  const key=betpresEmployeeCarryKey(row);
-  if(!key||keys.has(key))return;
-  sheet.rows.push({
-   id:uid("bte"),
-   personalNumber:String(row.personalNumber||"").replace(/\D/g,"").slice(0,3),
-   name:row.name||"",
-   position:row.position||"",
-   rewardPercent:row.rewardPercent??"",
-   sortOrder:Number.isFinite(Number(row.sortOrder))?Number(row.sortOrder):index,
-   values:{},
-   overtime:{}
-  });
-  keys.add(key);
-  added+=1
- });
- sheet.workerCarryVersion="betpres-workers-v1";
- if(added)sortBetpresEmployees(sheet);
- commitDirectState()
-}
 function betpresTimesheet(month,create=true){
  let sheet=state.betpresTimesheets.find(x=>x.projectId===state.selectedProjectId&&x.month===month);
  if(!sheet&&create){
-  const previous=[...state.betpresTimesheets]
-   .filter(x=>x.projectId===state.selectedProjectId&&x.month<month&&Array.isArray(x.rows)&&x.rows.some(row=>betpresEmployeeCarryKey(row)))
-   .sort((a,b)=>b.month.localeCompare(a.month))[0];
-  sheet={
-    id:uid("bts"),
-    projectId:state.selectedProjectId,
-    month,
-    workerCarryVersion:previous?"betpres-workers-v1":"",
-    rows:(previous?.rows||[]).filter(row=>betpresEmployeeCarryKey(row)).map((row,index)=>({
-    id:uid("bte"),
-    personalNumber:String(row.personalNumber||"").replace(/\D/g,"").slice(0,3),
-    name:row.name||"",
-    position:row.position||"",
-    rewardPercent:row.rewardPercent??"",
-    sortOrder:Number.isFinite(Number(row.sortOrder))?Number(row.sortOrder):index,
-    values:{},
-    overtime:{}
-   }))
-  };
-  sortBetpresEmployees(sheet);
+  sheet={id:uid("bts"),projectId:state.selectedProjectId,month,rows:[]};
   state.betpresTimesheets.push(sheet);
   commitDirectState()
  }
  if(sheet){
   sheet.rows=Array.isArray(sheet.rows)?sheet.rows:[];
   sheet.rows.forEach(row=>{row.values=row.values||{};row.overtime=row.overtime||{}});
-  carryBetpresEmployees(sheet,month)
  }
  return sheet
 }
@@ -3302,6 +3255,7 @@ function setWorkerMode(mode,renderMode=true){
  if($("companyTimesheetsPanel"))$("companyTimesheetsPanel").classList.toggle("hidden",selectedWorkerMode!=="companyTimesheets");
  document.querySelectorAll(".worker-company-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="companies"));
  document.querySelectorAll(".worker-betpres-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="betpres"));
+ if($("openMobileWorkerDay")){$("openMobileWorkerDay").classList.toggle("hidden",!["companies","betpres"].includes(selectedWorkerMode));$("openMobileWorkerDay").textContent=selectedWorkerMode==="betpres"?"Zadať hodiny podľa dňa":"Zadať počty podľa dňa"}
  document.querySelectorAll(".worker-thp-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="thp"));
  document.querySelectorAll(".worker-company-hours-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="companyHours"));
  document.querySelectorAll(".worker-company-timesheets-action").forEach(element=>element.classList.toggle("hidden",selectedWorkerMode!=="companyTimesheets"));
@@ -3315,7 +3269,7 @@ function setWorkerMode(mode,renderMode=true){
       ?companyTimesheet(selectedWorkerMonth,true)
       :workerSheet(selectedWorkerMonth,true);
  $("workerSheetStatus").textContent=selectedWorkerMode==="betpres"
-  ?`${sheet?.rows?.length||0} pracovníkov BETPRES · bežné hodiny + nadčas alebo P / N / D`
+  ?`${sheet?.rows?.length||0} pracovníkov vybraných na ${formatBillingMonth(selectedWorkerMonth)} · hodiny po dňoch alebo P / N / D`
   :selectedWorkerMode==="thp"
    ?`${sheet?.rows?.length||0} THP pracovníkov · hodiny + nadčas`
     :selectedWorkerMode==="companyHours"
@@ -3600,7 +3554,7 @@ function renderThpTimesheet(){
  renderSimpleEmployeeTimesheet({key:"thp",mode:"thp",head:"thpTimeHead",body:"thpTimeBody",foot:"thpTimeFoot",count:"thpEmployeeCount",hours:"thpHoursTotal",overtime:true,showDailyTotals:false,overtimeMetric:"thpOvertimeTotal",status:true,sheet:thpTimesheet,sort:sortThpEmployees,render:renderThpTimesheet,undo:"Úprava podsmenovky THP"})
 }
 function employeeNameSuggestions(kind){
- const sheets=kind==="thp"?state.thpTimesheets:state.betpresTimesheets,map=new Map();
+ const sheets=(kind==="thp"?state.thpTimesheets:state.betpresTimesheets).filter(sheet=>sheet.projectId===state.selectedProjectId),map=new Map();
  [...sheets].sort((a,b)=>String(b.month||"").localeCompare(String(a.month||""))).forEach(sheet=>(sheet.rows||[]).forEach(row=>{const name=String(row.name||"").trim();if(name&&!map.has(name.toLocaleLowerCase("sk")))map.set(name.toLocaleLowerCase("sk"),{name,personalNumber:String(row.personalNumber||""),position:String(row.position||"").trim(),rewardPercent:row.rewardPercent??""})}));
  return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,"sk"))
 }
@@ -3610,7 +3564,25 @@ function openEmployeeModal(kind){
  if(list)list.innerHTML=items.map(item=>`<option value="${esc(item.name)}">${esc(item.position)}</option>`).join("");
  nameInput.oninput=()=>{const found=items.find(item=>item.name.toLocaleLowerCase("sk")===nameInput.value.trim().toLocaleLowerCase("sk"));if(found&&personalNumberInput&&!personalNumberInput.value)personalNumberInput.value=found.personalNumber||"";if(found&&!positionInput.value)positionInput.value=found.position;if(found&&rewardInput&&!rewardInput.value)rewardInput.value=found.rewardPercent??""};
  if(personalNumberInput)personalNumberInput.oninput=()=>{personalNumberInput.value=personalNumberInput.value.replace(/\D/g,"").slice(0,3)};
- modal.classList.remove("hidden");setTimeout(()=>nameInput.focus(),50)
+ if(!isThp){
+  const roster=$("betpresRosterList"),search=$("betpresRosterSearch"),add=$("betpresRosterAdd"),sheet=betpresTimesheet(selectedWorkerMonth,true),present=new Set(sheet.rows.map(betpresEmployeeCarryKey));
+  const renderRoster=()=>{
+   const query=workSearchKey(search.value),available=items.map((item,index)=>({item,index})).filter(({item})=>!present.has(betpresEmployeeCarryKey(item))&&(!query||workSearchKey([item.name,item.personalNumber,item.position].join(" ")).includes(query)));
+   roster.innerHTML=available.length?available.map(({item,index})=>`<label class="betpres-roster-item"><input type="checkbox" value="${index}"><span><strong>${esc(item.name)}</strong><small>${esc([item.personalNumber?`č. ${item.personalNumber}`:"",item.position].filter(Boolean).join(" · ")||"Pracovník BETPRES")}</small></span></label>`).join(""):`<p class="betpres-roster-empty">${items.length?"Všetci známi pracovníci sú už v mesiaci alebo sa nenašla zhoda.":"Na tejto stavbe ešte nie je zoznam. Pridaj prvého pracovníka nižšie."}</p>`;
+   add.disabled=true;add.textContent="Pridať označených"
+  };
+  search.oninput=renderRoster;
+  roster.onchange=()=>{const count=roster.querySelectorAll('input[type="checkbox"]:checked').length;add.disabled=!count;add.textContent=count?`Pridať označených (${count})`:"Pridať označených"};
+  add.onclick=()=>{
+   const selected=[...roster.querySelectorAll('input[type="checkbox"]:checked')].map(input=>items[Number(input.value)]).filter(Boolean),existing=new Set(sheet.rows.map(betpresEmployeeCarryKey));
+   let added=0;
+   for(const item of selected){const key=betpresEmployeeCarryKey(item);if(!key||existing.has(key))continue;sheet.rows.push({id:uid("bte"),personalNumber:item.personalNumber||"",name:item.name,position:item.position||"",rewardPercent:item.rewardPercent??"",values:{},overtime:{}});existing.add(key);added++}
+   if(!added)return;
+   sortBetpresEmployees(sheet);modal.classList.add("hidden");save(`${added} pracovníkov bolo pridaných do mesiaca ${formatBillingMonth(selectedWorkerMonth)}.`);document.dispatchEvent(new Event("betpres-roster-updated"))
+  };
+  renderRoster()
+ }
+ modal.classList.remove("hidden");setTimeout(()=>(!isThp&&items.length?$("betpresRosterSearch"):nameInput).focus(),50)
 }
 if($("addBetpresEmployee"))$("addBetpresEmployee").onclick=()=>openEmployeeModal("betpres");
 if($("addBetpresEmployeeInline"))$("addBetpresEmployeeInline").onclick=()=>openEmployeeModal("betpres");
@@ -3621,7 +3593,7 @@ function addBlankBetpresEmployee(){
  save("Prázdny riadok pracovníka BETPRES bol pridaný.")
 }
 if($("addBlankBetpresEmployeeInline"))$("addBlankBetpresEmployeeInline").onclick=addBlankBetpresEmployee;
-if($("betpresEmployeeForm"))$("betpresEmployeeForm").onsubmit=e=>{e.preventDefault();const sheet=betpresTimesheet(selectedWorkerMonth,true),rewardRaw=$("betpresEmployeeReward").value.trim().replace(",","."),reward=rewardRaw===""?"":Math.max(0,Math.min(100,Number(rewardRaw))),name=$("betpresEmployeeName").value.trim();sheet.rows.push({id:uid("bte"),personalNumber:$("betpresEmployeePersonalNumber").value.replace(/\D/g,"").slice(0,3),name,position:$("betpresEmployeePosition").value.trim(),rewardPercent:Number.isFinite(reward)?reward:"",values:{},overtime:{}});sortBetpresEmployees(sheet);$("betpresEmployeeModal").classList.add("hidden");save(name?"Pracovník BETPRES bol pridaný.":"Prázdny riadok pracovníka BETPRES bol pridaný.")};
+if($("betpresEmployeeForm"))$("betpresEmployeeForm").onsubmit=e=>{e.preventDefault();const sheet=betpresTimesheet(selectedWorkerMonth,true),rewardRaw=$("betpresEmployeeReward").value.trim().replace(",","."),reward=rewardRaw===""?"":Math.max(0,Math.min(100,Number(rewardRaw))),name=$("betpresEmployeeName").value.trim(),personalNumber=$("betpresEmployeePersonalNumber").value.replace(/\D/g,"").slice(0,3),candidate={name,personalNumber};if(!name){$("betpresEmployeeName").focus();return}if(sheet.rows.some(row=>betpresEmployeeCarryKey(row)===betpresEmployeeCarryKey(candidate))){alert("Tento pracovník už je pridaný do vybraného mesiaca.");return}sheet.rows.push({id:uid("bte"),personalNumber,name,position:$("betpresEmployeePosition").value.trim(),rewardPercent:Number.isFinite(reward)?reward:"",values:{},overtime:{}});sortBetpresEmployees(sheet);$("betpresEmployeeModal").classList.add("hidden");save("Pracovník BETPRES bol pridaný do vybraného mesiaca.");document.dispatchEvent(new Event("betpres-roster-updated"))};
 if($("addThpEmployee"))$("addThpEmployee").onclick=()=>openEmployeeModal("thp");
 if($("addThpEmployeeInline"))$("addThpEmployeeInline").onclick=()=>openEmployeeModal("thp");
 if($("thpEmployeeForm"))$("thpEmployeeForm").onsubmit=e=>{e.preventDefault();const sheet=thpTimesheet(selectedWorkerMonth,true);sheet.rows.push({id:uid("thpe"),name:$("thpEmployeeName").value.trim(),position:$("thpEmployeePosition").value.trim(),values:{},overtime:{}});sortThpEmployees(sheet);$("thpEmployeeModal").classList.add("hidden");save("THP pracovník bol pridaný.")};
@@ -6769,6 +6741,8 @@ function workItemNeedsAttention(statement,item){
 function applyWorkOverviewUI(){
  const table=$("workStatementTable"),details=$("workStatements")?.querySelector(".work-header-panel");
  if(table)table.classList.toggle("work-overview-mode",workOverviewMode);
+ const remainHead=table?.querySelector("#workRemainHead");if(remainHead)remainHead.colSpan=workOverviewMode&& !table.classList.contains("work-order-mode")?1:2;
+ const emptyCell=table?.querySelector(".work-empty-row td");if(emptyCell&&!table.classList.contains("work-order-mode"))emptyCell.colSpan=workOverviewMode?9:17;
  if(details)details.classList.toggle("work-details-collapsed",!workDetailsVisible);
  if($("toggleWorkOverview"))$("toggleWorkOverview").textContent=workOverviewMode?"Rozšírené stĺpce":"Prehľadné stĺpce";
  if($("toggleWorkDetails"))$("toggleWorkDetails").textContent=workDetailsVisible?"Skryť hlavičku":"Zobraziť hlavičku";
@@ -6793,6 +6767,8 @@ function renderWorkStatements(){
  const currentAssignment=assignment(state.selectedProjectId,selectedWorkCompanyId),baseWorkLabel=assignmentDocType(currentAssignment)==="Obj"?"Objednávka":"ZoD",baseWorkId=workDocumentId(baseWorkLabel);
  if($("workStatementSourceFilter")){const current=selectedWorkDocFilter||baseWorkId;$("workStatementSourceFilter").innerHTML=workBudgetOptions(selectedWorkCompanyId);if([...$("workStatementSourceFilter").options].some(o=>o.value===current)){$("workStatementSourceFilter").value=current;selectedWorkDocFilter=current}else{selectedWorkDocFilter=baseWorkId;$("workStatementSourceFilter").value=selectedWorkDocFilter}}
  $("workStatementPeriod").value=selectedWorkPeriod||todayMonthValue();if($("workCurrentPeriodHead"))$("workCurrentPeriodHead").textContent=`Aktuálne obdobie (${selectedWorkPeriod})`;
+ if($("newWorkStatement"))$("newWorkStatement").title=`Otvoriť ${formatBillingMonth(shiftMonth(selectedWorkPeriod||todayMonthValue(),1))}`;
+ if($("previousWorkStatement"))$("previousWorkStatement").title=`Otvoriť ${formatBillingMonth(shiftMonth(selectedWorkPeriod||todayMonthValue(),-1))}`;
  const statement=getWorkStatement(!!selectedWorkCompanyId),a=currentAssignment,activeWorkDoc=selectedWorkDocument(),orderMode=isSelectedWorkOrderDocument();
  $("workStatementTable")?.classList.toggle("work-order-mode",orderMode);$("workStatements")?.classList.toggle("work-order-statement",orderMode);
  $("workStatementContract").value=orderMode?[activeWorkDoc?.label,activeWorkDoc?.title].filter(Boolean).join(" – "):(a?assignmentDocRef(a):"");
@@ -6830,7 +6806,7 @@ function renderWorkStatements(){
  if($("workVisibleCount"))$("workVisibleCount").textContent=`${rows.length} / ${allRows.length}`;
  selectedWorkItemIds=new Set([...selectedWorkItemIds].filter(id=>rows.some(item=>item.id===id)));
  $("workStatementTable").querySelector("colgroup").innerHTML=orderMode?`<col class="work-select-col"><col class="work-pc-col"><col class="work-desc-col"><col class="work-unit-col"><col class="work-num-col"><col class="work-money-col"><col class="work-money-col">`:`<col class="work-select-col"><col class="work-pc-col"><col class="work-type-col"><col class="work-code-col"><col class="work-desc-col"><col class="work-unit-col"><col class="work-num-col"><col class="work-money-col"><col class="work-money-col"><col class="work-num-col current-col"><col class="work-money-col current-col"><col class="work-num-col previous-col"><col class="work-money-col previous-col"><col class="work-num-col total-col"><col class="work-money-col total-col"><col class="work-num-col remain-col"><col class="work-money-col remain-col">`;
- $("workStatementTable").querySelector("thead").innerHTML=orderMode?`<tr><th><input id="workSelectAll" class="work-row-select" type="checkbox" title="Označiť všetky riadky"></th><th>P. č.</th><th>Popis položky</th><th>MJ</th><th>Množstvo</th><th>Cena [EUR]</th><th>Cena celkom [EUR]</th></tr>`:`<tr class="work-group-head"><th rowspan="2"><input id="workSelectAll" class="work-row-select" type="checkbox" title="Označiť všetky riadky"></th><th rowspan="2">P. č.</th><th rowspan="2">Typ</th><th rowspan="2">Kód položky</th><th rowspan="2">Popis položky</th><th rowspan="2">MJ</th><th rowspan="2">Zmluvné<br>množstvo</th><th rowspan="2">J. cena<br>[EUR]</th><th rowspan="2">Cena celkom<br>[EUR]</th><th colspan="2" class="current-col" id="workCurrentPeriodHead">Aktuálne obdobie (${esc(selectedWorkPeriod)})</th><th colspan="2" class="previous-col" id="workPreviousPeriodHead">Prestavané minulé obdobia</th><th colspan="2" class="total-col">Prestavané spolu</th><th colspan="2" class="remain-col">Zostatok</th></tr><tr class="work-sub-head"><th class="current-col">Množstvo</th><th class="current-col">Cena [EUR]</th><th class="previous-col">Množstvo</th><th class="previous-col">Cena [EUR]</th><th class="total-col">Množstvo</th><th class="total-col">Cena [EUR]</th><th class="remain-col">Množstvo</th><th class="remain-col">Cena [EUR]</th></tr>`;
+ $("workStatementTable").querySelector("thead").innerHTML=orderMode?`<tr><th><input id="workSelectAll" class="work-row-select" type="checkbox" title="Označiť všetky riadky"></th><th>P. č.</th><th>Popis položky</th><th>MJ</th><th>Množstvo</th><th>Cena [EUR]</th><th>Cena celkom [EUR]</th></tr>`:`<tr class="work-group-head"><th rowspan="2"><input id="workSelectAll" class="work-row-select" type="checkbox" title="Označiť všetky riadky"></th><th rowspan="2">P. č.</th><th rowspan="2">Typ</th><th rowspan="2">Kód položky</th><th rowspan="2">Popis položky</th><th rowspan="2">MJ</th><th rowspan="2">Zmluvné<br>množstvo</th><th rowspan="2">J. cena<br>[EUR]</th><th rowspan="2">Cena celkom<br>[EUR]</th><th colspan="2" class="current-col" id="workCurrentPeriodHead">Aktuálne obdobie (${esc(selectedWorkPeriod)})</th><th colspan="2" class="previous-col" id="workPreviousPeriodHead">Prestavané minulé obdobia</th><th colspan="2" class="total-col">Prestavané spolu</th><th colspan="2" class="remain-col" id="workRemainHead">Zostatok</th></tr><tr class="work-sub-head"><th class="current-col">Množstvo</th><th class="current-col">Cena [EUR]</th><th class="previous-col">Množstvo</th><th class="previous-col">Cena [EUR]</th><th class="total-col">Množstvo</th><th class="total-col">Cena [EUR]</th><th class="remain-col">Množstvo</th><th class="remain-col">Cena [EUR]</th></tr>`;
  if(!orderMode&&$("workPreviousPeriodHead"))$("workPreviousPeriodHead").textContent=previousStatement?`Prestavané minulé obdobia – stav k ${formatBillingMonth(previousStatement.period)}`:"Prestavané minulé obdobia";
  $("workStatementBody").innerHTML=rows.map(item=>{
   const c=workItemCalc(statement,item),section=c.section,selected=selectedWorkItemIds.has(item.id),needsAttention=workItemNeedsAttention(statement,item);

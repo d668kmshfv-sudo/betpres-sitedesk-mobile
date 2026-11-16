@@ -5,7 +5,7 @@
   if(!modal||!list)return;
   const categoryCopy={
     companies:{label:"Firmy",summary:"Spolu na stavbe",action:"+ Pridať firmu / skupinu"},
-    betpres:{label:"Smenovka BETPRES",summary:"Prítomní BETPRES",action:"+ Pridať meno BETPRES"},
+    betpres:{label:"Pracovníci BETPRES",summary:"Prítomní BETPRES",action:"+ Vybrať ľudí na mesiac"},
     thp:{label:"Smenovka THP",summary:"Prítomní THP",action:"+ Pridať meno THP"},
     companyHours:{label:"Firmy na hodiny",summary:"Odpracované",action:"+ Pridať hodinovú firmu"},
     companyTimesheets:{label:"Smenovky firiem",summary:"Prítomní v smenovke",action:"+ Pridať meno do smenovky"}
@@ -53,9 +53,10 @@
     }
   }
   function updateHome(day=selectedDay){
-    const date=dayDate(day),companies=companiesSheet(),companyTotal=categoryTotal("companies",day),betpres=categoryTotal("betpres",day),thp=categoryTotal("thp",day),hours=categoryTotal("companyHours",day),namedCompanies=currentCompanyTimesheetSources(activeMonth());
+    const date=dayDate(day),companies=companiesSheet(),companyTotal=categoryTotal("companies",day),betpres=betpresTimesheet(activeMonth(),true).rows.length;
+    if(byId("mobileWorkerMonth")?.value!==activeMonth())byId("mobileWorkerMonth").value=activeMonth();
     setText("#mobileWorkerHomeDate",new Intl.DateTimeFormat("sk-SK",{weekday:"long",day:"numeric",month:"long"}).format(date));setText("#mobileWorkerHomeTotal",companyTotal);
-    setText('[data-mobile-worker-mode-count="companies"]',companies.rows.filter(row=>!isBetpresWorkerRow(row)&&Number(row.values?.[day])>0).length);setText('[data-mobile-worker-mode-count="betpres"]',betpres);setText('[data-mobile-worker-mode-count="thp"]',thp);setText('[data-mobile-worker-mode-count="companyHours"]',`${formatWorkHoursCell(hours)||0} h`);setText('[data-mobile-worker-mode-count="companyTimesheets"]',namedCompanies.length)
+    setText('[data-mobile-worker-mode-count="companies"]',companies.rows.filter(row=>!isBetpresWorkerRow(row)&&Number(row.values?.[day])>0).length);setText('[data-mobile-worker-mode-count="betpres"]',betpres)
   }
   function updateSummary(){
     ensureCompanyManageButtons();
@@ -137,7 +138,7 @@
   function openDay(day,category="companies"){const month=activeMonth(),today=todayISO();selectedCategory=categoryCopy[category]?category:"companies";selectedDay=clampDay(day||(today.slice(0,7)===month?Number(today.slice(8,10)):1));changeSession=false;renderDay();modal.classList.remove("hidden");if(!matchMedia("(pointer: coarse)").matches)setTimeout(()=>list.querySelector("input")?.focus({preventScroll:true}),260)}
   function finishSession(){if(changeSession){endDirectUndo();changeSession=false}syncBetpresWorkerRow(activeMonth(),companiesSheet());if(!matchMedia("(max-width: 800px)").matches||document.body.classList.contains("mobile-worker-monthly-open"))setWorkerMode(selectedWorkerMode,true);if(typeof renderDashboard==="function")renderDashboard();updateHome()}
 
-  byId("openMobileWorkerDay")?.addEventListener("click",()=>openDay());document.querySelectorAll("[data-mobile-worker-open-mode]").forEach(button=>button.addEventListener("click",()=>openDay(null,button.dataset.mobileWorkerOpenMode)));
+  byId("openMobileWorkerDay")?.addEventListener("click",()=>openDay(null,selectedWorkerMode==="betpres"?"betpres":"companies"));document.querySelectorAll("[data-mobile-worker-open-mode]").forEach(button=>button.addEventListener("click",()=>openDay(null,button.dataset.mobileWorkerOpenMode)));
   document.querySelectorAll("[data-mobile-worker-monthly-mode]").forEach(button=>button.addEventListener("click",()=>{document.body.classList.add("mobile-worker-monthly-open");setWorkerMode(button.dataset.mobileWorkerMonthlyMode,true);byId(button.dataset.mobileWorkerMonthlyMode==="thp"?"thpTimesheetPanel":"companyTimesheetsPanel")?.scrollIntoView({behavior:"smooth",block:"start"})}));
   byId("mobileWorkerCategoryTabs")?.addEventListener("click",event=>{const button=event.target.closest("[data-mobile-worker-category]");if(button){selectedCategory=button.dataset.mobileWorkerCategory;renderDay()}});byId("mobileWorkerPrevDay").addEventListener("click",()=>{selectedDay=clampDay(selectedDay-1);renderDay()});byId("mobileWorkerNextDay").addEventListener("click",()=>{selectedDay=clampDay(selectedDay+1);renderDay()});byId("mobileWorkerDate").addEventListener("change",event=>{selectedDay=clampDay(Number(event.target.value.slice(8,10)));renderDay()});byId("mobileWorkerDone").addEventListener("click",()=>modal.classList.add("hidden"));
   byId("mobileWorkerManageAction")?.addEventListener("click",()=>{if(selectedCategory==="companyTimesheets"){addCompanyTimesheetName();return}const trigger={companies:"addWorkerCompany",betpres:"addBetpresEmployee",thp:"addThpEmployee",companyHours:"addCompanyHourTimesheet"}[selectedCategory];byId(trigger)?.click()});
@@ -162,5 +163,10 @@
     if(modal.classList.contains("mobile-worker-keyboard-open"))modal.classList.remove("mobile-worker-keyboard-open");
     finishSession()
   }).observe(modal,{attributes:true,attributeFilter:["class"]});
+  function setMobileMonth(month){if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))return;const workerMonth=byId("workerMonth");workerMonth.value=month;workerMonth.dispatchEvent(new Event("change"));selectedDay=month===todayISO().slice(0,7)?Number(todayISO().slice(8,10)):1;updateHome()}
+  byId("mobileWorkerMonth")?.addEventListener("change",event=>setMobileMonth(event.target.value));
+  byId("mobileWorkerMonthPrev")?.addEventListener("click",()=>setMobileMonth(shiftMonth(activeMonth(),-1)));
+  byId("mobileWorkerMonthNext")?.addEventListener("click",()=>setMobileMonth(shiftMonth(activeMonth(),1)));
+  document.addEventListener("betpres-roster-updated",()=>{if(!modal.classList.contains("hidden"))renderDay();else updateHome()});
   byId("workerMonth")?.addEventListener("change",()=>setTimeout(()=>updateHome(),0));byId("globalProject")?.addEventListener("change",()=>setTimeout(()=>updateHome(),0));updateHome();window.openMobileWorkerDay=openDay;window.__BETPRES_MOBILE_WORKERS_READY__=true
 })();

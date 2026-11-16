@@ -1,0 +1,120 @@
+/* Keep the current month and remaining value in the first viewport. */
+@media (min-width: 801px) {
+  body.work-focus-mode #workStatements .work-header-grid {
+    grid-template-columns: minmax(140px,1.15fr) minmax(120px,.95fr) minmax(270px,1.8fr) minmax(70px,.48fr) !important;
+    align-items: end;
+  }
+  body.work-focus-mode #workStatements .work-header-grid > .work-period-field { min-width: 0; }
+  body.work-focus-mode #workStatements .work-period-controls {
+    display: grid;
+    grid-template-columns: 35px minmax(100px,1fr) 90px;
+    gap: 5px;
+    min-width: 0;
+  }
+  body.work-focus-mode #workStatements .work-period-controls > button {
+    min-width: 0 !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 5px !important;
+    border: 1px solid #0a5b91 !important;
+    border-radius: 8px !important;
+    background: #0a5b91 !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    font-weight: 750 !important;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  body.work-focus-mode #workStatements .work-period-controls > button:first-child {
+    background: #fff !important;
+    color: #0a5b91 !important;
+    font-size: 19px !important;
+  }
+  body.work-focus-mode #workStatements .work-period-controls > button:focus-visible {
+    outline: 3px solid #70bbff !important;
+    outline-offset: 2px;
+  }
+  body.work-focus-mode #workStatements .work-period-controls > input {
+    min-width: 0 !important;
+    width: 100% !important;
+    font-size: 12px !important;
+  }
+  body.work-focus-mode #workStatements .work-sheet-wrap { padding-right: 16px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) {
+    min-width: 690px !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(1) { width: 30px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(4) { width: 88px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(5) { width: auto !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(6) { width: 40px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(7) { width: 74px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(8) { width: 74px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(10) { width: 70px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(11),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(17) { width: 86px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(2),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(3),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(9),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) col:nth-child(n+12):nth-child(-n+16),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) tbody tr:not(.work-empty-row) > td:nth-child(2),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) tbody tr:not(.work-empty-row) > td:nth-child(3),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) tbody tr:not(.work-empty-row) > td:nth-child(9),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) tbody tr:not(.work-empty-row) > td:nth-child(n+12):nth-child(-n+16),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) .work-group-head > th:nth-child(2),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) .work-group-head > th:nth-child(3),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) .work-group-head > th:nth-child(9),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) .work-group-head > th:nth-child(11),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) .work-group-head > th:nth-child(12),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) .work-sub-head > th:nth-child(n+3):nth-child(-n+7) {
+    display: none !important;
+  }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) th,
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) td,
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) td input,
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) td textarea {
+    font-size: 12px !important;
+  }
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) tbody td:nth-child(11),
+  body.work-focus-mode #workStatements .work-sheet.work-overview-mode:not(.work-order-mode) tbody td:nth-child(17) {
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+  }
+  body.work-focus-mode #workStatements .work-bottom-grid {
+    grid-template-columns: minmax(235px,1.3fr) minmax(150px,.75fr) minmax(170px,.85fr) !important;
+  }
+  body.work-focus-mode #workStatements .work-summary-card {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  body.work-focus-mode #workStatements .work-summary-card > div:not(.work-current-summary-row):not(.work-summary-main) {
+    display: none !important;
+  }
+  body.work-focus-mode #workStatements .work-summary-card > div span {
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    font-size: 10px !important;
+    line-height: 1.15;
+  }
+  body.work-focus-mode #workStatements .work-summary-card > div strong {
+    font-size: 15px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  body.work-focus-mode #workStatements .work-check-card > div {
+    display: grid !important;
+    gap: 2px !important;
+    font-size: 10px !important;
+  }
+  body.work-focus-mode #workStatements .work-check-card > div strong { font-size: 12px; }
+}
+@media (min-width: 801px) and (max-width: 900px) {
+  body.work-focus-mode #workStatements .work-header-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  body.work-focus-mode #workStatements .work-period-field { grid-column: 1 / -1 !important; }
+  body.work-focus-mode #workStatements .work-header-panel:not(.work-details-collapsed) { max-height: 180px !important; }
+}
+@media (max-width: 800px) {
+  #workStatements .work-period-controls { display: grid; grid-template-columns: 40px minmax(0,1fr) 84px; gap: 6px; }
+  #workStatements .work-period-controls > button { min-width: 0; padding: 0 5px; }
+}
