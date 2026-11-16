@@ -1,6 +1,6 @@
-const CACHE="betpres-subcontract-portal-1.0.4";
+const CACHE="betpres-subcontract-portal-1.0.5";
 const SHELL=[
- "./","index.html","styles.css?v=1.0.4","app.js?v=1.0.4",
+ "./","index.html","styles.css?v=1.0.5","app.js?v=1.0.5",
  "print-preview.html","print.css?v=1.0.4","print.js?v=1.0.4",
  "manifest.webmanifest","assets/app-icon.png","assets/navigation-logo.png",
  "assets/betpres-letterhead-2026.jpg","assets/pdfjs/pdf.mjs","assets/pdfjs/pdf.worker.mjs"

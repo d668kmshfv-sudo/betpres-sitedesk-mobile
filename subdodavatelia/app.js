@@ -1,6 +1,6 @@
 (function(){
  "use strict";
- const VERSION="1.0.4";
+ const VERSION="1.0.5";
  const CONNECTION_KEY="betpres-subcontract-connection-v1";
  const SESSION_KEY="betpres-subcontract-session-v1";
  const PREFERRED_SCOPE_KEY="betpres-subcontract-preferred-scope-v1";
@@ -12,7 +12,7 @@
  const today=()=>{const date=new Date();return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`};
  const monthNow=()=>today().slice(0,7);
  const viewNames={statement:"statementView"};
- const state={connection:null,session:null,scopes:[],scopeId:"",view:"statement",day:today(),month:monthNow(),diary:null,crew:null,ownerNotes:[],attachments:[],pendingAttachments:[],items:[],statement:null,statementRows:[],requestId:0,loading:false};
+ const state={connection:null,session:null,scopes:[],scopeId:"",view:"statement",day:today(),month:monthNow(),diary:null,crew:null,ownerNotes:[],attachments:[],pendingAttachments:[],items:[],statement:null,statementRows:[],otherUsage:new Map(),requestId:0,loading:false};
  let toastTimer=0,refreshPromise=null,draftStorageWarningShown=false;
 
  function showToast(message){const node=$("toast");node.textContent=message;node.classList.add("visible");clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove("visible"),3500)}
@@ -64,7 +64,7 @@
  function loadSession(){const data=safeRead(SESSION_KEY);return data?.access_token&&data?.refresh_token?data:null}
  function saveSession(data){state.session=data||null;if(data)safeStore(SESSION_KEY,data);else safeRemove(SESSION_KEY)}
  function clearPrivateView(){
-  state.scopes=[];state.scopeId="";state.diary=null;state.crew=null;state.ownerNotes=[];state.attachments=[];state.pendingAttachments=[];state.items=[];state.statement=null;state.statementRows=[];
+  state.scopes=[];state.scopeId="";state.diary=null;state.crew=null;state.ownerNotes=[];state.attachments=[];state.pendingAttachments=[];state.items=[];state.statement=null;state.statementRows=[];state.otherUsage=new Map();
   $("scopeSelect").innerHTML="";$("statementRows").innerHTML="";$("ownerNotes").innerHTML="";$("attachmentList").innerHTML="";$("diaryWorks").value="";$("diaryMachinery").value="";$("crewCount").value="0";
  }
  function showGate(){
@@ -374,6 +374,15 @@
   }catch(error){popup.close();showToast(`Súbor sa nepodarilo otvoriť: ${error.message}`)}
  }
 
+ function statementQuantity(value){
+  const raw=String(value??"").trim();
+  if(!raw)return 0;
+  if(!/^\d[\d\s\u00a0\u202f]*(?:[.,]\d{1,3})?$/.test(raw))return null;
+  const parsed=numberValue(raw);
+  return parsed!==null&&parsed<1000000000000000?parsed:null
+ }
+ function statementOther(itemId){return state.otherUsage.get(itemId)||{quantity:0,amount:0}}
+ function statementPrice(item,saved){return Number(saved?.unit_price_snapshot??item.unit_price)||0}
  function renderStatement(){
   const status=state.statement?.status||"draft",locked=statementLocked(),hasItems=state.items.length>0;
   $("statementStatus").textContent=status==="closed"?"Uzatvorený":status==="submitted"?"Odoslaný na schválenie":"Rozpracovaný";
@@ -382,8 +391,8 @@
   $("statementEmpty").hidden=hasItems;$("statementForm").hidden=!hasItems;
   const rowsByItem=new Map(state.statementRows.map(row=>[row.work_item_id,row]));
   $("statementRows").innerHTML=state.items.map(item=>{
-   const savedRow=rowsByItem.get(item.id),qty=savedRow?.quantity??0,reviewed=savedRow?.reviewed_quantity,changed=reviewed!==null&&reviewed!==undefined&&Math.abs(Number(reviewed)-Number(qty))>.0005,price=Number(savedRow?.unit_price_snapshot??item.unit_price)||0;
-   return `<div class="statement-row ${changed?"is-revised":""}" data-work-item="${escapeHtml(item.id)}"><div class="statement-item"><code>${escapeHtml(item.code||"")}</code><strong>${escapeHtml(item.description||"Položka")}</strong></div><div class="value"><span class="mobile-field-label">Zmluvné množstvo</span>${escapeHtml(valueText(item.contract_qty))} ${escapeHtml(item.unit||"")}</div><div class="value"><span class="mobile-field-label">Cena / MJ</span>${escapeHtml(currency.format(price))}</div><label class="quantity-wrap"><span class="mobile-field-label">Tento mesiac · ${escapeHtml(item.unit||"")}</span><input type="text" inputmode="decimal" autocomplete="off" data-quantity-for="${escapeHtml(item.id)}" value="${escapeHtml(String(qty))}" ${locked?"disabled":""} aria-label="Množstvo tento mesiac: ${escapeHtml(item.description)}">${changed?`<strong class="reviewed-quantity">Upravené BETPRES: ${escapeHtml(valueText(reviewed))} ${escapeHtml(item.unit||"")}</strong>${savedRow?.review_note?`<small class="review-note">${escapeHtml(savedRow.review_note)}</small>`:""}`:""}</label><div class="amount"><span class="mobile-field-label">${changed?"Schválená suma bez DPH":"Suma bez DPH"}</span><span data-amount-for="${escapeHtml(item.id)}">${escapeHtml(currency.format((Number(changed?reviewed:qty)||0)*price))}</span></div></div>`
+   const savedRow=rowsByItem.get(item.id),qty=savedRow?.quantity??0,reviewed=savedRow?.reviewed_quantity,changed=reviewed!==null&&reviewed!==undefined&&Math.abs(Number(reviewed)-Number(qty))>.0005,price=statementPrice(item,savedRow),other=statementOther(item.id),unit=escapeHtml(item.unit||""),id=escapeHtml(item.id),contract=Number(item.contract_qty)||0;
+   return `<div class="statement-row ${changed?"is-revised":""}" data-work-item="${id}"><div class="statement-item"><code>${escapeHtml(item.code||"")}</code><strong>${escapeHtml(item.description||"Položka")}</strong><small>Zmluva: <b>${escapeHtml(valueText(contract))} ${unit}</b> × ${escapeHtml(currency.format(price))} / ${unit||"MJ"} · ${escapeHtml(currency.format(contract*Number(item.unit_price||0)))} bez DPH</small></div><div class="statement-metric statement-other"><span>Ostatné mesiace</span><strong>${escapeHtml(valueText(other.quantity))} ${unit}</strong><small>${escapeHtml(currency.format(other.amount))} bez DPH</small></div><label class="statement-current"><span>Tento mesiac · ${unit||"MJ"}</span><input type="text" inputmode="decimal" autocomplete="off" data-quantity-for="${id}" value="${escapeHtml(String(qty))}" ${locked?"disabled":""} aria-label="Množstvo tento mesiac: ${escapeHtml(item.description)}"><small data-amount-for="${id}"></small>${changed?`<strong class="reviewed-quantity">Upravené BETPRES: ${escapeHtml(valueText(reviewed))} ${unit}</strong>${savedRow?.review_note?`<small class="review-note">${escapeHtml(savedRow.review_note)}</small>`:""}`:""}</label><div class="statement-metric statement-used"><span>Čerpané spolu</span><strong data-used-qty="${id}"></strong><small data-used-price="${id}"></small></div><div class="statement-metric statement-remaining"><span>Zostáva dočerpať</span><strong data-remaining-qty="${id}"></strong><small data-remaining-price="${id}"></small><em data-limit-for="${id}" hidden></em></div></div>`
   }).join("");
   $("saveStatementButton").disabled=locked;$("submitStatementButton").disabled=locked;
   const draft=readDraft("statement"),serverTime=Math.max(Date.parse(state.statement?.updated_at||"")||0,...state.statementRows.map(row=>Date.parse(row.updated_at||"")||0));
@@ -397,17 +406,30 @@
  async function loadStatement(){
   if(!state.scopeId)return;
   const id=state.scopeId,period=state.month,request=++state.requestId;
-  state.items=[];state.statement=null;state.statementRows=[];$("statementRows").innerHTML="";$("statementTotal").textContent="…";
+  state.items=[];state.statement=null;state.statementRows=[];state.otherUsage=new Map();$("statementRows").innerHTML="";$("statementTotal").textContent="…";
   try{
    const [items,statements]=await Promise.all([
     rest(`/rest/v1/subcontract_work_items?scope_id=eq.${filter(id)}&select=id,scope_id,code,description,unit,contract_qty,unit_price,sort_order,is_active&order=sort_order.asc,code.asc`),
-    rest(`/rest/v1/subcontract_statements?scope_id=eq.${filter(id)}&period=eq.${period}&select=id,scope_id,period,status,closed_at,updated_at&limit=1`)
+    rest(`/rest/v1/subcontract_statements?scope_id=eq.${filter(id)}&select=id,scope_id,period,status,closed_at,updated_at&order=period.asc&limit=1000`)
    ]);
-   const statement=statements?.[0]||null;
-   const rows=statement?await rest(`/rest/v1/subcontract_statement_rows?statement_id=eq.${filter(statement.id)}&select=id,statement_id,work_item_id,quantity,reviewed_quantity,review_note,reviewed_at,unit_price_snapshot,contract_qty_snapshot,line_total,updated_at`):[];
+   const statement=(statements||[]).find(row=>row.period===period)||null,allRows=[],statementIds=(statements||[]).map(row=>row.id);
+   for(let start=0;start<statementIds.length;start+=40){
+    const ids=statementIds.slice(start,start+40).map(filter).join(",");
+    for(let offset=0;;offset+=1000){
+     const batch=await rest(`/rest/v1/subcontract_statement_rows?statement_id=in.(${ids})&select=id,statement_id,work_item_id,quantity,reviewed_quantity,review_note,reviewed_at,unit_price_snapshot,contract_qty_snapshot,line_total,updated_at&limit=1000&offset=${offset}`);
+     allRows.push(...(batch||[]));
+     if(!Array.isArray(batch)||batch.length<1000)break
+    }
+   }
+   const rows=allRows.filter(row=>row.statement_id===statement?.id),otherUsage=new Map();
+   for(const row of allRows){
+    if(row.statement_id===statement?.id)continue;
+    const usage=otherUsage.get(row.work_item_id)||{quantity:0,amount:0},quantity=Number(row.reviewed_quantity??row.quantity)||0;
+    usage.quantity+=quantity;usage.amount+=quantity*(Number(row.unit_price_snapshot)||0);otherUsage.set(row.work_item_id,usage)
+   }
    if(request!==state.requestId||id!==state.scopeId||period!==state.month)return;
    const usedIds=new Set((rows||[]).map(row=>row.work_item_id));
-   state.items=Array.isArray(items)?items.filter(item=>item.is_active!==false||usedIds.has(item.id)):[];state.statement=statement;state.statementRows=Array.isArray(rows)?rows:[];renderStatement()
+   state.items=Array.isArray(items)?items.filter(item=>item.is_active!==false||usedIds.has(item.id)):[];state.statement=statement;state.statementRows=rows;state.otherUsage=otherUsage;renderStatement()
   }catch(error){if(request===state.requestId)showToast(error.message)}
  }
  function quantityInputs(){return [...$("statementRows").querySelectorAll("[data-quantity-for]")]}
@@ -421,23 +443,40 @@
   const draft=readDraft("statement");$("statementDraftHint").textContent=draft?"Neodoslané množstvá sú uložené v tomto zariadení. Ulož súpis na server.":"";$("restoreStatementDraft").hidden=true
  }
  function recalculateStatement(){
-  let total=0;
+  let total=0,contractTotal=0,otherTotal=0,usedTotal=0,remainingTotal=0,invalidMessage="";
   for(const input of quantityInputs()){
-   const item=state.items.find(row=>row.id===input.dataset.quantityFor),saved=state.statementRows.find(row=>row.work_item_id===input.dataset.quantityFor),quantity=statementLocked()&&saved?.reviewed_quantity!==null&&saved?.reviewed_quantity!==undefined?Number(saved.reviewed_quantity):numberValue(input.value),amount=(quantity??0)*(Number(saved?.unit_price_snapshot??item?.unit_price)||0);
-   const amountNode=$("statementRows").querySelector(`[data-amount-for="${input.dataset.quantityFor}"]`);
-   if(amountNode)amountNode.textContent=currency.format(amount);
-   input.classList.toggle("invalid",quantity===null);total+=amount
+   const item=state.items.find(row=>row.id===input.dataset.quantityFor);if(!item)continue;
+   const saved=state.statementRows.find(row=>row.work_item_id===item.id),other=statementOther(item.id),quantity=statementLocked()&&saved?.reviewed_quantity!==null&&saved?.reviewed_quantity!==undefined?Number(saved.reviewed_quantity):statementQuantity(input.value),price=statementPrice(item,saved),contract=Number(item.contract_qty)||0,available=contract-other.quantity,over=quantity!==null&&quantity>available+.0005,amount=quantity===null?0:quantity*price,used=other.quantity+(quantity??0),remaining=contract-used,contractAmount=contract*(Number(item.unit_price)||0),usedAmount=other.amount+amount,remainingAmount=contractAmount-usedAmount;
+   const row=input.closest(".statement-row"),find=selector=>row.querySelector(selector),unit=item.unit||"";
+   find("[data-amount-for]").textContent=quantity===null?"—":`${currency.format(amount)} bez DPH`;
+   find("[data-used-qty]").textContent=quantity===null?"—":`${valueText(used)} ${unit}`;
+   find("[data-used-price]").textContent=quantity===null?"—":`${currency.format(usedAmount)} bez DPH`;
+   find("[data-remaining-qty]").textContent=quantity===null?"—":`${valueText(remaining)} ${unit}`;
+   find("[data-remaining-price]").textContent=quantity===null?"—":`${currency.format(remainingAmount)} bez DPH`;
+   const note=find("[data-limit-for]");note.hidden=!over;note.textContent=over?`Možno zadať najviac ${valueText(Math.max(0,available))} ${unit}.`:"";
+   row.classList.toggle("is-over-limit",over);row.classList.toggle("is-negative-budget",remainingAmount<-.005);
+   input.classList.toggle("invalid",quantity===null||over);input.setAttribute("aria-invalid",String(quantity===null||over));
+   if(!invalidMessage&&(quantity===null||over))invalidMessage=quantity===null?`Skontroluj množstvo položky ${item.code||item.description}. Použi najviac tri desatinné miesta.`:`Položka ${item.code||item.description} má na tento mesiac zostatok najviac ${valueText(Math.max(0,available))} ${unit}.`;
+   total+=amount;contractTotal+=contractAmount;otherTotal+=other.amount;usedTotal+=usedAmount;remainingTotal+=remainingAmount
   }
-  $("statementTotal").textContent=currency.format(total)
+  $("statementTotal").textContent=currency.format(total);
+  $("statementContractTotal").textContent=currency.format(contractTotal);
+  $("statementOtherTotal").textContent=currency.format(otherTotal);
+  $("statementUsedTotal").textContent=currency.format(usedTotal);
+  $("statementRemainingTotal").textContent=currency.format(remainingTotal);
+  $("statementValidation").textContent=invalidMessage;$("statementValidation").hidden=!invalidMessage;
+  $("saveStatementButton").disabled=statementLocked()||Boolean(invalidMessage);
+  $("submitStatementButton").disabled=statementLocked()||Boolean(invalidMessage)
  }
  async function persistStatement(){
   if(statementLocked())throw new Error("Tento súpis je už uzamknutý.");
-  const quantities=quantityInputs().map(input=>({work_item_id:input.dataset.quantityFor,quantity:numberValue(input.value)}));
-  if(quantities.some(row=>row.quantity===null))throw new Error("Skontroluj množstvá. Použi nezáporné čísla.");
+  const quantities=quantityInputs().map(input=>({work_item_id:input.dataset.quantityFor,quantity:statementQuantity(input.value)}));
+  if(quantities.some(row=>row.quantity===null))throw new Error("Skontroluj množstvá. Použi nezáporné čísla s najviac tromi desatinnými miestami.");
+  for(const row of quantities){const item=state.items.find(item=>item.id===row.work_item_id);if(item&&row.quantity>Number(item.contract_qty)-statementOther(item.id).quantity+.0005)throw new Error(`Položku ${item.code||item.description} nemožno prečerpať. Zadaj najviac ${valueText(Math.max(0,Number(item.contract_qty)-statementOther(item.id).quantity))} ${item.unit||""}.`)}
   const scopeId=state.scopeId,period=state.month;
   let statement=state.statement;
   if(!statement){
-   const records=await rest("/rest/v1/subcontract_statements?on_conflict=scope_id,period",{method:"POST",body:{scope_id:scopeId,period,status:"draft"},prefer:"resolution=merge-duplicates,return=representation"});
+   const records=await rest("/rest/v1/subcontract_statements?on_conflict=scope_id,period",{method:"POST",body:{scope_id:scopeId,period},prefer:"resolution=merge-duplicates,return=representation"});
    statement=records?.[0];if(!statement?.id)throw new Error("Súpis sa nepodarilo vytvoriť.");if(scopeId===state.scopeId&&period===state.month)state.statement=statement
   }
   const payload=quantities.map(row=>({statement_id:statement.id,work_item_id:row.work_item_id,quantity:row.quantity}));
@@ -458,7 +497,7 @@
    }
    showToast("Mesačný súpis bol uložený.")
   }
-  catch(error){showToast(error.message)}finally{formBusy("saveStatementButton",false)}
+  catch(error){showToast(error.message)}finally{formBusy("saveStatementButton",false);recalculateStatement()}
  }
  async function submitStatement(){
   if(statementLocked()||!state.items.length)return;
@@ -472,7 +511,7 @@
    await loadStatement();showToast("Súpis bol odoslaný na schválenie.")
   }catch(error){showToast(error.message)}finally{
    formBusy("submitStatementButton",false);
-   if(id===state.scopeId&&period===state.month){$("saveStatementButton").disabled=statementLocked();quantityInputs().forEach(input=>input.disabled=statementLocked())}
+   if(id===state.scopeId&&period===state.month){quantityInputs().forEach(input=>input.disabled=statementLocked());recalculateStatement()}
   }
  }
 

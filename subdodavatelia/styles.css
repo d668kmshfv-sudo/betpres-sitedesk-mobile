@@ -154,3 +154,55 @@ label small{color:#71828e;font-size:11px;font-weight:500}
 @media(max-width:390px){.date-actions input{width:122px}.day-strip strong,.month-strip strong{font-size:13px}.stepper button{width:55px;height:55px}.stepper input{height:75px;font-size:38px}.statement-actions{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){button,.summary-card,.toast{transition:none!important}button:active:not(:disabled){transform:none}}
 @media(prefers-contrast:more){.panel,.summary-card,.day-strip,.month-strip,.empty-state{border-color:#688296}.status-chip{border-color:#355f7b}}
+
+/* Monthly statement: contract, other months, current entry and remaining budget. */
+.statement-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #cbdbe7;border-radius:14px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+.statement-overview>div{display:grid;gap:3px;min-width:0;padding:12px 15px;border-right:1px solid #e0e9ef}
+.statement-overview>div:last-child{border-right:0}
+.statement-overview span{color:#567084;font-size:10px;font-weight:780;text-transform:uppercase;letter-spacing:.03em}
+.statement-overview strong{color:#183d57;font-size:18px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.statement-overview .statement-overview-remaining{background:#eaf4ee}
+.statement-overview-remaining strong{color:#176947}
+.statement-help{margin:0 2px;color:#5b7385;font-size:12px;line-height:1.35}
+.statement-validation{margin:0;padding:10px 14px;border:1px solid #eab9b2;border-radius:10px;background:#fff3f1;color:#ae3428;font-size:12px;font-weight:760}
+.statement-table-head,.statement-row{grid-template-columns:minmax(230px,2.3fr) repeat(4,minmax(110px,.9fr));gap:11px}
+.statement-row{min-height:106px}
+.statement-item small{color:#5d7485;font-size:11px;line-height:1.35;font-variant-numeric:tabular-nums}
+.statement-item small b{color:#25485e;font-weight:760}
+.statement-metric,.statement-current{display:grid;align-content:center;gap:4px;min-width:0;font-variant-numeric:tabular-nums}
+.statement-metric>span,.statement-current>span:first-child{color:#607b8d;font-size:10px;font-weight:780;text-transform:uppercase;letter-spacing:.02em}
+.statement-metric strong{color:#193e58;font-size:15px;font-weight:800;white-space:nowrap}
+.statement-metric small,.statement-current>small{color:#5b7484;font-size:11px;line-height:1.3;white-space:nowrap}
+.statement-current input{width:100%;max-width:120px;min-width:0;height:40px;padding:6px 9px;border-color:#8db4d0;border-radius:9px;color:#123b68;font-size:16px;font-weight:800;text-align:right}
+.statement-current>small{font-weight:720}
+.statement-remaining{padding:8px 10px;border-radius:10px;background:#ecf7f0}
+.statement-remaining strong{color:#176947;font-size:17px}
+.statement-remaining small{color:#246d50}
+.statement-remaining em{color:#ad3328;font-size:10px;font-style:normal;font-weight:760;line-height:1.3}
+.statement-row.is-over-limit .statement-remaining,.statement-row.is-negative-budget .statement-remaining{background:#fff0ee}
+.statement-row.is-over-limit .statement-remaining strong,.statement-row.is-negative-budget .statement-remaining small{color:#b63228}
+.statement-current input.invalid{border-color:#c53d32;background:#fff4f2}
+@media(max-width:1050px){.statement-table-head,.statement-row{grid-template-columns:minmax(210px,2fr) repeat(4,minmax(105px,.8fr))}}
+@media(max-width:760px){
+ .month-strip{min-height:62px}
+ .month-strip>div:first-child{display:none}
+ .month-strip .date-actions{width:100%;display:flex}
+ .month-strip .date-actions input{width:auto;min-width:0;flex:1;text-align:center}
+ .statement-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .statement-overview>div{padding:10px 12px}
+ .statement-overview>div:nth-child(2){border-right:0}
+ .statement-overview>div:nth-child(-n+2){border-bottom:1px solid #e0e9ef}
+ .statement-overview strong{font-size:16px}
+ .statement-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:15px}
+ .statement-item{grid-column:1/-1;padding-bottom:8px;border-bottom:1px solid #e2eaf0}
+ .statement-metric,.statement-current{min-width:0;min-height:78px;padding:9px 10px;border:1px solid #e0e9ef;border-radius:10px;background:#f8fafc}
+ .statement-other{grid-column:1;grid-row:2}
+ .statement-current{grid-column:2;grid-row:2;background:#f0f7fc;border-color:#bed7e9}
+ .statement-used{grid-column:1;grid-row:3}
+ .statement-remaining{grid-column:2;grid-row:3;background:#eaf6ef;border-color:#badcc9}
+ .statement-metric strong{font-size:15px;white-space:normal}
+ .statement-remaining strong{font-size:17px}
+ .statement-metric small,.statement-current>small{font-size:10px;white-space:normal}
+ .statement-current input{max-width:none}
+ .statement-row.is-revised{padding-left:11px}
+}
