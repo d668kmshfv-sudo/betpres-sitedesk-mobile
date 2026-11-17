@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.6";
+const SITE_DESK_APP_VERSION="5.8.7";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -118,7 +118,7 @@ const normalizeStateList=key=>{
 };
 [
  "projects","companies","assignments","billings","materials","purchases","machinePassport",
- "handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays",
+ "handovers","workerSheets","betpresTimesheets","betpresEmployeeRoster","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays",
  "documentVersions","calendarEvents","workStatements","workStatementDeletions","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryCrew","siteDiaryMachinery","siteDiaryInspections","siteDiarySubcontracts","siteDiaryDayAttachments","materialSamples"
 ].forEach(normalizeStateList);
 if(!Array.isArray(state.defects))state.defects=[];
@@ -1359,7 +1359,7 @@ async function cloudPush({force=false,silent=false}={}){
   renderCloudPanel()
  }
 }
-const CLOUD_PROTECTED_COLLECTIONS=["projects","companies","assignments","billings","materials","purchases","machinePassport","handovers","workerSheets","betpresTimesheets","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryCrew","siteDiaryMachinery","siteDiaryInspections","siteDiarySubcontracts","siteDiaryDayAttachments","materialSamples"];
+const CLOUD_PROTECTED_COLLECTIONS=["projects","companies","assignments","billings","materials","purchases","machinePassport","handovers","workerSheets","betpresTimesheets","betpresEmployeeRoster","thpTimesheets","companyHourTimesheets","companyTimesheets","acceptanceProtocols","siteMeetings","controlDays","documentVersions","calendarEvents","workStatements","workBudgets","defects","mobileDiary","siteDiaryWeather","siteDiaryCrew","siteDiaryMachinery","siteDiaryInspections","siteDiarySubcontracts","siteDiaryDayAttachments","materialSamples"];
 function cloudMissingLocalRecords(remoteData){
  const missing=[];
  const remotelyDeletedDefects=new Set(mergedDefectDeletions(remoteData.defectDeletions).map(item=>item.id));
@@ -2142,7 +2142,7 @@ function renderProjectSelectors(){if(!project(state.selectedProjectId))state.sel
 function renderDashboard(){const p=activeProject();if(!p)return;$('dashTitle').textContent=p.name;const bs=state.billings.filter(b=>b.projectId===p.id),hs=state.handovers.filter(h=>h.projectId===p.id),ps=state.purchases.filter(x=>x.projectId===p.id),assignmentRows=state.assignments.filter(a=>a.projectId===p.id),protocols=state.acceptanceProtocols.filter(x=>x.projectId===p.id);const today=todayISO(),month=today.slice(0,7),day=Number(today.slice(8,10)),todaySheet=syncBetpresWorkerRow(month,workerSheet(month,true))&&workerSheet(month,true),workersToday=(todaySheet?.rows||[]).reduce((sum,r)=>sum+(Number(r.values?.[day])||0),0);$('metricWorkersToday').textContent=workersToday;$('metricWorkersDate').textContent=workersToday?`${fmtDateISO(today)} · spolu na stavbe`:`${fmtDateISO(today)} · dnešný stav zatiaľ nevyplnený`;$('metricBilling').textContent=eur.format(bs.reduce((s,x)=>s+Number(x.amount||0),0));$('metricHandovers').textContent=hs.length;if($('metricPurchases'))$('metricPurchases').textContent=ps.length;const missingAcceptance=Math.max(0,assignmentRows.length-new Set(protocols.map(x=>x.companyId)).size);if($('metricAcceptance'))$('metricAcceptance').textContent=protocols.length;if($('metricAcceptanceText'))$('metricAcceptanceText').textContent=`${missingAcceptance} firiem bez protokolu`;
 const recent=[...ps].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);if($('recentPurchases'))$('recentPurchases').innerHTML='';const monthly={};bs.forEach(b=>monthly[b.month]=(monthly[b.month]||0)+Number(b.amount||0));const keys=Object.keys(monthly).sort().slice(-12);const max=Math.max(1,...keys.map(k=>monthly[k]));$('billingChart').innerHTML=keys.length?keys.map(k=>{const m=Number(k.slice(5));return `<div class="bar-group"><div class="bar ${k===keys.at(-1)?'current':''}" style="height:${Math.max(3,monthly[k]/max*90)}%" data-value="${esc(eur.format(monthly[k]))}"></div><small>${monthNames[m-1]}</small></div>`}).join(''):`<div style="align-self:center;color:#789">Zatiaľ bez fakturácie</div>`;const byCompany={};bs.forEach(b=>byCompany[b.companyId]=(byCompany[b.companyId]||0)+Number(b.amount||0));$('topCompanies').innerHTML=Object.entries(byCompany).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v],i)=>`<div class="rank-row"><b>${i+1}.</b><div><strong>${esc(company(id)?.name||'')}</strong><small>${esc(company(id)?.scope||'')}</small></div><span>${eur.format(v)}</span></div>`).join('')||`<p style="color:#789">Zatiaľ bez údajov.</p>`;$('projectCards').innerHTML=state.projects.slice(0,5).map(x=>`<div class="mini-row"><div><strong>${esc(x.name)}</strong><small>${esc(x.address||'')}</small></div><span class="status">${x.id===state.selectedProjectId?'Aktívna':'Stavba'}</span></div>`).join('')}
 function renderProjects(){$("projectsGrid").innerHTML=state.projects.map(p=>`<article class="panel project-card"><h3>${esc(p.name)}</h3><p>${esc(p.address||"Bez adresy")}</p><p class="project-card-manager"><strong>Stavbyvedúci:</strong> ${esc(p.manager||"Neuvedený")}${p.managerPhone?` · ${esc(p.managerPhone)}`:""}</p><div class="project-meta"><span class="chip">${state.assignments.filter(a=>a.projectId===p.id).length} firiem</span><span class="chip">${state.handovers.filter(h=>h.projectId===p.id).length} zápisníc</span><span class="chip">${esc(p.region||"Kraj neuvedený")}</span>${p.startDate||p.endDate?`<span class="chip">${esc(fmtDateISO(p.startDate)||"?")} – ${esc(fmtDateISO(p.endDate)||"?")}</span>`:""}</div><div class="project-card-actions"><button class="ghost" data-activate-project="${p.id}">${p.id===state.selectedProjectId?"Aktívna stavba":"Nastaviť ako aktívnu"}</button><button class="ghost" data-edit-project="${p.id}">Upraviť údaje</button><button class="delete-project" data-delete-project="${p.id}">Vymazať stavbu</button></div></article>`).join("");document.querySelectorAll("[data-activate-project]").forEach(b=>b.onclick=()=>{state.selectedProjectId=b.dataset.activateProject;save("Aktívna stavba bola zmenená.")});document.querySelectorAll("[data-edit-project]").forEach(b=>b.onclick=()=>openProjectEditor(b.dataset.editProject));document.querySelectorAll("[data-delete-project]").forEach(b=>b.onclick=()=>deleteProject(b.dataset.deleteProject))}
-function deleteProject(id){const p=project(id);if(!p)return;if(state.projects.length===1){alert("Poslednú stavbu nie je možné vymazať. Najprv vytvor inú stavbu.");return}const typed=prompt(`Vymazanie je trvalé. Pre potvrdenie napíš presný názov stavby:\n\n${p.name}`);if(typed!==p.name){if(typed!==null)alert("Názov sa nezhoduje. Stavba nebola vymazaná.");return}state.projects=state.projects.filter(x=>x.id!==id);state.assignments=state.assignments.filter(x=>x.projectId!==id);state.billings=state.billings.filter(x=>x.projectId!==id);state.materials=state.materials.filter(x=>x.projectId!==id);state.purchases=state.purchases.filter(x=>x.projectId!==id);state.machinePassport=state.machinePassport.filter(x=>x.projectId!==id);state.handovers=state.handovers.filter(x=>x.projectId!==id);state.workerSheets=state.workerSheets.filter(x=>x.projectId!==id);state.betpresTimesheets=state.betpresTimesheets.filter(x=>x.projectId!==id);state.thpTimesheets=state.thpTimesheets.filter(x=>x.projectId!==id);state.companyHourTimesheets=state.companyHourTimesheets.filter(x=>x.projectId!==id);state.companyTimesheets=state.companyTimesheets.filter(x=>x.projectId!==id);state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.projectId!==id);state.siteMeetings=state.siteMeetings.filter(x=>x.projectId!==id);state.controlDays=state.controlDays.filter(x=>x.projectId!==id);state.documentVersions=state.documentVersions.filter(x=>x.projectId!==id);state.calendarEvents=state.calendarEvents.filter(x=>x.projectId!==id);state.workStatements=state.workStatements.filter(x=>x.projectId!==id);state.workStatementDeletions=state.workStatementDeletions.filter(x=>x.projectId!==id);state.workBudgets=state.workBudgets.filter(x=>x.projectId!==id);state.siteDiaryWeather=(state.siteDiaryWeather||[]).filter(x=>x.projectId!==id);state.siteDiaryCrew=(state.siteDiaryCrew||[]).filter(x=>x.projectId!==id);state.siteDiaryMachinery=(state.siteDiaryMachinery||[]).filter(x=>x.projectId!==id);state.siteDiaryInspections=(state.siteDiaryInspections||[]).filter(x=>x.projectId!==id);state.siteDiarySubcontracts=(state.siteDiarySubcontracts||[]).filter(x=>x.projectId!==id);state.siteDiaryDayAttachments=(state.siteDiaryDayAttachments||[]).filter(x=>x.projectId!==id);state.materialSamples=state.materialSamples.filter(x=>x.projectId!==id);if(state.selectedProjectId===id)state.selectedProjectId=state.projects[0]?.id||"";save("Stavba a jej naviazané údaje boli vymazané. Firmy zostali v databáze.")}
+function deleteProject(id){const p=project(id);if(!p)return;ensureBetpresEmployeeRoster();if(state.projects.length===1){alert("Poslednú stavbu nie je možné vymazať. Najprv vytvor inú stavbu.");return}const typed=prompt(`Vymazanie je trvalé. Pre potvrdenie napíš presný názov stavby:\n\n${p.name}`);if(typed!==p.name){if(typed!==null)alert("Názov sa nezhoduje. Stavba nebola vymazaná.");return}state.projects=state.projects.filter(x=>x.id!==id);state.assignments=state.assignments.filter(x=>x.projectId!==id);state.billings=state.billings.filter(x=>x.projectId!==id);state.materials=state.materials.filter(x=>x.projectId!==id);state.purchases=state.purchases.filter(x=>x.projectId!==id);state.machinePassport=state.machinePassport.filter(x=>x.projectId!==id);state.handovers=state.handovers.filter(x=>x.projectId!==id);state.workerSheets=state.workerSheets.filter(x=>x.projectId!==id);state.betpresTimesheets=state.betpresTimesheets.filter(x=>x.projectId!==id);state.thpTimesheets=state.thpTimesheets.filter(x=>x.projectId!==id);state.companyHourTimesheets=state.companyHourTimesheets.filter(x=>x.projectId!==id);state.companyTimesheets=state.companyTimesheets.filter(x=>x.projectId!==id);state.acceptanceProtocols=state.acceptanceProtocols.filter(x=>x.projectId!==id);state.siteMeetings=state.siteMeetings.filter(x=>x.projectId!==id);state.controlDays=state.controlDays.filter(x=>x.projectId!==id);state.documentVersions=state.documentVersions.filter(x=>x.projectId!==id);state.calendarEvents=state.calendarEvents.filter(x=>x.projectId!==id);state.workStatements=state.workStatements.filter(x=>x.projectId!==id);state.workStatementDeletions=state.workStatementDeletions.filter(x=>x.projectId!==id);state.workBudgets=state.workBudgets.filter(x=>x.projectId!==id);state.siteDiaryWeather=(state.siteDiaryWeather||[]).filter(x=>x.projectId!==id);state.siteDiaryCrew=(state.siteDiaryCrew||[]).filter(x=>x.projectId!==id);state.siteDiaryMachinery=(state.siteDiaryMachinery||[]).filter(x=>x.projectId!==id);state.siteDiaryInspections=(state.siteDiaryInspections||[]).filter(x=>x.projectId!==id);state.siteDiarySubcontracts=(state.siteDiarySubcontracts||[]).filter(x=>x.projectId!==id);state.siteDiaryDayAttachments=(state.siteDiaryDayAttachments||[]).filter(x=>x.projectId!==id);state.materialSamples=state.materialSamples.filter(x=>x.projectId!==id);if(state.selectedProjectId===id)state.selectedProjectId=state.projects[0]?.id||"";save("Stavba a jej naviazané údaje boli vymazané. Firmy zostali v databáze.")}
 const projectFormDefaults={constructionPermit:"áno",surveyPoints:"geodetickým vytýčením",electricity:"Zo staveniskového rozvádzača",water:"Staveniskové rozvody",documentation:"Bola odovzdaná projektová dokumentácia"};
 function projectFormSet(id,value){if($(id))$(id).value=value??""}
 function resetProjectForm(){
@@ -3070,6 +3070,44 @@ function betpresEmployeeCarryKey(row){
  const name=String(row?.name||"").trim().toLocaleLowerCase("sk").replace(/\s+/g," ");
  return name?`name:${name}`:""
 }
+function findBetpresRosterPerson(row,roster=state.betpresEmployeeRoster||[]){
+ const linked=row?.rosterId&&roster.find(person=>person.id===row.rosterId);
+ if(linked)return linked;
+ const number=String(row?.personalNumber||"").replace(/\D/g,"").slice(0,3),name=String(row?.name||"").trim().toLocaleLowerCase("sk").replace(/\s+/g," ");
+ if(number){
+  const exact=roster.find(person=>String(person.personalNumber||"")===number&&String(person.name||"").trim().toLocaleLowerCase("sk").replace(/\s+/g," ")===name);
+  if(exact)return exact;
+ }
+ if(!name)return null;
+ return roster.find(person=>String(person.name||"").trim().toLocaleLowerCase("sk").replace(/\s+/g," ")===name&&(!number||!person.personalNumber||String(person.personalNumber)===number))||null
+}
+function ensureBetpresEmployeeRoster(){
+ if(!Array.isArray(state.betpresEmployeeRoster))state.betpresEmployeeRoster=[];
+ let changed=false;
+ const sheets=[...(state.betpresTimesheets||[])].sort((a,b)=>String(b.month||"").localeCompare(String(a.month||"")));
+ for(const sheet of sheets)for(const row of Array.isArray(sheet.rows)?sheet.rows:[]){
+  const name=String(row.name||"").trim();if(!name)continue;
+  let person=findBetpresRosterPerson(row,state.betpresEmployeeRoster);
+  const hadLinkedProfile=Boolean(row.rosterId&&person?.id===row.rosterId);
+  if(!person){
+   const proposedId=row.id?`bpr-${row.id}`:uid("bpr");
+   person={id:state.betpresEmployeeRoster.some(entry=>entry.id===proposedId)?uid("bpr"):proposedId,name,personalNumber:String(row.personalNumber||"").replace(/\D/g,"").slice(0,3),position:String(row.position||"").trim(),rewardPercent:row.rewardPercent??""};
+   state.betpresEmployeeRoster.push(person);changed=true
+  }
+  if(!hadLinkedProfile){
+   if(!person.personalNumber&&row.personalNumber){person.personalNumber=String(row.personalNumber).replace(/\D/g,"").slice(0,3);changed=true}
+   if(!person.position&&row.position){person.position=String(row.position).trim();changed=true}
+   if(person.rewardPercent===""&&row.rewardPercent!==""&&row.rewardPercent!=null){person.rewardPercent=row.rewardPercent;changed=true}
+  }
+  if(row.rosterId!==person.id){row.rosterId=person.id;changed=true}
+ }
+ if(changed)commitDirectState();
+ return state.betpresEmployeeRoster
+}
+function updateBetpresRosterPerson(row,changes){
+ const person=ensureBetpresEmployeeRoster().find(item=>item.id===row.rosterId);
+ if(person)Object.assign(person,changes)
+}
 function betpresTimesheet(month,create=true){
  let sheet=state.betpresTimesheets.find(x=>x.projectId===state.selectedProjectId&&x.month===month);
  if(!sheet&&create){
@@ -3519,7 +3557,7 @@ function renderSimpleEmployeeTimesheet(config){
  });
  document.querySelectorAll(`[data-${config.key}-position]`).forEach(input=>{
   input.onfocus=()=>beginDirectUndo(config.undo);
-  input.oninput=()=>{const row=sheet.rows.find(r=>r.id===input.dataset[config.key+"Position"]);if(!row)return;row.position=input.value;commitDirectState()};
+  input.oninput=()=>{const row=sheet.rows.find(r=>r.id===input.dataset[config.key+"Position"]);if(!row)return;row.position=input.value;if(config.key==="betpres")updateBetpresRosterPerson(row,{position:input.value});commitDirectState()};
  input.onblur=()=>endDirectUndo()
  });
  if(config.key==="betpres")document.querySelectorAll("[data-betpres-reward]").forEach(input=>{
@@ -3530,6 +3568,7 @@ function renderSimpleEmployeeTimesheet(config){
    const raw=input.value.replace(/[^0-9,.]/g,"").replace(",","."),value=raw===""?"":Math.max(0,Math.min(100,Number(raw)));
    if(raw!==""&&!Number.isFinite(value))return;
    row.rewardPercent=value;
+   updateBetpresRosterPerson(row,{rewardPercent:value});
    commitDirectState()
   };
   input.onblur=()=>{const row=sheet.rows.find(r=>r.id===input.dataset.betpresReward);input.value=row?.rewardPercent??"";endDirectUndo()}
@@ -3541,6 +3580,7 @@ function renderSimpleEmployeeTimesheet(config){
    if(!row)return;
    input.value=input.value.replace(/\D/g,"").slice(0,3);
    row.personalNumber=input.value;
+   updateBetpresRosterPerson(row,{personalNumber:input.value});
    commitDirectState()
   };
   input.onblur=()=>endDirectUndo()
@@ -3556,6 +3596,7 @@ function renderThpTimesheet(){
  renderSimpleEmployeeTimesheet({key:"thp",mode:"thp",head:"thpTimeHead",body:"thpTimeBody",foot:"thpTimeFoot",count:"thpEmployeeCount",hours:"thpHoursTotal",overtime:true,showDailyTotals:false,overtimeMetric:"thpOvertimeTotal",status:true,sheet:thpTimesheet,sort:sortThpEmployees,render:renderThpTimesheet,undo:"Úprava podsmenovky THP"})
 }
 function employeeNameSuggestions(kind){
+ if(kind==="betpres")return [...ensureBetpresEmployeeRoster()].sort((a,b)=>a.name.localeCompare(b.name,"sk"));
  const sheets=(kind==="thp"?state.thpTimesheets:state.betpresTimesheets).filter(sheet=>sheet.projectId===state.selectedProjectId),map=new Map();
  [...sheets].sort((a,b)=>String(b.month||"").localeCompare(String(a.month||""))).forEach(sheet=>(sheet.rows||[]).forEach(row=>{const name=String(row.name||"").trim();if(name&&!map.has(name.toLocaleLowerCase("sk")))map.set(name.toLocaleLowerCase("sk"),{name,personalNumber:String(row.personalNumber||""),position:String(row.position||"").trim(),rewardPercent:row.rewardPercent??""})}));
  return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,"sk"))
@@ -3567,20 +3608,20 @@ function openEmployeeModal(kind){
  nameInput.oninput=()=>{const found=items.find(item=>item.name.toLocaleLowerCase("sk")===nameInput.value.trim().toLocaleLowerCase("sk"));if(found&&personalNumberInput&&!personalNumberInput.value)personalNumberInput.value=found.personalNumber||"";if(found&&!positionInput.value)positionInput.value=found.position;if(found&&rewardInput&&!rewardInput.value)rewardInput.value=found.rewardPercent??""};
  if(personalNumberInput)personalNumberInput.oninput=()=>{personalNumberInput.value=personalNumberInput.value.replace(/\D/g,"").slice(0,3)};
  if(!isThp){
-  const roster=$("betpresRosterList"),search=$("betpresRosterSearch"),add=$("betpresRosterAdd"),rosterSection=roster.closest(".betpres-roster-pick"),sheet=betpresTimesheet(selectedWorkerMonth,true),present=new Set(sheet.rows.map(betpresEmployeeCarryKey));
-  const candidates=items.map((item,index)=>({item,index})).filter(({item})=>!present.has(betpresEmployeeCarryKey(item)));
+  const roster=$("betpresRosterList"),search=$("betpresRosterSearch"),add=$("betpresRosterAdd"),rosterSection=roster.closest(".betpres-roster-pick"),sheet=betpresTimesheet(selectedWorkerMonth,true),presentIds=new Set(sheet.rows.map(row=>row.rosterId).filter(Boolean)),presentKeys=new Set(sheet.rows.map(betpresEmployeeCarryKey));
+  const candidates=items.map((item,index)=>({item,index})).filter(({item})=>!presentIds.has(item.id)&&!presentKeys.has(betpresEmployeeCarryKey(item)));
   rosterSection.classList.toggle("is-exhausted",!candidates.length);
   const renderRoster=()=>{
    const query=workSearchKey(search.value),available=candidates.filter(({item})=>!query||workSearchKey([item.name,item.personalNumber,item.position].join(" ")).includes(query));
-   roster.innerHTML=available.length?available.map(({item,index})=>`<label class="betpres-roster-item"><input type="checkbox" value="${index}"><span><strong>${esc(item.name)}</strong><small>${esc([item.personalNumber?`č. ${item.personalNumber}`:"",item.position].filter(Boolean).join(" · ")||"Pracovník BETPRES")}</small></span></label>`).join(""):`<p class="betpres-roster-empty">${items.length?"Všetci známi pracovníci sú už v mesiaci alebo sa nenašla zhoda.":"Na tejto stavbe ešte nie je zoznam. Pridaj prvého pracovníka nižšie."}</p>`;
+   roster.innerHTML=available.length?available.map(({item,index})=>`<label class="betpres-roster-item"><input type="checkbox" value="${index}"><span><strong>${esc(item.name)}</strong><small>${esc([item.personalNumber?`č. ${item.personalNumber}`:"",item.position].filter(Boolean).join(" · ")||"Pracovník BETPRES")}</small></span></label>`).join(""):`<p class="betpres-roster-empty">${items.length?"Všetci známi pracovníci sú už v tomto mesiaci alebo sa nenašla zhoda.":"Spoločný zoznam je prázdny. Pridaj prvého pracovníka nižšie."}</p>`;
    add.disabled=true;add.textContent="Pridať označených"
   };
   search.oninput=renderRoster;
   roster.onchange=()=>{const count=roster.querySelectorAll('input[type="checkbox"]:checked').length;add.disabled=!count;add.textContent=count?`Pridať označených (${count})`:"Pridať označených"};
   add.onclick=()=>{
-   const selected=[...roster.querySelectorAll('input[type="checkbox"]:checked')].map(input=>items[Number(input.value)]).filter(Boolean),existing=new Set(sheet.rows.map(betpresEmployeeCarryKey));
+   const selected=[...roster.querySelectorAll('input[type="checkbox"]:checked')].map(input=>items[Number(input.value)]).filter(Boolean),existingIds=new Set(sheet.rows.map(row=>row.rosterId).filter(Boolean)),existingKeys=new Set(sheet.rows.map(betpresEmployeeCarryKey));
    let added=0;
-   for(const item of selected){const key=betpresEmployeeCarryKey(item);if(!key||existing.has(key))continue;sheet.rows.push({id:uid("bte"),personalNumber:item.personalNumber||"",name:item.name,position:item.position||"",rewardPercent:item.rewardPercent??"",values:{},overtime:{}});existing.add(key);added++}
+   for(const item of selected){const key=betpresEmployeeCarryKey(item);if(existingIds.has(item.id)||existingKeys.has(key))continue;sheet.rows.push({id:uid("bte"),rosterId:item.id,personalNumber:item.personalNumber||"",name:item.name,position:item.position||"",rewardPercent:item.rewardPercent??"",values:{},overtime:{}});existingIds.add(item.id);existingKeys.add(key);added++}
    if(!added)return;
    sortBetpresEmployees(sheet);modal.classList.add("hidden");save(`${added} pracovníkov bolo pridaných do mesiaca ${formatBillingMonth(selectedWorkerMonth)}.`);document.dispatchEvent(new Event("betpres-roster-updated"))
   };
@@ -3597,7 +3638,18 @@ function addBlankBetpresEmployee(){
  save("Prázdny riadok pracovníka BETPRES bol pridaný.")
 }
 if($("addBlankBetpresEmployeeInline"))$("addBlankBetpresEmployeeInline").onclick=addBlankBetpresEmployee;
-if($("betpresEmployeeForm"))$("betpresEmployeeForm").onsubmit=e=>{e.preventDefault();const sheet=betpresTimesheet(selectedWorkerMonth,true),rewardRaw=$("betpresEmployeeReward").value.trim().replace(",","."),reward=rewardRaw===""?"":Math.max(0,Math.min(100,Number(rewardRaw))),name=$("betpresEmployeeName").value.trim(),personalNumber=$("betpresEmployeePersonalNumber").value.replace(/\D/g,"").slice(0,3),candidate={name,personalNumber};if(!name){$("betpresEmployeeName").focus();return}if(sheet.rows.some(row=>betpresEmployeeCarryKey(row)===betpresEmployeeCarryKey(candidate))){alert("Tento pracovník už je pridaný do vybraného mesiaca.");return}sheet.rows.push({id:uid("bte"),personalNumber,name,position:$("betpresEmployeePosition").value.trim(),rewardPercent:Number.isFinite(reward)?reward:"",values:{},overtime:{}});sortBetpresEmployees(sheet);$("betpresEmployeeModal").classList.add("hidden");save("Pracovník BETPRES bol pridaný do vybraného mesiaca.");document.dispatchEvent(new Event("betpres-roster-updated"))};
+if($("betpresEmployeeForm"))$("betpresEmployeeForm").onsubmit=e=>{
+ e.preventDefault();
+ const sheet=betpresTimesheet(selectedWorkerMonth,true),roster=ensureBetpresEmployeeRoster(),rewardRaw=$("betpresEmployeeReward").value.trim().replace(",","."),reward=rewardRaw===""?"":Math.max(0,Math.min(100,Number(rewardRaw))),name=$("betpresEmployeeName").value.trim(),personalNumber=$("betpresEmployeePersonalNumber").value.replace(/\D/g,"").slice(0,3),position=$("betpresEmployeePosition").value.trim();
+ if(!name){$("betpresEmployeeName").focus();return}
+ const candidate={name,personalNumber},person=findBetpresRosterPerson(candidate,roster);
+ if(sheet.rows.some(row=>(person&&row.rosterId===person.id)||betpresEmployeeCarryKey(row)===betpresEmployeeCarryKey(candidate))){alert("Tento pracovník už je pridaný do vybraného mesiaca.");return}
+ const profile=person||{id:uid("bpr"),name,personalNumber,position,rewardPercent:Number.isFinite(reward)?reward:""};
+ if(!person)roster.push(profile);
+ else Object.assign(profile,{name,personalNumber:personalNumber||profile.personalNumber||"",position:position||profile.position||"",rewardPercent:reward!==""&&Number.isFinite(reward)?reward:profile.rewardPercent??""});
+ sheet.rows.push({id:uid("bte"),rosterId:profile.id,personalNumber:profile.personalNumber||"",name:profile.name,position:profile.position||"",rewardPercent:profile.rewardPercent??"",values:{},overtime:{}});
+ sortBetpresEmployees(sheet);$("betpresEmployeeModal").classList.add("hidden");save("Pracovník BETPRES bol pridaný do vybraného mesiaca a spoločného zoznamu.");document.dispatchEvent(new Event("betpres-roster-updated"))
+};
 if($("addThpEmployee"))$("addThpEmployee").onclick=()=>openEmployeeModal("thp");
 if($("addThpEmployeeInline"))$("addThpEmployeeInline").onclick=()=>openEmployeeModal("thp");
 if($("thpEmployeeForm"))$("thpEmployeeForm").onsubmit=e=>{e.preventDefault();const sheet=thpTimesheet(selectedWorkerMonth,true);sheet.rows.push({id:uid("thpe"),name:$("thpEmployeeName").value.trim(),position:$("thpEmployeePosition").value.trim(),values:{},overtime:{}});sortThpEmployees(sheet);$("thpEmployeeModal").classList.add("hidden");save("THP pracovník bol pridaný.")};
