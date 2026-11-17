@@ -12,6 +12,7 @@
 #betpresEmployeeModal .betpres-roster-item span { display: grid; gap: 2px; min-width: 0; }
 #betpresEmployeeModal .betpres-roster-item strong { color: #17334b; font-size: 14px; line-height: 1.2; }
 #betpresEmployeeModal .betpres-roster-item small { color: #65778a; font-size: 11px; }
+#betpresEmployeeModal .betpres-roster-group-title { padding: 7px 11px; border-bottom: 1px solid #dbe5ed; background: #eef4f8; color: #1c4664; font-size: 11px; font-weight: 800; letter-spacing: .04em; }
 #betpresEmployeeModal .betpres-roster-empty { padding: 12px; }
 #betpresEmployeeModal #betpresRosterAdd { min-height: 42px; justify-self: start; background: #0a5b91; }
 #betpresEmployeeModal #betpresRosterAdd:disabled { background: #d5e0e7; color: #6d8190; cursor: default; }
@@ -31,6 +32,11 @@ body.sitedesk-v3 #betpresEmployeeModal .modal-actions { position: static; bottom
   #betpresEmployeeModal .modal-card { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); padding-bottom: max(16px,env(safe-area-inset-bottom)); }
   #betpresEmployeeModal .betpres-roster-list { max-height: 24vh; }
   #betpresEmployeeModal #betpresRosterAdd { width: 100%; }
+  #mobileWorkerDayModal .mobile-worker-attendance-card { grid-template-columns: 166px minmax(0,1fr) !important; grid-template-areas: "person person" "attendance codes" !important; }
+  #mobileWorkerDayModal .mobile-worker-attendance-card .mobile-worker-code-row { align-self: center; }
+}
+@media (max-width: 370px) {
+  #mobileWorkerDayModal .mobile-worker-attendance-card { grid-template-columns: minmax(0,1fr) !important; grid-template-areas: "person" "attendance" "codes" !important; }
 }
 
 /* Keep each person's name, profession and reward together on one compact row. */
@@ -60,6 +66,10 @@ body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-cell .employee-name {
   font-size: 12px !important;
   line-height: 17px !important;
 }
+body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-name-row { display: grid; grid-template-columns: minmax(0,1fr) 48px; gap: 4px; align-items: center; min-width: 0; }
+body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-name-row .employee-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-type-select { width: 48px !important; min-width: 48px !important; height: 25px !important; min-height: 25px !important; padding: 0 2px !important; border: 1px solid #b7cbd9 !important; border-radius: 6px !important; background: #eaf3f9 !important; color: #0b537f !important; font-size: 10px !important; font-weight: 800 !important; text-align: center; }
+body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-type-select.is-thp { background: #edf1fa !important; color: #344f8a !important; }
 body.sitedesk-v3 #workers #betpresTimesheetPanel .employee-cell .employee-delete-btn {
   position: absolute !important;
   float: none !important;
@@ -119,10 +129,21 @@ body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-employee-meta .employe
 #betpresEmployeeForm > .modal-actions { grid-column: 1 / -1 !important; }
 #betpresEmployeeForm > .betpres-personal-field { grid-column: 1 !important; }
 #betpresEmployeeForm > .betpres-name-field { grid-column: 2 / 4 !important; }
-#betpresEmployeeForm > .betpres-position-field { grid-column: 1 / 3 !important; }
+#betpresEmployeeForm > .betpres-type-field { grid-column: 1 !important; }
+#betpresEmployeeForm > .betpres-position-field { grid-column: 2 !important; }
 #betpresEmployeeForm > .betpres-reward-field { grid-column: 3 !important; }
 #betpresEmployeeForm > label { min-width: 0; gap: 4px; font-size: 11px; }
-#betpresEmployeeForm > label input { min-width: 0; width: 100%; }
+#betpresEmployeeForm > label input,#betpresEmployeeForm > label select { min-width: 0; width: 100%; }
+#betpresEmployeeForm > .betpres-type-field select { min-height: 42px; font-size: 16px; }
+#betpresWorkerTypeSummary { display: block; color: #58738a; font-size: 11px; font-weight: 750; white-space: nowrap; }
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-timesheet-summary article:first-child { display: grid !important; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center; column-gap: 8px; }
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-timesheet-summary article:first-child > span { grid-column: 1 / -1; margin-bottom: 0 !important; }
+body.sitedesk-v3 #workers #betpresTimesheetPanel .betpres-timesheet-summary article:first-child > strong { grid-column: 1; grid-row: 2; }
+body.sitedesk-v3 #workers #betpresTimesheetPanel #betpresWorkerTypeSummary { grid-column: 2; grid-row: 2; align-self: center; margin: 0 !important; }
+#mobileWorkerDayModal .mobile-worker-type-heading { margin: 7px 3px 2px; padding: 6px 9px; border-bottom: 1px solid #d5e1ea; color: #214b68; font-size: 12px; font-weight: 800; letter-spacing: .03em; }
+#mobileWorkerDayModal .mobile-worker-person-row { display: grid; grid-template-columns: minmax(0,1fr) 66px; gap: 7px; align-items: center; min-width: 0; }
+#mobileWorkerDayModal .mobile-worker-person-row .mobile-worker-name-input { width: 100% !important; }
+#mobileWorkerDayModal .mobile-worker-type-select { width: 66px !important; min-width: 66px !important; min-height: 44px !important; padding: 4px 5px !important; border: 1px solid #c2d4e0 !important; border-radius: 11px !important; background: #eaf3f9 !important; color: #0b537f !important; font-size: 14px !important; font-weight: 800 !important; }
 #betpresEmployeeForm .betpres-roster-pick.is-exhausted { gap: 4px; padding: 10px 12px; }
 #betpresEmployeeForm .betpres-roster-pick.is-exhausted > p,
 #betpresEmployeeForm .betpres-roster-pick.is-exhausted > input,

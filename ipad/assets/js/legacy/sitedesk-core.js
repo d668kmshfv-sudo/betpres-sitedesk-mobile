@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.7";
+const SITE_DESK_APP_VERSION="5.8.8";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -2732,8 +2732,11 @@ function syncBetpresWorkerRow(month,sheet){
        days=daysInMonth(month);
  betpresRow.values={};
  for(let day=1;day<=days;day++){
-  const hourlyCount=timeSheet.rows.filter(employee=>attendanceHours(employee.values?.[day])>0||attendanceHours(employee.overtime?.[day])>0).length,
-        thpCount=thpSheet.rows.filter(employee=>attendanceHours(employee.values?.[day])>0).length;
+  const presentBetpres=timeSheet.rows.filter(employee=>attendanceHours(employee.values?.[day])>0||attendanceHours(employee.overtime?.[day])>0),
+        presentIds=new Set(presentBetpres.map(employee=>employee.rosterId).filter(Boolean)),
+        presentNames=new Set(presentBetpres.map(employee=>String(employee.name||"").trim().toLocaleLowerCase("sk")).filter(Boolean)),
+        hourlyCount=presentBetpres.length,
+        thpCount=thpSheet.rows.filter(employee=>attendanceHours(employee.values?.[day])>0&&!presentIds.has(employee.rosterId)&&(employee.rosterId||!presentNames.has(String(employee.name||"").trim().toLocaleLowerCase("sk")))).length;
   betpresRow.values[day]=hourlyCount+thpCount
  }
  sortWorkerRows(targetSheet);
@@ -3070,6 +3073,7 @@ function betpresEmployeeCarryKey(row){
  const name=String(row?.name||"").trim().toLocaleLowerCase("sk").replace(/\s+/g," ");
  return name?`name:${name}`:""
 }
+function betpresWorkerType(value){return String(value||"").trim().toUpperCase()==="THP"?"THP":"R"}
 function findBetpresRosterPerson(row,roster=state.betpresEmployeeRoster||[]){
  const linked=row?.rosterId&&roster.find(person=>person.id===row.rosterId);
  if(linked)return linked;
@@ -3091,14 +3095,24 @@ function ensureBetpresEmployeeRoster(){
   const hadLinkedProfile=Boolean(row.rosterId&&person?.id===row.rosterId);
   if(!person){
    const proposedId=row.id?`bpr-${row.id}`:uid("bpr");
-   person={id:state.betpresEmployeeRoster.some(entry=>entry.id===proposedId)?uid("bpr"):proposedId,name,personalNumber:String(row.personalNumber||"").replace(/\D/g,"").slice(0,3),position:String(row.position||"").trim(),rewardPercent:row.rewardPercent??""};
+   person={id:state.betpresEmployeeRoster.some(entry=>entry.id===proposedId)?uid("bpr"):proposedId,name,personalNumber:String(row.personalNumber||"").replace(/\D/g,"").slice(0,3),position:String(row.position||"").trim(),rewardPercent:row.rewardPercent??"",workerType:betpresWorkerType(row.workerType)};
    state.betpresEmployeeRoster.push(person);changed=true
   }
+  const normalizedType=betpresWorkerType(person.workerType||row.workerType);
+  if(person.workerType!==normalizedType){person.workerType=normalizedType;changed=true}
   if(!hadLinkedProfile){
    if(!person.personalNumber&&row.personalNumber){person.personalNumber=String(row.personalNumber).replace(/\D/g,"").slice(0,3);changed=true}
    if(!person.position&&row.position){person.position=String(row.position).trim();changed=true}
    if(person.rewardPercent===""&&row.rewardPercent!==""&&row.rewardPercent!=null){person.rewardPercent=row.rewardPercent;changed=true}
   }
+  if(row.rosterId!==person.id){row.rosterId=person.id;changed=true}
+  if(row.workerType!==person.workerType){row.workerType=person.workerType;changed=true}
+ }
+ for(const sheet of state.thpTimesheets||[])for(const row of Array.isArray(sheet.rows)?sheet.rows:[]){
+  const name=String(row.name||"").trim();if(!name)continue;
+  let person=findBetpresRosterPerson(row,state.betpresEmployeeRoster);
+  if(!person){person={id:row.id?`bpr-${row.id}`:uid("bpr"),name,personalNumber:"",position:String(row.position||"").trim(),rewardPercent:"",workerType:"THP"};state.betpresEmployeeRoster.push(person);changed=true}
+  if(!person.workerType){person.workerType="THP";changed=true}
   if(row.rosterId!==person.id){row.rosterId=person.id;changed=true}
  }
  if(changed)commitDirectState();
@@ -3107,6 +3121,14 @@ function ensureBetpresEmployeeRoster(){
 function updateBetpresRosterPerson(row,changes){
  const person=ensureBetpresEmployeeRoster().find(item=>item.id===row.rosterId);
  if(person)Object.assign(person,changes)
+}
+function setBetpresWorkerType(row,value){
+ const workerType=betpresWorkerType(value),person=ensureBetpresEmployeeRoster().find(item=>item.id===row.rosterId);
+ if(person){
+  person.workerType=workerType;
+  for(const sheet of state.betpresTimesheets||[])for(const worker of sheet.rows||[])if(worker.rosterId===person.id)worker.workerType=workerType
+ }else row.workerType=workerType;
+ commitDirectState()
 }
 function betpresTimesheet(month,create=true){
  let sheet=state.betpresTimesheets.find(x=>x.projectId===state.selectedProjectId&&x.month===month);
@@ -3129,7 +3151,7 @@ function ensureBetpresEmployeeOrder(sheet){
 }
 function sortBetpresEmployees(sheet){
  sheet.rows=Array.isArray(sheet.rows)?sheet.rows:[];
- sheet.rows.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"sk",{
+ sheet.rows.sort((a,b)=>(betpresWorkerType(a.workerType)==="R"?0:1)-(betpresWorkerType(b.workerType)==="R"?0:1)||String(a.name||"").localeCompare(String(b.name||""),"sk",{
   sensitivity:"base",
   ignorePunctuation:true,
   numeric:true
@@ -3307,7 +3329,7 @@ function setWorkerMode(mode,renderMode=true){
       ?companyTimesheet(selectedWorkerMonth,true)
       :workerSheet(selectedWorkerMonth,true);
  $("workerSheetStatus").textContent=selectedWorkerMode==="betpres"
-  ?`${sheet?.rows?.length||0} pracovníkov vybraných na ${formatBillingMonth(selectedWorkerMonth)} · hodiny po dňoch alebo P / N / D`
+  ?`R ${(sheet?.rows||[]).filter(row=>betpresWorkerType(row.workerType)==="R").length} · THP ${(sheet?.rows||[]).filter(row=>betpresWorkerType(row.workerType)==="THP").length} · ${formatBillingMonth(selectedWorkerMonth)} · hodiny po dňoch alebo P / N / D`
   :selectedWorkerMode==="thp"
    ?`${sheet?.rows?.length||0} THP pracovníkov · hodiny + nadčas`
     :selectedWorkerMode==="companyHours"
@@ -3480,7 +3502,8 @@ function renderSimpleEmployeeTimesheet(config){
   row.overtime=row.overtime||{};
   const positionInput=`<input class="employee-position-input" data-${config.key}-position="${row.id}" value="${esc(row.position||"")}" placeholder="Profesia" autocomplete="off" aria-label="Profesia ${esc(row.name||"pracovníka")}">`;
   const employeeMeta=config.key==="betpres"?`<div class="betpres-employee-meta">${positionInput}<label class="employee-reward-field"><span>Odmena</span><input type="text" inputmode="decimal" maxlength="6" data-betpres-reward="${row.id}" value="${esc(row.rewardPercent??"")}" placeholder="0" aria-label="Odmena v percentách ${esc(row.name||"pracovníka")}"><b>%</b></label></div>`:positionInput;
-  let total=0,overtimeTotal=0,cells=`<tr>${config.key==="betpres"?`<td class="employee-personal-number-col"><input type="text" inputmode="numeric" maxlength="3" data-betpres-personal-number="${row.id}" value="${esc(row.personalNumber||"")}" aria-label="Osobné číslo pracovníka"></td>`:""}<td class="employee-cell"><div class="employee-identity"><div class="employee-name">${esc(row.name||"")}</div>${employeeMeta}</div><button class="employee-delete-btn" data-del-${config.key}="${row.id}" aria-label="Odobrať ${esc(row.name||"pracovníka")} z mesiaca">×</button></td>`;
+  const nameHtml=config.key==="betpres"?`<div class="employee-name-row"><div class="employee-name" title="${esc(row.name||"")}">${esc(row.name||"")}</div><select class="employee-type-select ${betpresWorkerType(row.workerType)==="THP"?"is-thp":""}" data-betpres-type="${row.id}" aria-label="Zaradenie ${esc(row.name||"pracovníka")}"><option value="R" ${betpresWorkerType(row.workerType)==="R"?"selected":""}>R</option><option value="THP" ${betpresWorkerType(row.workerType)==="THP"?"selected":""}>THP</option></select></div>`:`<div class="employee-name">${esc(row.name||"")}</div>`;
+  let total=0,overtimeTotal=0,cells=`<tr>${config.key==="betpres"?`<td class="employee-personal-number-col"><input type="text" inputmode="numeric" maxlength="3" data-betpres-personal-number="${row.id}" value="${esc(row.personalNumber||"")}" aria-label="Osobné číslo pracovníka"></td>`:""}<td class="employee-cell"><div class="employee-identity">${nameHtml}${employeeMeta}</div><button class="employee-delete-btn" data-del-${config.key}="${row.id}" aria-label="Odobrať ${esc(row.name||"pracovníka")} z mesiaca">×</button></td>`;
   for(let day=1;day<=days;day++){
    const date=new Date(year,mon-1,day),holiday=slovakHoliday(date),weekend=[0,6].includes(date.getDay()),key=dateKey(date),value=row.values?.[day]??"",cls=[weekend?"weekend":"",holiday?"holiday":"",key===today?"today-col":""].filter(Boolean).join(" ");
    const overtime=row.overtime?.[day]??"",h=attendanceHours(value),oh=attendanceHours(overtime);total+=h;overtimeTotal+=oh;if(h>0||oh>0)workedDays.add(day);
@@ -3507,10 +3530,11 @@ function renderSimpleEmployeeTimesheet(config){
   if(firstColumn&&table)table.style.setProperty("--betpres-personal-column-width",`${firstColumn.getBoundingClientRect().width}px`)
  }
  if($(config.count))$(config.count).textContent=sheet.rows.length;
+ if(config.key==="betpres"&&$("betpresWorkerTypeSummary"))$("betpresWorkerTypeSummary").textContent=`R ${sheet.rows.filter(row=>betpresWorkerType(row.workerType)==="R").length} · THP ${sheet.rows.filter(row=>betpresWorkerType(row.workerType)==="THP").length}`;
  if($(config.hours))$(config.hours).textContent=config.overtime&&!grand?"":`${formatWorkHours(grand)} h`;
  if(config.days&&$(config.days))$(config.days).textContent=workedDays.size;
  if(config.overtimeMetric&&$(config.overtimeMetric))$(config.overtimeMetric).textContent=overtimeGrand?`${formatWorkHours(overtimeGrand)} h`:"";
- if(config.status&&selectedWorkerMode===config.mode)$("workerSheetStatus").textContent=config.overtime&&!grand&&!overtimeGrand?`${sheet.rows.length} pracovníkov`:config.overtime&&overtimeGrand?`${sheet.rows.length} pracovníkov · ${formatWorkHours(grand)} h + ${formatWorkHours(overtimeGrand)} h nadčas`:`${sheet.rows.length} pracovníkov · ${formatWorkHours(grand)} h`;
+ if(config.status&&selectedWorkerMode===config.mode)$("workerSheetStatus").textContent=config.key==="betpres"?`R ${sheet.rows.filter(row=>betpresWorkerType(row.workerType)==="R").length} · THP ${sheet.rows.filter(row=>betpresWorkerType(row.workerType)==="THP").length} · ${formatWorkHours(grand)} h`:config.overtime&&!grand&&!overtimeGrand?`${sheet.rows.length} pracovníkov`:config.overtime&&overtimeGrand?`${sheet.rows.length} pracovníkov · ${formatWorkHours(grand)} h + ${formatWorkHours(overtimeGrand)} h nadčas`:`${sheet.rows.length} pracovníkov · ${formatWorkHours(grand)} h`;
  document.querySelectorAll(`[data-${config.key}-cell]`).forEach(input=>{
   input.onfocus=()=>beginDirectUndo(config.undo);
   input.onchange=()=>{
@@ -3585,6 +3609,9 @@ function renderSimpleEmployeeTimesheet(config){
   };
   input.onblur=()=>endDirectUndo()
  });
+ if(config.key==="betpres")document.querySelectorAll("[data-betpres-type]").forEach(input=>{
+  input.onchange=()=>{const row=sheet.rows.find(item=>item.id===input.dataset.betpresType);if(!row)return;beginDirectUndo("Zmena zaradenia pracovníka");setBetpresWorkerType(row,input.value);sortBetpresEmployees(sheet);endDirectUndo();config.render()}
+ });
  document.querySelectorAll(`[data-del-${config.key}]`).forEach(button=>{
   button.onclick=()=>{if(confirm("Vymazať pracovníka zo smenovky?")){sheet.rows=sheet.rows.filter(r=>r.id!==button.dataset[`del${config.key.charAt(0).toUpperCase()+config.key.slice(1)}`]);save("Pracovník bol vymazaný zo smenovky.")}}
  })
@@ -3596,16 +3623,16 @@ function renderThpTimesheet(){
  renderSimpleEmployeeTimesheet({key:"thp",mode:"thp",head:"thpTimeHead",body:"thpTimeBody",foot:"thpTimeFoot",count:"thpEmployeeCount",hours:"thpHoursTotal",overtime:true,showDailyTotals:false,overtimeMetric:"thpOvertimeTotal",status:true,sheet:thpTimesheet,sort:sortThpEmployees,render:renderThpTimesheet,undo:"Úprava podsmenovky THP"})
 }
 function employeeNameSuggestions(kind){
- if(kind==="betpres")return [...ensureBetpresEmployeeRoster()].sort((a,b)=>a.name.localeCompare(b.name,"sk"));
+ if(kind==="betpres")return [...ensureBetpresEmployeeRoster()].sort((a,b)=>(betpresWorkerType(a.workerType)==="R"?0:1)-(betpresWorkerType(b.workerType)==="R"?0:1)||a.name.localeCompare(b.name,"sk"));
  const sheets=(kind==="thp"?state.thpTimesheets:state.betpresTimesheets).filter(sheet=>sheet.projectId===state.selectedProjectId),map=new Map();
  [...sheets].sort((a,b)=>String(b.month||"").localeCompare(String(a.month||""))).forEach(sheet=>(sheet.rows||[]).forEach(row=>{const name=String(row.name||"").trim();if(name&&!map.has(name.toLocaleLowerCase("sk")))map.set(name.toLocaleLowerCase("sk"),{name,personalNumber:String(row.personalNumber||""),position:String(row.position||"").trim(),rewardPercent:row.rewardPercent??""})}));
  return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,"sk"))
 }
 function openEmployeeModal(kind){
- const isThp=kind==="thp",form=$(isThp?"thpEmployeeForm":"betpresEmployeeForm"),modal=$(isThp?"thpEmployeeModal":"betpresEmployeeModal"),nameInput=$(isThp?"thpEmployeeName":"betpresEmployeeName"),personalNumberInput=isThp?null:$("betpresEmployeePersonalNumber"),positionInput=$(isThp?"thpEmployeePosition":"betpresEmployeePosition"),rewardInput=isThp?null:$("betpresEmployeeReward"),list=$(isThp?"thpEmployeeSuggestions":"betpresEmployeeSuggestions"),items=employeeNameSuggestions(kind);
+ const isThp=kind==="thp",form=$(isThp?"thpEmployeeForm":"betpresEmployeeForm"),modal=$(isThp?"thpEmployeeModal":"betpresEmployeeModal"),nameInput=$(isThp?"thpEmployeeName":"betpresEmployeeName"),personalNumberInput=isThp?null:$("betpresEmployeePersonalNumber"),positionInput=$(isThp?"thpEmployeePosition":"betpresEmployeePosition"),rewardInput=isThp?null:$("betpresEmployeeReward"),typeInput=isThp?null:$("betpresEmployeeType"),list=$(isThp?"thpEmployeeSuggestions":"betpresEmployeeSuggestions"),items=employeeNameSuggestions(kind);
  form.reset();
  if(list)list.innerHTML=items.map(item=>`<option value="${esc(item.name)}">${esc(item.position)}</option>`).join("");
- nameInput.oninput=()=>{const found=items.find(item=>item.name.toLocaleLowerCase("sk")===nameInput.value.trim().toLocaleLowerCase("sk"));if(found&&personalNumberInput&&!personalNumberInput.value)personalNumberInput.value=found.personalNumber||"";if(found&&!positionInput.value)positionInput.value=found.position;if(found&&rewardInput&&!rewardInput.value)rewardInput.value=found.rewardPercent??""};
+ nameInput.oninput=()=>{const found=items.find(item=>item.name.toLocaleLowerCase("sk")===nameInput.value.trim().toLocaleLowerCase("sk"));if(found&&personalNumberInput&&!personalNumberInput.value)personalNumberInput.value=found.personalNumber||"";if(found&&!positionInput.value)positionInput.value=found.position;if(found&&rewardInput&&!rewardInput.value)rewardInput.value=found.rewardPercent??"";if(found&&typeInput)typeInput.value=betpresWorkerType(found.workerType)};
  if(personalNumberInput)personalNumberInput.oninput=()=>{personalNumberInput.value=personalNumberInput.value.replace(/\D/g,"").slice(0,3)};
  if(!isThp){
   const roster=$("betpresRosterList"),search=$("betpresRosterSearch"),add=$("betpresRosterAdd"),rosterSection=roster.closest(".betpres-roster-pick"),sheet=betpresTimesheet(selectedWorkerMonth,true),presentIds=new Set(sheet.rows.map(row=>row.rosterId).filter(Boolean)),presentKeys=new Set(sheet.rows.map(betpresEmployeeCarryKey));
@@ -3613,7 +3640,10 @@ function openEmployeeModal(kind){
   rosterSection.classList.toggle("is-exhausted",!candidates.length);
   const renderRoster=()=>{
    const query=workSearchKey(search.value),available=candidates.filter(({item})=>!query||workSearchKey([item.name,item.personalNumber,item.position].join(" ")).includes(query));
-   roster.innerHTML=available.length?available.map(({item,index})=>`<label class="betpres-roster-item"><input type="checkbox" value="${index}"><span><strong>${esc(item.name)}</strong><small>${esc([item.personalNumber?`č. ${item.personalNumber}`:"",item.position].filter(Boolean).join(" · ")||"Pracovník BETPRES")}</small></span></label>`).join(""):`<p class="betpres-roster-empty">${items.length?"Všetci známi pracovníci sú už v tomto mesiaci alebo sa nenašla zhoda.":"Spoločný zoznam je prázdny. Pridaj prvého pracovníka nižšie."}</p>`;
+   roster.innerHTML=available.length?["R","THP"].map(type=>{
+    const group=available.filter(({item})=>betpresWorkerType(item.workerType)===type);
+    return group.length?`<div class="betpres-roster-group-title">${type} · ${group.length}</div>${group.map(({item,index})=>`<label class="betpres-roster-item"><input type="checkbox" value="${index}"><span><strong>${esc(item.name)}</strong><small>${esc([item.personalNumber?`č. ${item.personalNumber}`:"",item.position].filter(Boolean).join(" · ")||"Pracovník BETPRES")}</small></span></label>`).join("")}`:""
+   }).join(""):`<p class="betpres-roster-empty">${items.length?"Všetci známi pracovníci sú už v tomto mesiaci alebo sa nenašla zhoda.":"Spoločný zoznam je prázdny. Pridaj prvého pracovníka nižšie."}</p>`;
    add.disabled=true;add.textContent="Pridať označených"
   };
   search.oninput=renderRoster;
@@ -3621,7 +3651,7 @@ function openEmployeeModal(kind){
   add.onclick=()=>{
    const selected=[...roster.querySelectorAll('input[type="checkbox"]:checked')].map(input=>items[Number(input.value)]).filter(Boolean),existingIds=new Set(sheet.rows.map(row=>row.rosterId).filter(Boolean)),existingKeys=new Set(sheet.rows.map(betpresEmployeeCarryKey));
    let added=0;
-   for(const item of selected){const key=betpresEmployeeCarryKey(item);if(existingIds.has(item.id)||existingKeys.has(key))continue;sheet.rows.push({id:uid("bte"),rosterId:item.id,personalNumber:item.personalNumber||"",name:item.name,position:item.position||"",rewardPercent:item.rewardPercent??"",values:{},overtime:{}});existingIds.add(item.id);existingKeys.add(key);added++}
+   for(const item of selected){const key=betpresEmployeeCarryKey(item);if(existingIds.has(item.id)||existingKeys.has(key))continue;sheet.rows.push({id:uid("bte"),rosterId:item.id,personalNumber:item.personalNumber||"",name:item.name,position:item.position||"",rewardPercent:item.rewardPercent??"",workerType:betpresWorkerType(item.workerType),values:{},overtime:{}});existingIds.add(item.id);existingKeys.add(key);added++}
    if(!added)return;
    sortBetpresEmployees(sheet);modal.classList.add("hidden");save(`${added} pracovníkov bolo pridaných do mesiaca ${formatBillingMonth(selectedWorkerMonth)}.`);document.dispatchEvent(new Event("betpres-roster-updated"))
   };
@@ -3640,14 +3670,15 @@ function addBlankBetpresEmployee(){
 if($("addBlankBetpresEmployeeInline"))$("addBlankBetpresEmployeeInline").onclick=addBlankBetpresEmployee;
 if($("betpresEmployeeForm"))$("betpresEmployeeForm").onsubmit=e=>{
  e.preventDefault();
- const sheet=betpresTimesheet(selectedWorkerMonth,true),roster=ensureBetpresEmployeeRoster(),rewardRaw=$("betpresEmployeeReward").value.trim().replace(",","."),reward=rewardRaw===""?"":Math.max(0,Math.min(100,Number(rewardRaw))),name=$("betpresEmployeeName").value.trim(),personalNumber=$("betpresEmployeePersonalNumber").value.replace(/\D/g,"").slice(0,3),position=$("betpresEmployeePosition").value.trim();
+ const sheet=betpresTimesheet(selectedWorkerMonth,true),roster=ensureBetpresEmployeeRoster(),rewardRaw=$("betpresEmployeeReward").value.trim().replace(",","."),reward=rewardRaw===""?"":Math.max(0,Math.min(100,Number(rewardRaw))),name=$("betpresEmployeeName").value.trim(),personalNumber=$("betpresEmployeePersonalNumber").value.replace(/\D/g,"").slice(0,3),position=$("betpresEmployeePosition").value.trim(),workerType=betpresWorkerType($("betpresEmployeeType").value);
  if(!name){$("betpresEmployeeName").focus();return}
  const candidate={name,personalNumber},person=findBetpresRosterPerson(candidate,roster);
  if(sheet.rows.some(row=>(person&&row.rosterId===person.id)||betpresEmployeeCarryKey(row)===betpresEmployeeCarryKey(candidate))){alert("Tento pracovník už je pridaný do vybraného mesiaca.");return}
- const profile=person||{id:uid("bpr"),name,personalNumber,position,rewardPercent:Number.isFinite(reward)?reward:""};
+ const profile=person||{id:uid("bpr"),name,personalNumber,position,rewardPercent:Number.isFinite(reward)?reward:"",workerType};
  if(!person)roster.push(profile);
- else Object.assign(profile,{name,personalNumber:personalNumber||profile.personalNumber||"",position:position||profile.position||"",rewardPercent:reward!==""&&Number.isFinite(reward)?reward:profile.rewardPercent??""});
- sheet.rows.push({id:uid("bte"),rosterId:profile.id,personalNumber:profile.personalNumber||"",name:profile.name,position:profile.position||"",rewardPercent:profile.rewardPercent??"",values:{},overtime:{}});
+ else Object.assign(profile,{name,personalNumber:personalNumber||profile.personalNumber||"",position:position||profile.position||"",rewardPercent:reward!==""&&Number.isFinite(reward)?reward:profile.rewardPercent??"",workerType});
+ const newRow={id:uid("bte"),rosterId:profile.id,personalNumber:profile.personalNumber||"",name:profile.name,position:profile.position||"",rewardPercent:profile.rewardPercent??"",workerType,values:{},overtime:{}};
+ sheet.rows.push(newRow);setBetpresWorkerType(newRow,workerType);
  sortBetpresEmployees(sheet);$("betpresEmployeeModal").classList.add("hidden");save("Pracovník BETPRES bol pridaný do vybraného mesiaca a spoločného zoznamu.");document.dispatchEvent(new Event("betpres-roster-updated"))
 };
 if($("addThpEmployee"))$("addThpEmployee").onclick=()=>openEmployeeModal("thp");

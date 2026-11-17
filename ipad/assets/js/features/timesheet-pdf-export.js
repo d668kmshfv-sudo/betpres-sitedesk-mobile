@@ -1,7 +1,7 @@
 (function () {
  "use strict";
 
- var APP_VERSION = "5.2.15";
+ var APP_VERSION = "5.8.8";
  var dayNames = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
  var euro = new Intl.NumberFormat("sk-SK", { style: "currency", currency: "EUR" });
 
@@ -142,7 +142,7 @@ function splitRows(rows, size) {
    ".company-status-table{height:156mm}.company-status-table thead th,.company-status-table tfoot td{height:5mm;padding-top:.2mm;padding-bottom:.2mm}.company-status-table tbody td{height:var(--status-row-height);padding-top:.2mm;padding-bottom:.2mm}",
    ".company-status-table tbody td.name strong{font-size:10.5px;line-height:1.1;white-space:normal;overflow-wrap:anywhere}.company-status-table tbody td:not(.name){font-size:8.5px}.company-status-table tfoot td.name{font-size:9px}",
     ".employee-timesheet-table .name{width:46mm}.employee-timesheet-table tbody td.name strong{font-size:11px;line-height:1.12}.employee-timesheet-table tbody td.name small{font-size:7.5px;line-height:1.1;margin-top:.4mm}",
-    ".betpres-employee-timesheet-table tbody td{height:8.3mm}.employee-timesheet-table .employee-reward{display:inline-flex;align-items:center;gap:1mm;margin-top:.7mm;padding:.45mm 1.2mm;border:1px solid #8eb6d6;border-radius:1.5mm;background:#e8f3fb;color:#082f61;font-size:6.8px;font-weight:800;line-height:1}.employee-timesheet-table .employee-reward b{font-size:7.4px}",
+    ".betpres-employee-timesheet-table tbody td{height:8.3mm}.employee-timesheet-table .worker-type-badge{display:inline-block;margin-left:1.2mm;padding:.4mm 1mm;border:1px solid #8eb6d6;border-radius:1.4mm;background:#e8f3fb;color:#082f61;font-size:7px;font-weight:800;vertical-align:middle}.employee-timesheet-table .worker-type-badge.is-thp{background:#edf1fa;border-color:#aab9dd;color:#344f8a}.employee-timesheet-table .employee-reward{display:inline-flex;align-items:center;gap:1mm;margin-top:.7mm;padding:.45mm 1.2mm;border:1px solid #8eb6d6;border-radius:1.5mm;background:#e8f3fb;color:#082f61;font-size:6.8px;font-weight:800;line-height:1}.employee-timesheet-table .employee-reward b{font-size:7.4px}",
     ".employee-timesheet-table .thp-stack{display:flex;min-height:5mm;flex-direction:column;align-items:center;justify-content:center;line-height:2.2mm}.employee-timesheet-table .thp-stack .thp-extra{color:#a05c12;font-size:6.1px}",
    ".employee-timesheet-table tbody tr.hours-row td{border-bottom:1px dashed #8aa2b7}.employee-timesheet-table tbody tr.overtime-row td{height:5.2mm;background:#fff4df!important;color:#754712;border-top:0}.employee-timesheet-table td.sum small{display:block;font-size:5.5px;line-height:1;color:#60778b}.employee-timesheet-table tr.overtime-row td.sum small,.employee-timesheet-table tr.overtime-total td.sum small{color:#9b5c13}.employee-timesheet-table tfoot tr.overtime-total td{background:#ffe7bd!important;color:#6f430f}",
    "tfoot td{background:#d5e6f4;font-weight:800;border-top:1.5px solid #082f61}.empty{height:18mm;text-align:left;padding-left:4mm;color:#6b7c90}",
@@ -261,7 +261,7 @@ function splitRows(rows, size) {
      var blankEmployeeRow = !String(row.personalNumber || "").trim() && !String(row.name || "").trim() && !String(row.position || "").trim() && (row.rewardPercent === undefined || row.rewardPercent === "") && !Object.keys(row.values || {}).length && !Object.keys(row.overtime || {}).length;
      var employeePosition = row.position || "";
     var rewardValue = !isThp && row.rewardPercent !== undefined && row.rewardPercent !== "" ? displayValue(row.rewardPercent) : "";
-    body += '<tr><td>' + (pageIndex * rowsPerPage + rowIndex + 1) + "</td>" + (!isThp ? '<td class="personal-number">' + html(row.personalNumber || "") + "</td>" : "") + '<td class="name"><strong>' + html(row.name || "") + "</strong>" + (employeePosition ? '<small>' + html(employeePosition) + '</small>' : "") + (rewardValue ? '<span class="employee-reward">Odmena <b>' + html(rewardValue) + " %</b></span>" : "") + "</td>";
+    body += '<tr><td>' + (pageIndex * rowsPerPage + rowIndex + 1) + "</td>" + (!isThp ? '<td class="personal-number">' + html(row.personalNumber || "") + "</td>" : "") + '<td class="name"><strong>' + html(row.name || "") + "</strong>" + (!isThp && !blankEmployeeRow ? '<span class="worker-type-badge ' + (betpresWorkerType(row.workerType) === "THP" ? "is-thp" : "") + '">' + betpresWorkerType(row.workerType) + '</span>' : "") + (employeePosition ? '<small>' + html(employeePosition) + '</small>' : "") + (rewardValue ? '<span class="employee-reward">Odmena <b>' + html(rewardValue) + " %</b></span>" : "") + "</td>";
     for (var day = 1; day <= info.days; day += 1) {
      var value = row.values && row.values[day];
      var overtimeValue = isThp && row.overtime ? row.overtime[day] : "";
@@ -282,8 +282,8 @@ function splitRows(rows, size) {
      if (!isThp) totals += '<td class="' + dayMeta(month, day).className + '">' + html(displayValue(dayTotal || "")) + "</td>";
     }
     if (!isThp) totals += '<td class="sum">' + html(displayValue(grand)) + "</td></tr>";
-    var table = '<table class="employee-timesheet-table ' + (isThp ? "thp-employee-timesheet-table" : "betpres-employee-timesheet-table") + '"><thead>' + tableHead(month, isThp ? "Meno a pozícia" : "Meno, pozícia a odmena", false, !isThp) + "</thead><tbody>" + body + "</tbody>" + (totals ? "<tfoot>" + totals + "</tfoot>" : "") + "</table>";
-    var detail = rows.length + " pracovníkov" + (isThp ? " · hodiny a nadčas pod sebou" : " · bežné hodiny · voľné riadky na ručné dopísanie");
+    var table = '<table class="employee-timesheet-table ' + (isThp ? "thp-employee-timesheet-table" : "betpres-employee-timesheet-table") + '"><thead>' + tableHead(month, isThp ? "Meno a pozícia" : "Meno, typ, pozícia a odmena", false, !isThp) + "</thead><tbody>" + body + "</tbody>" + (totals ? "<tfoot>" + totals + "</tfoot>" : "") + "</table>";
+    var detail = rows.length + " pracovníkov" + (isThp ? " · hodiny a nadčas pod sebou" : " · R " + rows.filter(function (row) { return betpresWorkerType(row.workerType) === "R"; }).length + " · THP " + rows.filter(function (row) { return betpresWorkerType(row.workerType) === "THP"; }).length + " · voľné riadky na ručné dopísanie");
     var summary = isThp && !grand && !overtimeGrand ? "" : displayValue(grand) + " h" + (isThp && overtimeGrand ? " · " + displayValue(overtimeGrand) + " h nadčas" : "");
    pages.push(page(title, month, pageIndex + 1, chunks.length, detail, table, summary));
   });
