@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.8";
+const SITE_DESK_APP_VERSION="5.8.9";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -896,7 +896,7 @@ async function cloudSignIn(event){
  try{await cloudRefreshWorkspaceStatus();await cloudLoadTeamContext();if(latestCloudRequested())await cloudPull();else await cloudResumeAutomaticSync()}
  catch(error){setCloudMessage("cloudSyncMessage",`Prihlásenie je v poriadku, ale pracovný priestor sa zatiaľ nenačítal: ${error.message}`,"error")}
 }
-function cloudFriendlyAuthError(error){const message=String(error?.message||error||"");if(/invalid login credentials/i.test(message))return"Nesprávny e-mail alebo heslo.";if(/email not confirmed/i.test(message))return"E-mail ešte nie je potvrdený. Otvor potvrdzovací e-mail zo Supabase a potom sa prihlás.";if(/failed to fetch|network/i.test(message))return"iPad sa nevie pripojiť k Supabase. Skontroluj internet a Project URL.";return message}
+function cloudFriendlyAuthError(error){const message=String(error?.message||error||"");if(/invalid login credentials/i.test(message))return"Nesprávny e-mail alebo heslo.";if(/email not confirmed/i.test(message))return"E-mail ešte nie je potvrdený. Otvor potvrdzovací e-mail zo Supabase a potom sa prihlás.";if(/failed to fetch|network/i.test(message))return"iPad sa nevie pripojiť k Supabase. Skontroluj internet, Project URL a či je projekt v Supabase aktívny.";return message}
 async function cloudSignUp(){
  const email=$("cloudEmail").value.trim(),
        password=$("cloudPassword").value,
@@ -6287,13 +6287,20 @@ function selectedWorkDocument(){
  if(id===workDocumentId(baseLabel))return{id,label:baseLabel};
  if(id.startsWith("assignment-addendum:")){
   const addendum=assignmentAddenda(companyAssignment).find(item=>`assignment-addendum:${item.id}`===id);
-  if(addendum)return{id,label:assignmentAddendumLabel(addendum)}
+  if(addendum)return{id,label:assignmentAddendumLabel(addendum),number:addendum.number||"",title:addendum.name||""}
  }
  if(id.startsWith("assignment-order:")){const order=assignmentOrders(companyAssignment).find(item=>`assignment-order:${item.id}`===id);if(order)return{id,label:assignmentOrderLabel(order),number:order.number||"",title:order.name||"",price:order.price||"",order}}
  const budget=workBudgetList(companyId).find(item=>canonicalWorkDocumentId(companyId,item.label||"",item.id)===id);
  if(budget)return{id,label:budget.label||workBudgetDocLabel(budget.docType,budget.docNumber)};
  const statement=getWorkStatement(false),item=statement?.items?.find(row=>workItemSourceId(row)===id);
  return{id,label:workItemSourceLabel(item)||"ZoD"}
+}
+function workDocumentScope(statement,doc=selectedWorkDocument(),companyAssignment=assignment(state.selectedProjectId,statement?.companyId)){
+ if(!statement)return"";
+ const docId=String(doc?.id||""),scopes=statement.documentScopes;
+ if(docId&&scopes&&Object.prototype.hasOwnProperty.call(scopes,docId))return String(scopes[docId]??"");
+ if(docId.startsWith("assignment-order:")||docId.startsWith("assignment-addendum:"))return doc?.title||"";
+ return statement.scope||companyAssignment?.scope||""
 }
 function ensureWorkStatementDocuments(statement){
  (statement?.items||[]).forEach(item=>{
@@ -6790,7 +6797,7 @@ function getWorkStatement(create=true){
   const previousNumber=Number.parseInt(numberingSource?.number,10);
   const bounds=workPeriodBounds(selectedWorkPeriod),
         currentAssignment=assignment(state.selectedProjectId,selectedWorkCompanyId);
-  statement={id:uid("wsu"),projectId:state.selectedProjectId,companyId:selectedWorkCompanyId,period:selectedWorkPeriod,number:Number.isFinite(previousNumber)?previousNumber+1:1,object:template?.object||"",scope:template?.scope||currentAssignment?.scope||"",statementDate:bounds.to,dateFrom:bounds.from,dateTo:bounds.to,note:"",items,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  statement={id:uid("wsu"),projectId:state.selectedProjectId,companyId:selectedWorkCompanyId,period:selectedWorkPeriod,number:Number.isFinite(previousNumber)?previousNumber+1:1,object:template?.object||"",scope:template?.scope||currentAssignment?.scope||"",documentScopes:clone(template?.documentScopes||{}),statementDate:bounds.to,dateFrom:bounds.from,dateTo:bounds.to,note:"",items,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
   state.workStatements.push(statement);commitDirectState()
  }
  if(statement){
@@ -6817,7 +6824,7 @@ function updateAutomaticWorkTotal(item){
  if(item.contractTotalAuto){item.contractTotal="";return true}
  return false
 }
-let workRowSearch="",workRowFilter="all",workOverviewMode=true,workDetailsVisible=true;
+let workRowSearch="",workRowFilter="all",workOverviewMode=false,workDetailsVisible=true;
 function workSearchKey(value){
  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("sk").replace(/[^a-z0-9]+/g,"")
 }
@@ -6864,6 +6871,8 @@ function renderWorkStatements(){
   const emptyMessage=selectedWorkCompanyId?"Súpis pre túto firmu a mesiac neexistuje. Tlačidlom Pridať položku vytvoríš nový súpis.":companies.length?"Vyber firmu, ktorej súpis chceš zobraziť.":"Na stavbe nie je dostupná firma.";
   $("workStatementBody").innerHTML=`<tr class="work-empty-row"><td colspan="${orderMode?7:17}">${emptyMessage}</td></tr>`;
   renderMobileWorkItems(null,[],orderMode,emptyMessage);
+  for(const id of ["workContractTotal","workPreviousTotal","workCurrentTotal","workBuiltTotal","workRemainingTotal"])if($(id))$(id).textContent="0,00 €";
+  for(const id of ["workItemCount","workOverCount","workDifferenceCount"])if($(id))$(id).textContent="0";
   ["workStatementNumber","workStatementObject","workStatementDate","workStatementDateFrom","workStatementDateTo","workStatementScope","workStatementNote"].forEach(id=>{if($(id))$(id).value=""});
   if($("deleteWorkStatement"))$("deleteWorkStatement").disabled=true;
   if($("workInvoiceAmount"))$("workInvoiceAmount").textContent="0,00 €";
@@ -6881,7 +6890,7 @@ function renderWorkStatements(){
  $("workStatementDate").value=statement.statementDate||"";
  $("workStatementDateFrom").value=statement.dateFrom||"";
  $("workStatementDateTo").value=statement.dateTo||"";
- $("workStatementScope").value=statement.scope||a?.scope||"";
+ $("workStatementScope").value=workDocumentScope(statement,activeWorkDoc,a);
  $("workStatementNote").value=statement.note||"";
  const allRows=(statement.items||[]).filter(item=>!isWorkDocSectionItem(item));
  let rows=selectedWorkDocFilter?allRows.filter(item=>workItemSourceId(item)===selectedWorkDocFilter):allRows;
@@ -7183,6 +7192,14 @@ if($("workRowFilter"))$("workRowFilter").onchange=()=>{workRowFilter=$("workRowF
 ["workStatementObject","workStatementDate","workStatementDateFrom","workStatementDateTo","workStatementScope","workStatementNote"].forEach(id=>{
  $(id).oninput=()=>{
   const s=getWorkStatement(false);if(!s)return;
+  if(id==="workStatementScope"){
+   const doc=selectedWorkDocument();
+   if(String(doc?.id||"").startsWith("assignment-order:")||String(doc?.id||"").startsWith("assignment-addendum:")){
+    if(!s.documentScopes||typeof s.documentScopes!=="object")s.documentScopes={};
+    s.documentScopes[doc.id]=$(id).value;
+    s.status="draft";s.updatedAt=new Date().toISOString();commitDirectState();return
+   }
+  }
   const map={workStatementObject:"object",workStatementDate:"statementDate",workStatementDateFrom:"dateFrom",workStatementDateTo:"dateTo",workStatementScope:"scope",workStatementNote:"note"};
   s[map[id]]=$(id).value;s.status="draft";s.updatedAt=new Date().toISOString();commitDirectState()
  }
@@ -7484,12 +7501,12 @@ function xlsxCell(ref,value,style=0,formula=""){
 $("exportWorkXlsx").onclick=async()=>{
  const s=getWorkStatement(false);if(!s)return;
  const c=company(s.companyId),a=assignment(s.projectId,s.companyId),
-       docShort=assignmentDocShort(a),
+       selectedDoc=selectedWorkDocument(),docShort=isSelectedWorkOrderDocument()?"Obj.":assignmentDocShort(a),docNumber=selectedDoc?.number||a?.contractNo||"",
        zip=new JSZip(),
        dataRows=workExportRows(s),startRow=8,summaryRow=startRow+dataRows.length;
- const meta1=[`Stavba: ${activeProject()?.name||""}`,"","","",`Firma: ${c?.name||""}`,"","","",`${docShort}: ${a?.contractNo||""}`,"","","",`Obdobie: ${formatBillingMonth(s.period)}`,"","",""];
+ const meta1=[`Stavba: ${activeProject()?.name||""}`,"","","",`Firma: ${c?.name||""}`,"","","",`${docShort}: ${docNumber}`,"","","",`Obdobie: ${formatBillingMonth(s.period)}`,"","",""];
  const meta2=[`Objekt: ${s.object||""}`,"","","",`Súpis č.: ${s.number}`,"","","",`Dátum súpisu: ${fmtDateISO(s.statementDate)}`,"","","",`Trvanie: ${fmtDateISO(s.dateFrom)} – ${fmtDateISO(s.dateTo)}`,"","",""];
- const meta3=[`${docShort} č.: ${a?.contractNo||""}`,"","","",`Predmet činnosti: ${s.scope||a?.scope||""}`,"","","","","","","","","","",""]; 
+ const meta3=[`${docShort} č.: ${docNumber}`,"","","",`Predmet činnosti: ${workDocumentScope(s,selectedDoc,a)}`,"","","","","","","","","","",""];
  const group=[`Rozpočet (${docShort})`,"","","","","","","","Aktuálne obdobie","","Prestavané minulé obdobia","","Prestavané spolu","","Zostatok",""];
  const headers=["P. č.","Typ","Kód položky","Popis položky","MJ","Zmluvné množstvo","J. cena [EUR]","Cena celkom [EUR]","Množstvo","Cena [EUR]","Množstvo","Cena [EUR]","Množstvo","Cena [EUR]","Množstvo","Cena [EUR]"];
  const rows=[["SÚPIS PRÁC"],meta1,meta2,meta3,[],group,headers,...dataRows,
@@ -7592,7 +7609,7 @@ $("exportWorkPdf").onclick=async()=>{
        totalPages=chunks.length,
        printDate=fmtDateISO(s.statementDate),
        periodBounds=`${fmtDateISO(s.dateFrom)} – ${fmtDateISO(s.dateTo)}`,
-       scopeText=s.scope||a?.scope||"",
+       scopeText=workDocumentScope(s,selectedDoc,a),
        contractNumber=selectedDoc?.number||a?.contractNo||"",
        documentShort=orderMode?"Obj.":assignmentDocShort(a),
         currentInvoiceTotal=workItemSummary(s,"currentPrice");

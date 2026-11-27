@@ -11,8 +11,8 @@
  <link rel="manifest" href="manifest.webmanifest">
  <link rel="icon" href="assets/app-icon.png">
  <link rel="apple-touch-icon" href="assets/app-icon.png">
- <link rel="stylesheet" href="styles.css?v=1.0.5">
- <script src="app.js?v=1.0.5" defer></script>
+ <link rel="stylesheet" href="styles.css?v=1.0.6">
+ <script src="app.js?v=1.0.6" defer></script>
 </head>
 <body>
  <div id="gate" class="gate">
@@ -87,13 +87,13 @@
      <form id="statementForm" class="statement-form">
       <div class="statement-overview" aria-label="Prehľad čerpania súpisu">
        <div><span>Zmluva bez DPH</span><strong id="statementContractTotal">0,00 €</strong></div>
-       <div><span>Ostatné mesiace</span><strong id="statementOtherTotal">0,00 €</strong></div>
+       <div><span>Prestavané mimo mesiaca</span><strong id="statementOtherTotal">0,00 €</strong></div>
        <div><span>Čerpané spolu</span><strong id="statementUsedTotal">0,00 €</strong></div>
        <div class="statement-overview-remaining"><span>Zostáva dočerpať</span><strong id="statementRemainingTotal">0,00 €</strong></div>
       </div>
-      <p class="statement-help">Zostatok zahŕňa všetky už uložené mesiace. Množstvo položky nemôže prekročiť zmluvný rozsah.</p>
+      <p class="statement-help">Zostatok zahŕňa prestavané množstvá zo starších súpisov BETPRES aj mesiace uložené v tomto portáli. Množstvo položky nemôže prekročiť zmluvný rozsah.</p>
       <p id="statementValidation" class="statement-validation" role="alert" hidden></p>
-      <div class="panel statement-panel"><div class="statement-table-head"><span>POLOŽKA / ZMLUVA</span><span>OSTATNÉ MESIACE</span><span>TENTO MESIAC</span><span>ČERPANÉ SPOLU</span><span>ZOSTÁVA</span></div><div id="statementRows"></div><p id="statementDraftHint" class="draft-hint" role="status"></p><button type="button" class="secondary restore-draft" id="restoreStatementDraft" hidden>Obnoviť miestny návrh</button></div>
+      <div class="panel statement-panel"><div class="statement-table-head"><span>POLOŽKA / ZMLUVA</span><span>PRESTAVANÉ MIMO MESIACA</span><span>TENTO MESIAC</span><span>ČERPANÉ SPOLU</span><span>ZOSTÁVA</span></div><div id="statementRows"></div><p id="statementDraftHint" class="draft-hint" role="status"></p><button type="button" class="secondary restore-draft" id="restoreStatementDraft" hidden>Obnoviť miestny návrh</button></div>
       <div class="statement-footer"><div><span>Spolu za tento mesiac bez DPH</span><strong id="statementTotal">0,00 €</strong></div><div class="statement-actions"><button type="submit" class="primary" id="saveStatementButton">Uložiť súpis</button><button type="button" id="submitStatementButton" class="secondary">Odoslať na schválenie</button></div></div>
      </form>
     </section>

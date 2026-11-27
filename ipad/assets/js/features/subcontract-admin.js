@@ -8,7 +8,7 @@
  const month=()=>today().slice(0,7);
  const money=value=>new Intl.NumberFormat("sk-SK",{style:"currency",currency:"EUR"}).format(Number(value)||0);
  const dateLabel=value=>value&&typeof fmtDateISO==="function"?fmtDateISO(value):value||"—";
- let contextKey="",workspaceId="",scopes=[],scope=null,companyId="",publishedItems=[],invitations=[],dayRecord=null,crewRecord=null,attachments=[],statement=null,statementRows=[],requestVersion=0,isOwner=false;
+ let contextKey="",workspaceId="",scopes=[],scope=null,companyId="",publishedItems=[],invitations=[],dayRecord=null,crewRecord=null,attachments=[],statement=null,statementRows=[],firstPortalPeriod="",requestVersion=0,isOwner=false;
 
  function notify(message,tone="neutral"){
   const node=$("saStatus");node.textContent=message;node.dataset.tone=tone;
@@ -30,24 +30,63 @@
   $("saCompany").value=companyId;
   $("saProjectName").textContent=activeProject()?.name||"Aktuálna stavba";
   $("saCompanyHelp").textContent=companies.length?`${companies.length} firiem priradených k tejto stavbe`:'Firmu pridáš v časti Firmy a zmluvy.';
-  if(previous!==companyId){scope=null;publishedItems=[];invitations=[];statement=null;statementRows=[]}
+  if(previous!==companyId){scope=null;publishedItems=[];invitations=[];statement=null;statementRows=[];firstPortalPeriod=""}
+ }
+ function nextPeriod(value){const [year,month]=String(value).split("-").map(Number);const date=new Date(Date.UTC(year,month,1));return `${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,"0")}`}
+ function openingCutoff(){
+  if(firstPortalPeriod)return firstPortalPeriod;
+  const lastBilled=(state.billings||[]).filter(row=>row.projectId===state.selectedProjectId&&row.companyId===companyId&&/^\d{4}-(0[1-9]|1[0-2])$/.test(String(row.month||""))&&Number(row.amount)>0).map(row=>row.month).sort().at(-1);
+  const lastMeasured=(state.workStatements||[]).filter(row=>row.projectId===state.selectedProjectId&&row.companyId===companyId&&/^\d{4}-(0[1-9]|1[0-2])$/.test(String(row.period||""))&&(row.items||[]).some(item=>Math.abs(workNumber(item.currentQty))>.0005)).map(row=>row.period).sort().at(-1);
+  return [month(),lastBilled&&nextPeriod(lastBilled),lastMeasured&&nextPeriod(lastMeasured)].filter(Boolean).sort().at(-1)
+ }
+ async function loadFirstUsedPortalPeriod(id){
+  const statements=await cloudFetch(`/rest/v1/subcontract_statements?scope_id=eq.${id}&select=id,period&order=period.asc&limit=1000`);
+  if(!Array.isArray(statements)||!statements.length)return"";
+  const periods=new Map(statements.map(row=>[row.id,row.period]));let first="";
+  for(let start=0;start<statements.length;start+=40){
+   const ids=statements.slice(start,start+40).map(row=>row.id).join(",");
+   for(let offset=0;;offset+=1000){
+    const rows=await cloudFetch(`/rest/v1/subcontract_statement_rows?statement_id=in.(${ids})&select=statement_id,quantity,reviewed_quantity&limit=1000&offset=${offset}`);
+    for(const row of rows||[]){
+     if(workNumber(row.reviewed_quantity??row.quantity)<=0)continue;
+     const period=periods.get(row.statement_id);if(period&&(!first||period<first))first=period
+    }
+    if(!Array.isArray(rows)||rows.length<1000)break
+   }
+  }
+  return first
+ }
+ function sourceOpening(sourceItem,cutoff){
+  let quantity=0,amount=0;
+  const sourceKey=String(sourceItem.budgetItemId||"").trim(),code=String(sourceItem.code||sourceItem.pc||"").trim().toLocaleLowerCase("sk"),description=String(sourceItem.description||"").trim().toLocaleLowerCase("sk"),documentId=String(sourceItem.sourceDocId||sourceItem.budgetDocId||"");
+  for(const historical of (state.workStatements||[]).filter(row=>row.projectId===state.selectedProjectId&&row.companyId===companyId&&String(row.period||"")<cutoff)){
+   for(const item of historical.items||[]){
+    if(String(item.type||"").toUpperCase()==="D")continue;
+    const sameBudget=sourceKey&&String(item.budgetItemId||"").trim()===sourceKey;
+    const sameText=code&&description&&String(item.code||item.pc||"").trim().toLocaleLowerCase("sk")===code&&String(item.description||"").trim().toLocaleLowerCase("sk")===description&&(!documentId||!String(item.sourceDocId||item.budgetDocId||"")||String(item.sourceDocId||item.budgetDocId)===documentId);
+    if(!sameBudget&&!sameText)continue;
+    const current=workNumber(item.currentQty),price=workNumber(item.unitPrice);
+    quantity+=current;amount+=Math.round(current*price*100)/100
+   }
+  }
+  return{opening_qty:Math.round(quantity*1000)/1000,opening_amount:Math.round(amount*100)/100,opening_before_period:cutoff}
  }
  function sourceItems(){
-  const byId=new Map();let sourceLabel="";
+  const byId=new Map(),cutoff=openingCutoff();let sourceLabel="";
   const latest=(state.workStatements||[]).filter(item=>item.projectId===state.selectedProjectId&&item.companyId===companyId).sort((a,b)=>String(b.period||"").localeCompare(String(a.period||"")))[0];
   if(latest){
    sourceLabel=`Tvoj súpis ${latest.period||""}`;
    for(const [index,item] of (latest.items||[]).entries()){
     if(String(item.type||"").toUpperCase()==="D"||!String(item.description||"").trim())continue;
     const sourceId=String(item.budgetItemId||item.id||`statement:${latest.id}:${index}`);
-    if(!byId.has(sourceId))byId.set(sourceId,{source_item_id:sourceId,code:String(item.code||item.pc||""),description:String(item.description||""),unit:String(item.unit||""),contract_qty:workNumber(item.contractQty),unit_price:workNumber(item.unitPrice),sort_order:byId.size+1,is_active:true})
+    if(!byId.has(sourceId))byId.set(sourceId,{source_item_id:sourceId,code:String(item.code||item.pc||""),description:String(item.description||""),unit:String(item.unit||""),contract_qty:workNumber(item.contractQty),unit_price:workNumber(item.unitPrice),...sourceOpening(item,cutoff),sort_order:byId.size+1,is_active:true})
    }
   }else for(const budget of (state.workBudgets||[]).filter(item=>item.projectId===state.selectedProjectId&&item.companyId===companyId)){
    sourceLabel="Úvodný súpis / rozpočet";
    for(const [index,item] of (budget.items||[]).entries()){
     if(String(item.type||"").toUpperCase()==="D"||!String(item.description||"").trim())continue;
     const sourceId=String(item.id||`budget:${budget.id}:${index}`);
-    if(!byId.has(sourceId))byId.set(sourceId,{source_item_id:sourceId,code:String(item.code||item.pc||""),description:String(item.description||""),unit:String(item.unit||""),contract_qty:workNumber(item.contractQty),unit_price:workNumber(item.unitPrice),sort_order:byId.size+1,is_active:true})
+    if(!byId.has(sourceId))byId.set(sourceId,{source_item_id:sourceId,code:String(item.code||item.pc||""),description:String(item.description||""),unit:String(item.unit||""),contract_qty:workNumber(item.contractQty),unit_price:workNumber(item.unitPrice),opening_qty:0,opening_amount:0,opening_before_period:cutoff,sort_order:byId.size+1,is_active:true})
    }
   }
   return{items:[...byId.values()],sourceLabel};
@@ -59,8 +98,10 @@
  function renderSource(){
   const source=sourceItems(),hasScope=Boolean(scope);
   const current=sourceIsCurrent(source.items);
-  $("saBudgetSource").textContent=source.items.length?`${source.sourceLabel}: ${source.items.length} položiek. ${hasScope?(current?"Položky subdodávky sú zhodné s tvojím súpisom.":"Položky sa zmenili alebo ešte neboli zverejnené. Zverejni ich pred schválením mesiaca."):"Najprv zriaď priestor firmy."}`:"Pre túto firmu ešte nie je pripravený rozpočet ani súpis. Najprv pridaj položky v časti Súpis prác.";
-  $("saBudgetSource").dataset.tone=current?"success":"warning";
+  const opening=source.items.reduce((sum,item)=>sum+Number(item.opening_amount||0),0);
+  const overdrawn=source.items.filter(item=>item.opening_qty>item.contract_qty+.0005).length;
+  $("saBudgetSource").textContent=source.items.length?`${source.sourceLabel}: ${source.items.length} položiek. Prestavané pred vstupom do portálu: ${money(opening)} bez DPH (pred ${openingCutoff()}). ${overdrawn?`${overdrawn} historických položiek už prekračuje zmluvné množstvo; ďalšie čerpanie bude zablokované. `:""}${hasScope?(current?"Položky a staršie množstvá sú zhodné s tvojím súpisom.":"Zverejni položky a staršie množstvá, aby mala firma správny zostatok."):"Najprv zriaď priestor firmy."}`:"Pre túto firmu ešte nie je pripravený rozpočet ani súpis. Najprv pridaj položky v časti Súpis prác.";
+  $("saBudgetSource").dataset.tone=current&&!overdrawn?"success":"warning";
   $("saPublishBudget").disabled=!hasScope||!source.items.length;
   if($("saCloseStatement"))$("saCloseStatement").disabled=!statement||statement.status!=="submitted"||!current;
  }
@@ -69,7 +110,7 @@
   const active=publishedItems.filter(item=>item.is_active!==false);
   if(active.length!==items.length)return false;
   const existing=new Map(active.map(item=>[String(item.source_item_id),item]));
-  return items.every(item=>{const saved=existing.get(String(item.source_item_id));return saved&&["code","description","unit"].every(key=>String(saved[key]||"")===String(item[key]||""))&&Number(saved.sort_order)===Number(item.sort_order)&&Math.abs(Number(saved.contract_qty)-Number(item.contract_qty))<.0001&&Math.abs(Number(saved.unit_price)-Number(item.unit_price))<.0001})
+  return items.every(item=>{const saved=existing.get(String(item.source_item_id));return saved&&["code","description","unit","opening_before_period"].every(key=>String(saved[key]||"")===String(item[key]||""))&&Number(saved.sort_order)===Number(item.sort_order)&&Math.abs(Number(saved.contract_qty)-Number(item.contract_qty))<.0001&&Math.abs(Number(saved.unit_price)-Number(item.unit_price))<.0001&&Math.abs(Number(saved.opening_qty||0)-Number(item.opening_qty||0))<.0001&&Math.abs(Number(saved.opening_amount||0)-Number(item.opening_amount||0))<.011})
  }
  function renderScope(){
   scope=scopes.find(item=>item.company_id===companyId)||null;
@@ -142,14 +183,16 @@
  async function loadScopeDetails(id){
   const token=++requestVersion;
   try{
-   const [members,items,invites]=await Promise.all([
+   const [members,items,invites,usedPeriod]=await Promise.all([
     cloudFetch(`/rest/v1/subcontract_scope_members?scope_id=eq.${id}&select=*&order=created_at.asc`),
     cloudFetch(`/rest/v1/subcontract_work_items?scope_id=eq.${id}&select=*&order=sort_order.asc`),
-    cloudFetch(`/rest/v1/subcontract_invitations?scope_id=eq.${id}&status=eq.pending&select=email,status,created_at&order=created_at.asc`)
+    cloudFetch(`/rest/v1/subcontract_invitations?scope_id=eq.${id}&status=eq.pending&select=email,status,created_at&order=created_at.asc`),
+    loadFirstUsedPortalPeriod(id)
    ]);
    if(token!==requestVersion||scope?.id!==id)return;
    publishedItems=Array.isArray(items)?items:[];
    invitations=Array.isArray(invites)?invites:[];
+   firstPortalPeriod=usedPeriod;
    renderMembers(Array.isArray(members)?members:[]);renderPublished();
    await Promise.all([loadDay(id),loadStatement(id)])
   }catch(error){if(token===requestVersion)handleError(error,"Načítanie údajov subdodávky")}
@@ -193,11 +236,16 @@
  }
  async function publishBudget(){
   if(!scope||scope.project_id!==state.selectedProjectId||scope.company_id!==companyId)return;
-  const {items}=sourceItems();if(!items.length)return;
-  const confirmed=confirm(`Zverejniť ${items.length} položiek iba firme ${currentCompany()?.name||""}? Pridelené množstvá v uzatvorených mesiacoch zostanú zachované.`);
-  if(!confirmed)return;
   $("saPublishBudget").disabled=true;
   try{
+   firstPortalPeriod=await loadFirstUsedPortalPeriod(scope.id);
+   const {items}=sourceItems();if(!items.length)return;
+   const impossible=items.find(item=>item.opening_qty<-.0005||item.opening_amount<-.005);
+   if(impossible)throw new Error(`Skontroluj minulé množstvá položky ${impossible.code||impossible.description}. Množstvo alebo suma je záporná.`);
+   const opening=items.reduce((sum,item)=>sum+Number(item.opening_amount||0),0);
+   const overdrawn=items.filter(item=>item.opening_qty>item.contract_qty+.0005).length;
+   const confirmed=confirm(`Zverejniť ${items.length} položiek firme ${currentCompany()?.name||""}?\n\nZo súpisov BETPRES sa prevezme ${money(opening)} prestavaných prác pred ${openingCutoff()}. Firma uvidí tento zostatok a nemôže pridať nad zmluvné množstvá.${overdrawn?`\n\n${overdrawn} historických položiek už prekračuje zmluvu. Staré množstvá sa zachovajú a ďalšie čerpanie týchto položiek sa zablokuje.`:""}\n\nSkontroluj sumu pred potvrdením.`);
+   if(!confirmed)return;
    const payload=items.map(item=>({...item,scope_id:scope.id}));
    const result=await cloudFetch("/rest/v1/subcontract_work_items?on_conflict=scope_id,source_item_id&select=*",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify(payload)});
    if(!Array.isArray(result))throw new Error("Databáza nepotvrdila zverejnenie položiek.");
@@ -206,7 +254,7 @@
     await cloudFetch(`/rest/v1/subcontract_work_items?id=eq.${stale.id}`,{method:"PATCH",body:JSON.stringify({is_active:false})})
    }
    publishedItems=await cloudFetch(`/rest/v1/subcontract_work_items?scope_id=eq.${scope.id}&select=*&order=sort_order.asc`);
-   renderPublished();notify(`${items.length} položiek bolo zverejnených firme ${currentCompany()?.name||""}.`,"success")
+   renderPublished();notify(`${items.length} položiek a ${money(opening)} starších prác bolo zverejnených firme ${currentCompany()?.name||""}.`,"success")
   }catch(error){handleError(error,"Zverejnenie súpisu")}
   finally{renderSource()}
  }

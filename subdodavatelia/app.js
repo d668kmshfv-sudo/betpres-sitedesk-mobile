@@ -1,6 +1,6 @@
 (function(){
  "use strict";
- const VERSION="1.0.5";
+ const VERSION="1.0.6";
  const CONNECTION_KEY="betpres-subcontract-connection-v1";
  const SESSION_KEY="betpres-subcontract-session-v1";
  const PREFERRED_SCOPE_KEY="betpres-subcontract-preferred-scope-v1";
@@ -381,7 +381,10 @@
   const parsed=numberValue(raw);
   return parsed!==null&&parsed<1000000000000000?parsed:null
  }
- function statementOther(itemId){return state.otherUsage.get(itemId)||{quantity:0,amount:0}}
+ function statementOther(item){
+  const portal=state.otherUsage.get(item.id)||{quantity:0,amount:0};
+  return{quantity:portal.quantity+Number(item.opening_qty||0),amount:portal.amount+Number(item.opening_amount||0)}
+ }
  function statementPrice(item,saved){return Number(saved?.unit_price_snapshot??item.unit_price)||0}
  function renderStatement(){
   const status=state.statement?.status||"draft",locked=statementLocked(),hasItems=state.items.length>0;
@@ -391,8 +394,8 @@
   $("statementEmpty").hidden=hasItems;$("statementForm").hidden=!hasItems;
   const rowsByItem=new Map(state.statementRows.map(row=>[row.work_item_id,row]));
   $("statementRows").innerHTML=state.items.map(item=>{
-   const savedRow=rowsByItem.get(item.id),qty=savedRow?.quantity??0,reviewed=savedRow?.reviewed_quantity,changed=reviewed!==null&&reviewed!==undefined&&Math.abs(Number(reviewed)-Number(qty))>.0005,price=statementPrice(item,savedRow),other=statementOther(item.id),unit=escapeHtml(item.unit||""),id=escapeHtml(item.id),contract=Number(item.contract_qty)||0;
-   return `<div class="statement-row ${changed?"is-revised":""}" data-work-item="${id}"><div class="statement-item"><code>${escapeHtml(item.code||"")}</code><strong>${escapeHtml(item.description||"Položka")}</strong><small>Zmluva: <b>${escapeHtml(valueText(contract))} ${unit}</b> × ${escapeHtml(currency.format(price))} / ${unit||"MJ"} · ${escapeHtml(currency.format(contract*Number(item.unit_price||0)))} bez DPH</small></div><div class="statement-metric statement-other"><span>Ostatné mesiace</span><strong>${escapeHtml(valueText(other.quantity))} ${unit}</strong><small>${escapeHtml(currency.format(other.amount))} bez DPH</small></div><label class="statement-current"><span>Tento mesiac · ${unit||"MJ"}</span><input type="text" inputmode="decimal" autocomplete="off" data-quantity-for="${id}" value="${escapeHtml(String(qty))}" ${locked?"disabled":""} aria-label="Množstvo tento mesiac: ${escapeHtml(item.description)}"><small data-amount-for="${id}"></small>${changed?`<strong class="reviewed-quantity">Upravené BETPRES: ${escapeHtml(valueText(reviewed))} ${unit}</strong>${savedRow?.review_note?`<small class="review-note">${escapeHtml(savedRow.review_note)}</small>`:""}`:""}</label><div class="statement-metric statement-used"><span>Čerpané spolu</span><strong data-used-qty="${id}"></strong><small data-used-price="${id}"></small></div><div class="statement-metric statement-remaining"><span>Zostáva dočerpať</span><strong data-remaining-qty="${id}"></strong><small data-remaining-price="${id}"></small><em data-limit-for="${id}" hidden></em></div></div>`
+   const savedRow=rowsByItem.get(item.id),qty=savedRow?.quantity??0,reviewed=savedRow?.reviewed_quantity,changed=reviewed!==null&&reviewed!==undefined&&Math.abs(Number(reviewed)-Number(qty))>.0005,price=statementPrice(item,savedRow),other=statementOther(item),unit=escapeHtml(item.unit||""),id=escapeHtml(item.id),contract=Number(item.contract_qty)||0;
+   return `<div class="statement-row ${changed?"is-revised":""}" data-work-item="${id}"><div class="statement-item"><code>${escapeHtml(item.code||"")}</code><strong>${escapeHtml(item.description||"Položka")}</strong><small>Zmluva: <b>${escapeHtml(valueText(contract))} ${unit}</b> × ${escapeHtml(currency.format(price))} / ${unit||"MJ"} · ${escapeHtml(currency.format(contract*Number(item.unit_price||0)))} bez DPH</small></div><div class="statement-metric statement-other"><span>Prestavané mimo mesiaca</span><strong>${escapeHtml(valueText(other.quantity))} ${unit}</strong><small>${escapeHtml(currency.format(other.amount))} bez DPH</small>${Number(item.opening_qty||0)>0?`<small>Pred portálom: ${escapeHtml(valueText(item.opening_qty))} ${unit}</small>`:""}</div><label class="statement-current"><span>Tento mesiac · ${unit||"MJ"}</span><input type="text" inputmode="decimal" autocomplete="off" data-quantity-for="${id}" value="${escapeHtml(String(qty))}" ${locked?"disabled":""} aria-label="Množstvo tento mesiac: ${escapeHtml(item.description)}"><small data-amount-for="${id}"></small>${changed?`<strong class="reviewed-quantity">Upravené BETPRES: ${escapeHtml(valueText(reviewed))} ${unit}</strong>${savedRow?.review_note?`<small class="review-note">${escapeHtml(savedRow.review_note)}</small>`:""}`:""}</label><div class="statement-metric statement-used"><span>Čerpané spolu</span><strong data-used-qty="${id}"></strong><small data-used-price="${id}"></small></div><div class="statement-metric statement-remaining"><span>Zostáva dočerpať</span><strong data-remaining-qty="${id}"></strong><small data-remaining-price="${id}"></small><em data-limit-for="${id}" hidden></em></div></div>`
   }).join("");
   $("saveStatementButton").disabled=locked;$("submitStatementButton").disabled=locked;
   const draft=readDraft("statement"),serverTime=Math.max(Date.parse(state.statement?.updated_at||"")||0,...state.statementRows.map(row=>Date.parse(row.updated_at||"")||0));
@@ -409,7 +412,7 @@
   state.items=[];state.statement=null;state.statementRows=[];state.otherUsage=new Map();$("statementRows").innerHTML="";$("statementTotal").textContent="…";
   try{
    const [items,statements]=await Promise.all([
-    rest(`/rest/v1/subcontract_work_items?scope_id=eq.${filter(id)}&select=id,scope_id,code,description,unit,contract_qty,unit_price,sort_order,is_active&order=sort_order.asc,code.asc`),
+    rest(`/rest/v1/subcontract_work_items?scope_id=eq.${filter(id)}&select=id,scope_id,code,description,unit,contract_qty,unit_price,opening_qty,opening_amount,opening_before_period,sort_order,is_active&order=sort_order.asc,code.asc`),
     rest(`/rest/v1/subcontract_statements?scope_id=eq.${filter(id)}&select=id,scope_id,period,status,closed_at,updated_at&order=period.asc&limit=1000`)
    ]);
    const statement=(statements||[]).find(row=>row.period===period)||null,allRows=[],statementIds=(statements||[]).map(row=>row.id);
@@ -420,6 +423,12 @@
      allRows.push(...(batch||[]));
      if(!Array.isArray(batch)||batch.length<1000)break
     }
+   }
+   const earliestPeriod=(items||[]).filter(item=>item.is_active!==false).map(item=>String(item.opening_before_period||"")).filter(Boolean).sort().at(-1)||"";
+   if(earliestPeriod&&period<earliestPeriod&&request===state.requestId&&id===state.scopeId){
+    state.month=earliestPeriod;$("monthInput").value=earliestPeriod;$("selectedMonthLabel").textContent=monthLabel(earliestPeriod);
+    showToast(`Staršie práce sú už prevzaté zo súpisov BETPRES. Nové množstvá zapisuj od ${monthLabel(earliestPeriod)}.`);
+    void loadStatement();return
    }
    const rows=allRows.filter(row=>row.statement_id===statement?.id),otherUsage=new Map();
    for(const row of allRows){
@@ -446,15 +455,15 @@
   let total=0,contractTotal=0,otherTotal=0,usedTotal=0,remainingTotal=0,invalidMessage="";
   for(const input of quantityInputs()){
    const item=state.items.find(row=>row.id===input.dataset.quantityFor);if(!item)continue;
-   const saved=state.statementRows.find(row=>row.work_item_id===item.id),other=statementOther(item.id),quantity=statementLocked()&&saved?.reviewed_quantity!==null&&saved?.reviewed_quantity!==undefined?Number(saved.reviewed_quantity):statementQuantity(input.value),price=statementPrice(item,saved),contract=Number(item.contract_qty)||0,available=contract-other.quantity,over=quantity!==null&&quantity>available+.0005,amount=quantity===null?0:quantity*price,used=other.quantity+(quantity??0),remaining=contract-used,contractAmount=contract*(Number(item.unit_price)||0),usedAmount=other.amount+amount,remainingAmount=contractAmount-usedAmount;
+   const saved=state.statementRows.find(row=>row.work_item_id===item.id),other=statementOther(item),quantity=statementLocked()&&saved?.reviewed_quantity!==null&&saved?.reviewed_quantity!==undefined?Number(saved.reviewed_quantity):statementQuantity(input.value),price=statementPrice(item,saved),contract=Number(item.contract_qty)||0,available=Math.max(0,contract-other.quantity),historicalExcess=other.quantity>contract+.0005,over=quantity!==null&&quantity>available+.0005,amount=quantity===null?0:quantity*price,used=other.quantity+(quantity??0),remaining=Math.max(0,contract-used),contractAmount=contract*(Number(item.unit_price)||0),usedAmount=other.amount+amount,remainingAmount=Math.max(0,contractAmount-usedAmount);
    const row=input.closest(".statement-row"),find=selector=>row.querySelector(selector),unit=item.unit||"";
    find("[data-amount-for]").textContent=quantity===null?"—":`${currency.format(amount)} bez DPH`;
    find("[data-used-qty]").textContent=quantity===null?"—":`${valueText(used)} ${unit}`;
    find("[data-used-price]").textContent=quantity===null?"—":`${currency.format(usedAmount)} bez DPH`;
    find("[data-remaining-qty]").textContent=quantity===null?"—":`${valueText(remaining)} ${unit}`;
    find("[data-remaining-price]").textContent=quantity===null?"—":`${currency.format(remainingAmount)} bez DPH`;
-   const note=find("[data-limit-for]");note.hidden=!over;note.textContent=over?`Možno zadať najviac ${valueText(Math.max(0,available))} ${unit}.`:"";
-   row.classList.toggle("is-over-limit",over);row.classList.toggle("is-negative-budget",remainingAmount<-.005);
+   const note=find("[data-limit-for]");note.hidden=!over&&!historicalExcess;note.textContent=historicalExcess?`Staršie súpisy už presiahli zmluvné množstvo o ${valueText(other.quantity-contract)} ${unit}. Nové čerpanie je zablokované.`:over?`Možno zadať najviac ${valueText(available)} ${unit}.`:"";
+   row.classList.toggle("is-over-limit",over);row.classList.toggle("is-negative-budget",historicalExcess||contractAmount-usedAmount<-.005);
    input.classList.toggle("invalid",quantity===null||over);input.setAttribute("aria-invalid",String(quantity===null||over));
    if(!invalidMessage&&(quantity===null||over))invalidMessage=quantity===null?`Skontroluj množstvo položky ${item.code||item.description}. Použi najviac tri desatinné miesta.`:`Položka ${item.code||item.description} má na tento mesiac zostatok najviac ${valueText(Math.max(0,available))} ${unit}.`;
    total+=amount;contractTotal+=contractAmount;otherTotal+=other.amount;usedTotal+=usedAmount;remainingTotal+=remainingAmount
@@ -472,7 +481,7 @@
   if(statementLocked())throw new Error("Tento súpis je už uzamknutý.");
   const quantities=quantityInputs().map(input=>({work_item_id:input.dataset.quantityFor,quantity:statementQuantity(input.value)}));
   if(quantities.some(row=>row.quantity===null))throw new Error("Skontroluj množstvá. Použi nezáporné čísla s najviac tromi desatinnými miestami.");
-  for(const row of quantities){const item=state.items.find(item=>item.id===row.work_item_id);if(item&&row.quantity>Number(item.contract_qty)-statementOther(item.id).quantity+.0005)throw new Error(`Položku ${item.code||item.description} nemožno prečerpať. Zadaj najviac ${valueText(Math.max(0,Number(item.contract_qty)-statementOther(item.id).quantity))} ${item.unit||""}.`)}
+  for(const row of quantities){const item=state.items.find(item=>item.id===row.work_item_id);if(item&&row.quantity>Math.max(0,Number(item.contract_qty)-statementOther(item).quantity)+.0005)throw new Error(`Položku ${item.code||item.description} nemožno prečerpať. Zadaj najviac ${valueText(Math.max(0,Number(item.contract_qty)-statementOther(item).quantity))} ${item.unit||""}.`)}
   const scopeId=state.scopeId,period=state.month;
   let statement=state.statement;
   if(!statement){
