@@ -213,25 +213,25 @@
   var workbook = new window.ExcelJS.Workbook();
   workbook.creator = "BETPRES APP"; workbook.company = "BETPRES, s.r.o."; workbook.created = new Date(); workbook.modified = new Date(); workbook.calcProperties.fullCalcOnLoad = true;
   var sheet = workbook.addWorksheet("Súpis objednávky", { views: [{ state: "frozen", ySplit: 6, activeCell: "D7", showGridLines: false }], pageSetup: { orientation: "landscape", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.3, right: 0.3, top: 0.45, bottom: 0.45, header: 0.2, footer: 0.2 } }, headerFooter: { oddHeader: "&C&B" + (companyData && companyData.name || ""), oddFooter: "&LBETPRES APP&CStrana &P / &N&R" + formatBillingMonth(statement.period) } });
-  [8,58,10,16,16,18,2,2,2,2].forEach(function (width, index) { sheet.getColumn(index + 1).width = width; if (index >= 6) sheet.getColumn(index + 1).hidden = true; });
-  sheet.mergeCells("A1:F1"); sheet.mergeCells("A2:C2"); sheet.mergeCells("D2:F2"); sheet.mergeCells("A3:C3"); sheet.mergeCells("D3:F3"); sheet.mergeCells("A4:F4");
+   [8,58,10,16,16,18,16,16,2,2,2,2].forEach(function (width, index) { sheet.getColumn(index + 1).width = width; if (index >= 8) sheet.getColumn(index + 1).hidden = true; });
+   sheet.mergeCells("A1:H1"); sheet.mergeCells("A2:D2"); sheet.mergeCells("E2:H2"); sheet.mergeCells("A3:D3"); sheet.mergeCells("E3:H3"); sheet.mergeCells("A4:H4");
   sheet.getCell("A1").value = "SÚPIS PRÁC K OBJEDNÁVKE";
-  sheet.getCell("A2").value = "OBJEDNÁVATEĽ: BETPRES, s.r.o."; sheet.getCell("D2").value = "ZHOTOVITEĽ: " + (companyData && companyData.name || "");
-  sheet.getCell("A3").value = "STAVBA: " + (projectData && projectData.name || ""); sheet.getCell("D3").value = (selectedDoc && selectedDoc.label || "Objednávka") + " · " + formatBillingMonth(statement.period);
-  sheet.getCell("A4").value = "Vyplň zelené bunky MNOŽSTVO a CENA. CENA CELKOM sa vypočíta automaticky; súbor môžeš potom načítať späť do aplikácie.";
-  ["P. Č.","POPIS POLOŽKY","MJ","MNOŽSTVO","CENA €","CENA CELKOM €","BETPRES_ITEM_ID","BETPRES_STATEMENT_ID","BETPRES_TEMPLATE_VERSION","BETPRES_SOURCE"].forEach(function (value, index) { sheet.getCell(6, index + 1).value = value; });
+   sheet.getCell("A2").value = "OBJEDNÁVATEĽ: BETPRES, s.r.o."; sheet.getCell("E2").value = "ZHOTOVITEĽ: " + (companyData && companyData.name || "");
+   sheet.getCell("A3").value = "STAVBA: " + (projectData && projectData.name || ""); sheet.getCell("E3").value = (selectedDoc && selectedDoc.label || "Objednávka") + " · " + formatBillingMonth(statement.period);
+   sheet.getCell("A4").value = "Vyplň zelené množstvo za tento mesiac. Jednotková cena je pri nových výkonových položkách pevná; pri starších objednávkach možno upraviť aj cenu.";
+   ["P. Č.","POPIS POLOŽKY","MJ","MNOŽSTVO NA FAKTÚRU","CENA €","NA FAKTÚRU €","DOHODNUTÉ MNOŽSTVO","ZOSTÁVA MNOŽSTVO","BETPRES_ITEM_ID","BETPRES_STATEMENT_ID","BETPRES_TEMPLATE_VERSION","BETPRES_SOURCE"].forEach(function (value, index) { sheet.getCell(6, index + 1).value = value; });
   var navy="FF082F61",blue="FF174F7F",pale="FFEAF2F8",green="FFE3F4E9",borderColor="FFA9BAC8";
   sheet.getRow(1).height=38; sheet.getRow(2).height=24; sheet.getRow(3).height=24; sheet.getRow(4).height=34; sheet.getRow(6).height=32;
   sheet.getCell("A1").font={name:"Aptos Display",size:18,bold:true,color:{argb:navy}}; sheet.getCell("A1").alignment={horizontal:"center",vertical:"middle"};
-  ["A2","D2","A3","D3"].forEach(function(ref){var cell=sheet.getCell(ref);cell.font={name:"Aptos",size:10,bold:true,color:{argb:"FF173753"}};cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:pale}};cell.alignment={vertical:"middle",wrapText:true};});
+   ["A2","E2","A3","E3"].forEach(function(ref){var cell=sheet.getCell(ref);cell.font={name:"Aptos",size:10,bold:true,color:{argb:"FF173753"}};cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:pale}};cell.alignment={vertical:"middle",wrapText:true};});
   sheet.getCell("A4").font={name:"Aptos",size:10,bold:true,color:{argb:"FF173753"}};sheet.getCell("A4").fill={type:"pattern",pattern:"solid",fgColor:{argb:green}};sheet.getCell("A4").alignment={vertical:"middle",wrapText:true};
-  sheet.getRow(6).eachCell({includeEmpty:true},function(cell,col){cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:col<=6?blue:navy}};cell.font={name:"Aptos",size:10,bold:true,color:{argb:"FFFFFFFF"}};cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};});
-  sourceItems.forEach(function(item,index){var rowNumber=index+7,row=sheet.getRow(rowNumber),calc=workItemCalc(statement,item);row.height=25;[item.pc||"",item.description||"",item.unit||"",calc.contractQty,calc.unitPrice,null,item.id||"",statement.id,TEMPLATE_VERSION,workItemSourceLabel(item)||"Objednávka"].forEach(function(value,column){row.getCell(column+1).value=value;});row.getCell(6).value={formula:'IF(OR(D'+rowNumber+'="",E'+rowNumber+'=""),"",D'+rowNumber+'*E'+rowNumber+')',result:calc.contractTotal};row.eachCell({includeEmpty:true},function(cell,col){cell.font={name:"Aptos",size:10,color:{argb:"FF102A43"}};cell.alignment={vertical:col===2?"top":"middle",horizontal:col>=4&&col<=6?"right":"left",wrapText:col===2};if(col===4)cell.numFmt="0.000";if(col===5||col===6)cell.numFmt="#,##0.00";});[4,5].forEach(function(col){row.getCell(col).fill={type:"pattern",pattern:"solid",fgColor:{argb:green}};row.getCell(col).font={name:"Aptos",size:10,bold:true,color:{argb:"FF173753"}};row.getCell(col).protection={locked:false};});});
-  var firstDataRow=7,lastDataRow=Math.max(firstDataRow,sourceItems.length+6),summaryRow=sourceItems.length+7;sheet.mergeCells("A"+summaryRow+":E"+summaryRow);sheet.getCell("A"+summaryRow).value="CELKOM (bez DPH)";sheet.getCell("F"+summaryRow).value={formula:"SUM(F"+firstDataRow+":F"+lastDataRow+")",result:workItemSummary(statement,"contractTotal")};sheet.getRow(summaryRow).height=27;sheet.getRow(summaryRow).eachCell({includeEmpty:true},function(cell,col){cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:pale}};cell.font={name:"Aptos",size:10,bold:true,color:{argb:"FF173753"}};cell.alignment={vertical:"middle",horizontal:col===6?"right":"left"};if(col===6)cell.numFmt="#,##0.00";});
-  sheet.eachRow(function(row){row.eachCell({includeEmpty:true},function(cell,col){if(col<=6)cell.border={top:{style:"thin",color:{argb:borderColor}},left:{style:"thin",color:{argb:borderColor}},bottom:{style:"thin",color:{argb:borderColor}},right:{style:"thin",color:{argb:borderColor}}};});});
-  for(var rowNumber=7;rowNumber<=lastDataRow;rowNumber+=1){sheet.getCell("D"+rowNumber).dataValidation={type:"decimal",operator:"between",allowBlank:true,formulae:[-999999999,999999999]};sheet.getCell("E"+rowNumber).dataValidation={type:"decimal",operator:"between",allowBlank:true,formulae:[-999999999,999999999]};}
+   sheet.getRow(6).eachCell({includeEmpty:true},function(cell,col){cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:col<=8?blue:navy}};cell.font={name:"Aptos",size:10,bold:true,color:{argb:"FFFFFFFF"}};cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};});
+   sourceItems.forEach(function(item,index){var rowNumber=index+7,row=sheet.getRow(rowNumber),calc=workItemCalc(statement,item),measured=isMeasuredWorkOrderItem(item);row.height=25;[item.pc||"",item.description||"",item.unit||"",measured?parseWorkNumber(item.currentQty):calc.contractQty,calc.unitPrice,null,measured&&!workOrderHasLimit(item)?null:calc.contractQty,workOrderHasLimit(item)?calc.remainingQty:null,item.id||"",statement.id,TEMPLATE_VERSION,workItemSourceLabel(item)||"Objednávka"].forEach(function(value,column){row.getCell(column+1).value=value;});row.getCell(6).value={formula:'IF(OR(D'+rowNumber+'="",E'+rowNumber+'=""),"",D'+rowNumber+'*E'+rowNumber+')',result:calc.currentPrice};row.eachCell({includeEmpty:true},function(cell,col){cell.font={name:"Aptos",size:10,color:{argb:"FF102A43"}};cell.alignment={vertical:col===2?"top":"middle",horizontal:col>=4&&col<=8?"right":"left",wrapText:col===2};if(col===4||col===7||col===8)cell.numFmt="0.000";if(col===5||col===6)cell.numFmt="#,##0.00";});(measured?[4]:[4,5]).forEach(function(col){row.getCell(col).fill={type:"pattern",pattern:"solid",fgColor:{argb:green}};row.getCell(col).font={name:"Aptos",size:10,bold:true,color:{argb:"FF173753"}};row.getCell(col).protection={locked:false};});});
+   var firstDataRow=7,lastDataRow=Math.max(firstDataRow,sourceItems.length+6),summaryRow=sourceItems.length+7;sheet.mergeCells("A"+summaryRow+":E"+summaryRow);sheet.getCell("A"+summaryRow).value="NA FAKTÚRU (bez DPH)";sheet.getCell("F"+summaryRow).value={formula:"SUM(F"+firstDataRow+":F"+lastDataRow+")",result:workItemSummary(statement,"currentPrice")};sheet.getRow(summaryRow).height=27;sheet.getRow(summaryRow).eachCell({includeEmpty:true},function(cell,col){cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:pale}};cell.font={name:"Aptos",size:10,bold:true,color:{argb:"FF173753"}};cell.alignment={vertical:"middle",horizontal:col===6?"right":"left"};if(col===6)cell.numFmt="#,##0.00";});
+   sheet.eachRow(function(row){row.eachCell({includeEmpty:true},function(cell,col){if(col<=8)cell.border={top:{style:"thin",color:{argb:borderColor}},left:{style:"thin",color:{argb:borderColor}},bottom:{style:"thin",color:{argb:borderColor}},right:{style:"thin",color:{argb:borderColor}}};});});
+   for(var rowNumber=7;rowNumber<=lastDataRow;rowNumber+=1){sheet.getCell("D"+rowNumber).dataValidation={type:"decimal",operator:"between",allowBlank:true,formulae:[-999999999,999999999]};if(!isMeasuredWorkOrderItem(sourceItems[rowNumber-7]||{}))sheet.getCell("E"+rowNumber).dataValidation={type:"decimal",operator:"between",allowBlank:true,formulae:[-999999999,999999999]};}
   var logo=await logoBytes();if(logo){var imageId=workbook.addImage({buffer:new Uint8Array(logo),extension:"png"});sheet.addImage(imageId,{tl:{col:0.15,row:0.15},br:{col:1.7,row:1.15},editAs:"oneCell"});}
-  sheet.pageSetup.printArea="A1:F"+summaryRow;await sheet.protect("",{selectLockedCells:false,selectUnlockedCells:true,formatCells:false,formatColumns:false,formatRows:false,insertRows:false,deleteRows:false});
+   sheet.pageSetup.printArea="A1:H"+summaryRow;await sheet.protect("",{selectLockedCells:false,selectUnlockedCells:true,formatCells:false,formatColumns:false,formatRows:false,insertRows:false,deleteRows:false});
   var buffer=await workbook.xlsx.writeBuffer();return new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
  }
 
@@ -339,6 +339,19 @@
    var item = itemMap.get(itemId);
    if (!item) { skipped += 1; continue; }
    if (String(item.type || "").toUpperCase() === "D" || isWorkPriceOnlyItem(item)) continue;
+    if (typeof isMeasuredWorkOrderItem === "function" && isMeasuredWorkOrderItem(item)) {
+     var measuredQty = numericValue(row[3]), measuredPrice = numericValue(row[4]);
+     if (measuredQty.blank) continue;
+     if (!measuredQty.ok || !measuredPrice.ok) { invalid.push({ row: rowIndex + 1, item: item, raw: !measuredQty.ok ? row[3] : row[4] }); continue; }
+     var fixedPrice = parseWorkNumber(item.unitPrice);
+     if (!measuredPrice.blank && Math.abs(measuredPrice.value - fixedPrice) > 0.000005) { invalid.push({ row: rowIndex + 1, item: item, raw: "Jednotkovú cenu uprav v aplikácii, nie v návratovom Exceli." }); continue; }
+     var oldMeasuredQty = parseWorkNumber(item.currentQty), newMeasuredQty = workRound(measuredQty.value, 6), measuredCalc = workItemCalc(statement, item);
+     if (Math.abs(oldMeasuredQty - newMeasuredQty) < 0.0000005) { unchanged += 1; continue; }
+     if (workOrderHasLimit(item) && newMeasuredQty + measuredCalc.previousQty > measuredCalc.contractQty + 0.0005) { invalid.push({ row: rowIndex + 1, item: item, raw: "Množstvo prekračuje dohodnutý limit." }); continue; }
+     var measuredDelta = workRound((newMeasuredQty - oldMeasuredQty) * fixedPrice, 2); totalDelta += measuredDelta;
+     updates.push({ item: item, measuredOrderMode: true, oldValue: oldMeasuredQty, newValue: newMeasuredQty, delta: measuredDelta, over: false, negative: newMeasuredQty < 0, row: rowIndex + 1 });
+     continue;
+    }
    if (typeof isWorkOrderItem === "function" && isWorkOrderItem(item)) {
     var parsedQty = numericValue(row[3]), parsedPrice = numericValue(row[4]);
     if (parsedQty.blank && parsedPrice.blank) continue;
@@ -607,8 +620,8 @@
   if (!header) throw new Error("V exporte chýbajú bezpečné identifikátory.");
   var dataRow = rows.find(function (row, index) { return index > header.rowIndex && String(row[header.idColumn] || "") === String(item.id); });
   if (!dataRow) throw new Error("Exportovaná položka sa nenašla.");
-  var orderMode = typeof isWorkOrderItem === "function" && isWorkOrderItem(item);
-  var nextValue = workRound(parseWorkNumber(orderMode ? item.contractQty : item.currentQty) + 2.5, 3);
+  var orderMode = typeof isWorkOrderItem === "function" && isWorkOrderItem(item), legacyOrderMode = orderMode && !isMeasuredWorkOrderItem(item);
+  var nextValue = workRound(parseWorkNumber(legacyOrderMode ? item.contractQty : item.currentQty) + 2.5, 3);
   dataRow[orderMode ? 3 : 8] = String(nextValue);
   var result = parseReturnedWorkbook(rows, statement);
   if (result.fatal || result.updates.length !== 1 || Math.abs(result.updates[0].newValue - nextValue) > 0.000001) throw new Error("Návratový import nepriradil množstvo k pôvodnej položke.");

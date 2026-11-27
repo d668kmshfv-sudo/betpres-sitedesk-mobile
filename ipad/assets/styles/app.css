@@ -3582,13 +3582,17 @@ body.work-focus-mode #workStatements .work-sheet td textarea{min-height:28px!imp
 body.work-focus-mode #workStatements .work-sheet td.work-calculated{font-size:9.5px!important}
 .work-sheet.work-overview-mode .total-col{display:none!important}
 .work-sheet .work-active-cell{outline:2px solid #217346!important;outline-offset:-2px!important;background:#fff!important;position:relative;z-index:3}
-.work-sheet.work-order-mode{min-width:760px!important;width:100%!important;table-layout:fixed!important}
-.work-sheet.work-order-mode .work-select-col{width:42px!important}.work-sheet.work-order-mode .work-pc-col{width:70px!important}
-.work-sheet.work-order-mode .work-desc-col{width:auto!important}.work-sheet.work-order-mode .work-unit-col{width:80px!important}
-.work-sheet.work-order-mode .work-num-col{width:130px!important}.work-sheet.work-order-mode .work-money-col{width:145px!important}
-.work-sheet.work-order-mode th{font-size:11px!important;height:42px}.work-sheet.work-order-mode td,.work-sheet.work-order-mode td input{font-size:11px!important}
+.work-sheet.work-order-mode{min-width:1060px!important;width:100%!important;table-layout:fixed!important}
+.work-sheet.work-order-mode .work-select-col{width:36px!important}.work-sheet.work-order-mode .work-pc-col{width:55px!important}
+.work-sheet.work-order-mode .work-desc-col{width:auto!important}.work-sheet.work-order-mode .work-unit-col{width:55px!important}
+.work-sheet.work-order-mode .work-num-col{width:112px!important}.work-sheet.work-order-mode .work-money-col{width:110px!important}
+.work-sheet.work-order-mode th{font-size:11px!important;height:46px;line-height:1.2}.work-sheet.work-order-mode th small{font-size:9px;font-weight:500;white-space:nowrap}.work-sheet.work-order-mode td,.work-sheet.work-order-mode td input{font-size:11px!important}
 .work-sheet.work-order-mode .order-total-col{background:#e7f3e7;font-weight:900}
-.work-order-statement .work-summary-card>div:not(.work-current-summary-row){display:none}.work-order-statement .work-summary-card .work-current-summary-row{margin-top:8px}
+.work-order-statement .work-summary-card .work-current-summary-row{margin-top:8px}
+.work-order-guide{display:flex;gap:10px;align-items:center;margin:5px 0 9px;padding:8px 12px;border:1px solid #c7dce9;border-radius:10px;background:#f3f8fc;color:#31536b;font-size:12px;line-height:1.35}
+.work-order-guide strong{white-space:nowrap;color:#0c4772}.work-order-guide.hidden{display:none}
+.work-order-statement .work-paste-tip{display:none}
+@media(max-width:760px){.work-order-guide{align-items:flex-start;flex-direction:column;gap:3px}}
 .assignment-order-chips span{border-color:#b9d7c1!important;background:#edf8ef!important;color:#18512c!important}.assignment-order-action{background:#e9f5eb!important;color:#18512c!important;border-color:#acd0b5!important}
 .work-needs-attention td:first-child{box-shadow:inset 4px 0 0 #dc8b17}
 body.work-focus-mode #workStatements .work-bottom-grid{flex:0 0 auto;display:grid!important;grid-template-columns:minmax(0,2fr) minmax(230px,.8fr) minmax(270px,1fr)!important;gap:5px!important;max-height:78px;margin:5px 0 0!important;overflow:hidden}

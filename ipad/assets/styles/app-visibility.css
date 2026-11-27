@@ -41,6 +41,7 @@
   body.work-focus-mode #workStatements .work-actions input,
   body.work-focus-mode #workStatements .work-actions select { min-height: 34px !important; height: 34px !important; font-size: 11.5px !important; }
   body.work-focus-mode #workStatements .work-sheet { min-width: 1340px !important; font-size: 12px !important; }
+  body.work-focus-mode #workStatements .work-sheet.work-order-mode { min-width: 1060px !important; }
   body.work-focus-mode #workStatements .work-sheet th { padding: 5px 4px !important; color: #314a5e !important; font-size: 10.5px !important; }
   body.work-focus-mode #workStatements .work-sheet td { min-height: 34px !important; height: 34px !important; }
   body.work-focus-mode #workStatements .work-sheet td input,
