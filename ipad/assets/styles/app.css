@@ -3874,6 +3874,11 @@ body.sitedesk-v3 #billing .billing-month-chip small{color:#647f91!important}
 #workStatementState{display:inline-flex!important;justify-self:end;width:max-content;padding:3px 8px;border-radius:999px;background:#6b7d8c;color:#fff!important;font-size:10px!important}
 #workStatementState.is-saved{background:#27885a}
 #workStatementState.is-billed{background:#f4bd24;color:#173753!important}
+#workStatementState.is-mismatch{background:#a91919;color:#fff!important}
+.billing-mismatch-badge{display:block;margin-top:3px;color:#a91919;font-size:10px;font-weight:800;white-space:normal}
+.billing-mismatch-notice{margin:10px 0;padding:10px 14px;border:1px solid #e3a3a3;border-radius:10px;background:#fff2f2;color:#7d1b1b;font-size:13px;line-height:1.45}
+.billing-mismatch-notice[hidden]{display:none}
+.billing-mismatch-notice strong{font-weight:800}
 .work-desc-cell.has-work-doc-badge{position:relative!important;padding-top:16px!important}
 .work-doc-badge{
  position:absolute;right:4px;top:2px;z-index:4;display:inline-flex;align-items:center;height:14px;padding:0 6px;

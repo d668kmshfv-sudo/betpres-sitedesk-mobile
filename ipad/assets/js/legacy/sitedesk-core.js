@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.10";
+const SITE_DESK_APP_VERSION="5.8.11";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -2383,6 +2383,19 @@ function renderBilling(){
         )
         .sort((a,b)=>String(b.month||"").localeCompare(String(a.month||""))||(company(a.companyId)?.name||"").localeCompare(company(b.companyId)?.name||"","sk"));
 
+ const billingChecks=new Map(rows.map(record=>{
+  const statement=record.workStatementId?state.workStatements.find(item=>item.id===record.workStatementId):null;
+  return[record.id,{statement,mismatch:statement?workBillingMismatch(statement,record):null}]
+ }));
+ const mismatchedRows=rows.filter(record=>billingChecks.get(record.id)?.mismatch),notice=$("billingMismatchNotice");
+ if(notice){
+  notice.hidden=!mismatchedRows.length;
+  notice.innerHTML=mismatchedRows.length?`<strong>Pozor: ${mismatchedRows.length} ${mismatchedRows.length===1?"záznam má":"záznamy majú"} rozdiel medzi fakturáciou a súpisom.</strong> ${mismatchedRows.slice(0,3).map(record=>{
+   const diff=billingChecks.get(record.id).mismatch;
+   return`${esc(company(record.companyId)?.name||"Firma")} · ${esc(formatBillingMonth(record.month))}: fakturácia ${eur.format(diff.billed)}, súpis ${eur.format(diff.measured)}`
+  }).join("; ")}${mismatchedRows.length>3?`; a ďalších ${mismatchedRows.length-3}`:""}`:""
+ }
+
  const displayedTotal=rows.reduce((sum,record)=>sum+Number(record.amount||0),0);
  $("billingTotal").textContent=eur.format(displayedTotal);
  $("billingContractPriceTotal").textContent=eur.format(billingContractPriceForRows(rows));
@@ -2407,7 +2420,10 @@ function renderBilling(){
  $("billingTable").innerHTML=rows.map(record=>{
   const contractPrice=Number(record.contractPrice||0),
         amendment=String(record.amendmentNo||"").trim(),
-        selectedRow=selectedMonth&&record.month===selectedMonth;
+        selectedRow=selectedMonth&&record.month===selectedMonth,
+        linkedStatement=billingChecks.get(record.id)?.statement,
+        billingMismatch=billingChecks.get(record.id)?.mismatch,
+        billingIssue=billingMismatch?`Súpis: ${eur.format(billingMismatch.measured)} · nesúlad`:record.workStatementId&&!linkedStatement?"Prepojený súpis chýba":"";
   const description=billingRecordDescription(record);
   return `<tr class="${selectedRow?"billing-month-selected-row":""}">
    <td><strong>${esc(company(record.companyId)?.name||"")}</strong>${record.workStatementId?`<small class="billing-source-badge">Zo súpisu č. ${esc(record.workStatementNo||"")}</small>`:""}</td>
@@ -2415,7 +2431,7 @@ function renderBilling(){
    <td>${description?`<span class="billing-description">${esc(description)}</span>`:`<span class="billing-empty-value">Bez popisu</span>`}</td>
    <td class="num">${contractPrice>0?`<strong>${eur.format(contractPrice)}</strong>`:`<span class="billing-empty-value">Nedoplnené</span>`}</td>
    <td>${amendment?`<span class="billing-amendment">${esc(amendment)}</span>`:`<span class="billing-empty-value">Bez dodatku</span>`}</td>
-   <td class="num"><strong>${eur.format(record.amount)}</strong></td>
+   <td class="num"><strong>${eur.format(record.amount)}</strong>${billingIssue?`<small class="billing-mismatch-badge">${esc(billingIssue)}</small>`:""}</td>
    <td><div class="row-actions">
     ${record.workStatementId?`<button class="ghost" data-open-work-statement="${record.id}">Otvoriť súpis</button>`:""}
     <button class="ghost" data-edit-billing="${record.id}">Upraviť</button>
@@ -7167,14 +7183,16 @@ function updateWorkStatementSummary(statement){
  $("workItemCount").textContent=calculations.length;
  const over=calculations.filter(x=>x.over).length,diffs=calculations.filter(x=>Math.abs(x.difference)>.011).length;
  $("workOverCount").textContent=over;$("workDifferenceCount").textContent=diffs;
+ const linkedBilling=state.billings.find(record=>record.workStatementId===statement.id),billingMismatch=workBillingMismatch(statement,linkedBilling);
  const msg=$("workCheckMessage");msg.className="";
- if(over){msg.className="error";msg.textContent=`${over} položiek prekračuje zmluvné množstvo.`}
+ if(billingMismatch){msg.className="error";msg.textContent=`Nesúlad s fakturáciou: fakturované ${eur.format(billingMismatch.billed)}, položky súpisu ${eur.format(billingMismatch.measured)}. Fakturovanú sumu aplikácia nezmenila. Skontroluj pôvodný súpis.`}
+ else if(over){msg.className="error";msg.textContent=`${over} položiek prekračuje zmluvné množstvo.`}
  else if(diffs){msg.className="warning";msg.textContent=`${diffs} položiek má ručne upravenú zmluvnú cenu.`}
  else msg.textContent="Súpis je v poriadku.";
- const linkedBilling=state.billings.find(record=>record.workStatementId===statement.id),stateEl=$("workStatementState");
+ const stateEl=$("workStatementState");
  if(stateEl){
-  stateEl.className=linkedBilling?"is-billed":statement.savedAt?"is-saved":"is-draft";
-  stateEl.textContent=linkedBilling?"Vo fakturácii":statement.savedAt?"Uložený":"Rozpracovaný"
+  stateEl.className=billingMismatch?"is-mismatch":linkedBilling?"is-billed":statement.savedAt?"is-saved":"is-draft";
+  stateEl.textContent=billingMismatch?"Nesúlad s fakturáciou":linkedBilling?"Vo fakturácii":statement.savedAt?"Uložený":"Rozpracovaný"
  }
  $("workAutoSaveLabel").textContent=`Automaticky uložené ${new Date().toLocaleTimeString("sk-SK",{hour:"2-digit",minute:"2-digit"})}`
 }
@@ -7426,6 +7444,7 @@ if($("saveAndBillWorkStatement"))$("saveAndBillWorkStatement").onclick=()=>{
         contractPrice:contractPrice||"",amendmentNo:addenda.join(", "),workStatementId:s.id,workStatementNo:s.number,
         source:"work-statement",sourceLabel:`Súpis č. ${s.number}`,documents:activeDocs,updatedAt:now
        };
+ if(existing&&workRound(parseWorkNumber(existing.amount),2)!==record.amount&&!confirm(`Pozor, suma súpisu ${eur.format(record.amount)} sa líši od už uloženej fakturácie ${eur.format(parseWorkNumber(existing.amount))}. Pokračovaním sa fakturovaná suma prepíše. Chceš pokračovať?`))return;
  if(existing)Object.assign(existing,record);else state.billings.push(record);
  storeBillingContractPrice(record.companyId,record.contractPrice,record.projectId);
  s.status="billed";s.savedAt=s.savedAt||now;s.billedAt=now;s.billingId=record.id;s.updatedAt=now;
@@ -7544,6 +7563,20 @@ $("exportWorkXlsx").onclick=async()=>{
  const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});downloadWorkBlob(blob,workFileBase(s)+".xlsx")
 };
 function workItemSummary(statement,key){return workItemsForCurrentDocument(statement).filter(x=>String(x.type||"").toUpperCase()!=="D").reduce((sum,x)=>sum+Number(workItemCalc(statement,x)[key]||0),0)}
+function workBillingStatementTotal(statement,billing){
+ if(!statement||!billing)return null;
+ const documents=Array.isArray(billing.documents)?billing.documents.filter(Boolean):[];
+ const orderDocuments=documents.filter(label=>isWorkOrderDocument("",label));
+ if(orderDocuments.length&&(orderDocuments.length!==1||documents.length!==1))return null;
+ const orderDocId=orderDocuments.length?billing.sourceDocId||canonicalWorkDocumentId(statement.companyId,orderDocuments[0]):"";
+ const items=(statement.items||[]).filter(item=>String(item.type||"").toUpperCase()!=="D"&&(orderDocId?workItemSourceId(item)===orderDocId:!isWorkOrderItem(item)));
+ return workRound(items.reduce((sum,item)=>sum+Number(workItemCalc(statement,item).currentPrice||0),0),2)
+}
+function workBillingMismatch(statement,billing){
+ const measured=workBillingStatementTotal(statement,billing);if(measured===null)return null;
+ const billed=parseWorkNumber(billing.amount);
+ return workRound(billed,2)!==measured?{billed,measured}:null
+}
 function workItemSummaryQtyDisplay(){return ""}
 $("exportWorkPdf").onclick=async()=>{
  const s=getWorkStatement(false);if(!s)return;
