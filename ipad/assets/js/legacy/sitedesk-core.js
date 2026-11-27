@@ -1,6 +1,6 @@
 const BETPRES_LOGO_IMAGE=new URL("assets/images/navigation-logo.png",document.baseURI).href;const DEFAULT_LETTERHEAD_IMAGE=new URL("assets/images/betpres-letterhead-2026.jpg",document.baseURI).href;let LETTERHEAD_IMAGE=DEFAULT_LETTERHEAD_IMAGE;
 const KEY="betpres-stavebna-evidencia-v7";const AUTO_BACKUP_KEY=KEY+"-auto-backup";const seed=window.SEED_DATA;const clone=o=>JSON.parse(JSON.stringify(o));
-const SITE_DESK_APP_VERSION="5.8.11";
+const SITE_DESK_APP_VERSION="5.8.12";
 const SITE_DESK_DB_NAME="betpres-sitedesk-localdb";
 const SITE_DESK_DB_VERSION=1;
 const SITE_DESK_SNAPSHOT_STORE="snapshots";
@@ -8570,19 +8570,49 @@ function acceptancePriceDisplay(value){
  if(!/\d/.test(raw))return raw;
  return acceptanceMoney(acceptanceNumberValue(raw))
 }
+function acceptanceAdditionDetails(line){
+ const raw=String(line||"").trim();
+ if(!raw)return{amount:0,description:"",hasAmount:false};
+ let amountText="",description=raw;
+ const separator=Math.max(raw.lastIndexOf("|"),raw.lastIndexOf(";"));
+ if(separator>=0){
+  const tail=raw.slice(separator+1).trim();
+  if(/^[+\-−]?\s*\d[\d\s.,]*(?:\s*€(?:\s*bez\s*DPH)?)?$/i.test(tail)){
+   amountText=tail;description=raw.slice(0,separator).trim()||raw
+  }
+ }
+ if(!amountText){
+  const currency=raw.match(/([+\-−]?\s*\d[\d\s.,]*)\s*€(?:\s*bez\s*DPH)?\s*$/i);
+  if(currency){
+   amountText=currency[1];description=raw.slice(0,currency.index).replace(/[\s–—-]+$/,"").trim()||raw;
+   if(/^\s*-\s+\d/.test(amountText)&&/\bdodatok\b/i.test(description))amountText=amountText.replace(/^\s*-\s+/,"")
+  }
+ }
+ if(!amountText)return{amount:0,description:raw,hasAmount:false};
+ let amount=acceptanceNumberValue(amountText);
+ if(/odpoč|menejprác/i.test(raw))amount=-Math.abs(amount);
+ return{amount,description,hasAmount:true}
+}
 function acceptanceAdditionsSum(text){
- return String(text||"").split(/\r?\n/).map(line=>line.trim()).filter(Boolean).reduce((sum,line)=>sum+acceptanceNumberValue(line),0)
+ return workRound(String(text||"").split(/\r?\n/).reduce((sum,line)=>sum+acceptanceAdditionDetails(line).amount,0),2)
 }
 function acceptanceProtocolNoFromContract(contract){
  const value=String(contract||"").trim();
  return value?`PP-${value}`:""
+}
+let acceptanceActualPriceManual=false;
+function acceptanceManualPriceValue(value){
+ const raw=String(value||"").trim().replace(/\s*€(?:\s*bez\s*DPH)?\s*$/i,"").replace(/[\u00a0\u202f]/g," ").trim();
+ const valid=/^[+\-−]?\s*(?:(?:\d{1,3}(?:[ .]\d{3})+|\d+)(?:,\d{1,2})?|(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?)$/;
+ return valid.test(raw)?acceptanceNumberValue(raw):null
 }
 function acceptanceRecalculatePrices(){
  if(!$("acceptanceContractPrice")||!$("acceptanceActualPrice"))return;
  const contractValue=$("acceptanceContractPrice").value.trim(),base=acceptanceNumberValue(contractValue);
  const add=acceptanceAdditionsSum($("acceptanceAdditions")?.value||"");
  if($("acceptanceAdditionsPrice"))$("acceptanceAdditionsPrice").value=acceptanceMoney(add);
- $("acceptanceActualPrice").value=contractValue?acceptanceMoney(base+add):"";
+ if(!acceptanceActualPriceManual)$("acceptanceActualPrice").value=contractValue?acceptanceMoney(workRound(base+add,2)):"";
+ if($("acceptancePriceMode"))$("acceptancePriceMode").textContent=acceptanceActualPriceManual?"Ručná cena zostane zachovaná aj pri zmene ZoD alebo dodatkov.":"Automaticky: cena podľa ZoD + dodatky − odpočty.";
  const companyId=$("acceptanceCompany").value;
  const invoiced=state.billings.filter(record=>record.projectId===state.selectedProjectId&&record.companyId===companyId).reduce((sum,record)=>sum+Number(record.amount||0),0);
  if($("acceptanceInvoicedAmount"))$("acceptanceInvoicedAmount").value=companyId?acceptanceMoney(invoiced):""
@@ -8717,17 +8747,10 @@ function acceptanceMergedAdditions(a,current=""){
 }
 function acceptanceAdditionItems(text){
  return String(text||"").split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map((line,index)=>{
-  const amount=acceptanceNumberValue(line);
-  let no=String(index+1),desc=line,priceText=amount?acceptanceMoney(amount):"";
+  const details=acceptanceAdditionDetails(line),amount=details.amount;
+  let no=String(index+1),desc=details.description,priceText=details.hasAmount?acceptanceMoney(amount):"";
   const noMatch=line.match(/(?:dodatok\s*č\.?|č\.?|dod\.?)[\s:.-]*([\w\/.-]+)/i);
   if(noMatch)no=noMatch[1];
-  if(line.includes("|")){
-   const parts=line.split("|").map(v=>v.trim()).filter(Boolean);
-   desc=parts.slice(0,-1).join(" | ")||parts[0]||line;
-   if(parts.length>1)priceText=acceptanceMoney(acceptanceNumberValue(parts.at(-1)))
-  }else{
-   desc=line.replace(/[+-]?\s*\d[\d\s.,]*\s*€?(?:\s*bez\s*DPH)?\s*$/i,"").trim()||line
-  }
   return{no,desc,amount,priceText}
  })
 }
@@ -8766,7 +8789,7 @@ openAcceptance=function(id="",prefillCompanyId=""){
  acceptanceSetValue("acceptanceProtocolNo",x?.protocolNo||acceptanceProtocolNoFromContract(baseAssignment?.contractNo||""));
  acceptanceSetValue("acceptanceContractNo",x?.contractNo||baseAssignment?.contractNo||"");
  acceptanceSetValue("acceptanceSubject",x?.subject||baseAssignment?.scope||"");
- acceptanceSetValue("acceptanceAdditions",acceptanceMergedAdditions(baseAssignment,x?.additions||""));
+ acceptanceSetValue("acceptanceAdditions",x?x.additions||"":acceptanceMergedAdditions(baseAssignment,""));
  acceptanceSetValue("acceptanceLocation",x?.location||"");
  acceptanceSetValue("acceptanceContractStart",x?.contractStart||baseAssignment?.contractStart||"");
  acceptanceSetValue("acceptanceContractEnd",x?.contractEnd||baseAssignment?.contractEnd||"");
@@ -8784,14 +8807,33 @@ openAcceptance=function(id="",prefillCompanyId=""){
  acceptanceSetValue("acceptanceSupplierStatement",x?.supplierStatement||acceptanceDefaultSupplierStatement);
  acceptanceSetValue("acceptanceClientRep",x?.clientRep||activeProject()?.manager||"");
  acceptanceSetValue("acceptanceSupplierRep",x?.supplierRep||baseAssignment?.contact||company(selectedCompanyId)?.contact||"");
+ acceptanceActualPriceManual=Boolean(String(x?.actualPriceOverride||"").trim());
+ acceptanceSetValue("acceptanceActualPrice",acceptanceActualPriceManual?x.actualPriceOverride:"");
  acceptanceRecalculatePrices();
  $("acceptanceModal").classList.remove("hidden")
 };
-if($("acceptanceCompany"))$("acceptanceCompany").onchange=()=>acceptanceFillFromAssignment($("acceptanceCompany").value,true);
+if($("acceptanceCompany"))$("acceptanceCompany").onchange=()=>{acceptanceActualPriceManual=false;acceptanceSetValue("acceptanceActualPrice","");acceptanceFillFromAssignment($("acceptanceCompany").value,true)};
 ["acceptanceContractPrice","acceptanceAdditions"].forEach(id=>{if($(id))$(id).addEventListener("input",acceptanceRecalculatePrices)});
+if($("acceptanceActualPrice")){
+ $("acceptanceActualPrice").addEventListener("input",()=>{acceptanceActualPriceManual=true;acceptanceRecalculatePrices()});
+ $("acceptanceActualPrice").addEventListener("blur",()=>{
+  const raw=acceptanceGetValue("acceptanceActualPrice").trim();
+  if(!raw){acceptanceActualPriceManual=false;acceptanceRecalculatePrices();return}
+  const amount=acceptanceManualPriceValue(raw);
+  if(amount!==null)acceptanceSetValue("acceptanceActualPrice",acceptanceMoney(amount))
+ })
+}
+if($("acceptanceResetActualPrice"))$("acceptanceResetActualPrice").onclick=()=>{acceptanceActualPriceManual=false;acceptanceRecalculatePrices()};
 if($("acceptanceForm"))$("acceptanceForm").onsubmit=e=>{
  e.preventDefault();
+ if(acceptanceActualPriceManual&&!acceptanceGetValue("acceptanceActualPrice").trim())acceptanceActualPriceManual=false;
  acceptanceRecalculatePrices();
+ let actualPriceOverride="";
+ if(acceptanceActualPriceManual){
+  const manualAmount=acceptanceManualPriceValue(acceptanceGetValue("acceptanceActualPrice"));
+  if(manualAmount===null){alert("Zadaj platnú skutočnú cenu diela, napríklad 405 000,00.");$("acceptanceActualPrice").focus();return}
+  actualPriceOverride=acceptanceMoney(manualAmount);acceptanceSetValue("acceptanceActualPrice",actualPriceOverride)
+ }
  const id=$("acceptanceId").value||uid("ap");
  const docs=acceptanceGetValue("acceptanceDocuments").split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
  const record={
@@ -8801,7 +8843,7 @@ if($("acceptanceForm"))$("acceptanceForm").onsubmit=e=>{
   additions:acceptanceGetValue("acceptanceAdditions").trim(),additionsPrice:acceptanceGetValue("acceptanceAdditionsPrice"),
   location:acceptanceGetValue("acceptanceLocation").trim(),contractStart:acceptanceGetValue("acceptanceContractStart")||"",contractEnd:acceptanceGetValue("acceptanceContractEnd")||"",
   actualStart:acceptanceGetValue("acceptanceActualStart")||"",actualEnd:acceptanceGetValue("acceptanceActualEnd")||"",
-  contractPrice:acceptanceGetValue("acceptanceContractPrice").trim(),actualPrice:acceptanceGetValue("acceptanceActualPrice").trim(),invoicedPrice:acceptanceGetValue("acceptanceInvoicedAmount").trim(),
+  contractPrice:acceptanceGetValue("acceptanceContractPrice").trim(),actualPrice:acceptanceGetValue("acceptanceActualPrice").trim(),actualPriceOverride,invoicedPrice:acceptanceGetValue("acceptanceInvoicedAmount").trim(),
   result:acceptanceGetValue("acceptanceResult"),documents:docs,documentsText:docs.join("\n"),notes:acceptanceGetValue("acceptanceNotes").trim(),
   penalty:acceptanceGetValue("acceptancePenalty")||"Neuplatňujú",qualityDeduction:acceptanceGetValue("acceptanceQualityDeduction")||"Neuplatňuje",
   penaltyReason:acceptanceGetValue("acceptancePenaltyReason").trim()||"Nie je",warranty:acceptanceGetValue("acceptanceWarranty").trim()||acceptanceDefaultWarrantyText,
@@ -8831,8 +8873,8 @@ printAcceptance=function(id){
  const parties=acceptancePartiesHtml(p,c,a,x);
  const protocolNo=esc(x.protocolNo||acceptanceProtocolNoFromContract(x.contractNo||a?.contractNo)||"PREBERACÍ PROTOKOL");
  const penalty=acceptancePenaltyChecks(x.penalty||"Neuplatňujú"),quality=acceptanceQualityChecks(x.qualityDeduction||"Neuplatňuje");
- const contractValue=x.contractPrice||a?.contractPrice||"",basePrice=esc(acceptancePriceDisplay(contractValue)),additionsPrice=esc(x.additionsPrice||acceptanceMoney(acceptanceAdditionsSum(x.additions||""))),
-       actualPrice=esc(contractValue?acceptanceMoney(acceptanceNumberValue(contractValue)+acceptanceAdditionsSum(x.additions||"")):x.actualPrice||"—"),
+ const contractValue=x.contractPrice||a?.contractPrice||"",additionsTotal=acceptanceAdditionsSum(x.additions||""),basePrice=esc(acceptancePriceDisplay(contractValue)),additionsPrice=esc(acceptanceMoney(additionsTotal)),
+       actualPrice=esc(x.actualPriceOverride?acceptancePriceDisplay(x.actualPriceOverride):contractValue?acceptanceMoney(workRound(acceptanceNumberValue(contractValue)+additionsTotal,2)):acceptancePriceDisplay(x.actualPrice)),
        invoicedTotal=state.billings.filter(record=>record.projectId===x.projectId&&record.companyId===x.companyId).reduce((sum,record)=>sum+Number(record.amount||0),0),
        invoicedPrice=esc(x.invoicedPrice||acceptanceMoney(invoicedTotal));
  const html=`<!doctype html><html lang="sk"><head><meta charset="utf-8"><title>Preberací protokol</title><style>
