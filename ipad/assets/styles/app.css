@@ -2568,6 +2568,12 @@ body.sitedesk-v3 .toast{
  min-width:220px;
  color:#24485f
 }
+.company-table .assignment-scope-cell{min-width:240px;max-width:320px}
+.assignment-scope-entry{display:grid;gap:2px;padding:4px 0;line-height:1.25}
+.assignment-scope-entry+.assignment-scope-entry{border-top:1px solid #dce5ec}
+.assignment-scope-entry small{font-size:10px;font-weight:750;color:#5a7487}
+.assignment-scope-entry strong{font-size:12px;white-space:normal;overflow-wrap:anywhere}
+.assignment-scope-extra small{color:#126137}
 
 
 /* SiteDesk 4.9.1 – rozlíšenie ZoD / Obj. pri firme na stavbe */
